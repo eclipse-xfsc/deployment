@@ -1,0 +1,9 @@
+apiVersion: v1
+appVersion: v1.0.0
+description: Nats
+name: nats
+version: 1.0.0
+dependencies:
+  - name: nats
+    version: 7.12.2
+    repository: oci://registry-1.docker.io/bitnamicharts

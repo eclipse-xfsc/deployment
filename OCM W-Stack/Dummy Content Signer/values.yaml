@@ -1,0 +1,14 @@
+dummycontentsigner:
+  image:
+    tag: main
+    pullPolicy: Always
+
+
+  config:
+    origin: "https://cloud-wallet.xfsc.dev"
+    signerUrl: http://signer.default.svc.cluster.local:8080/v1/credential
+    signerKey: signerkey
+    nats:
+      url: nats://nats.nats.svc.cluster.local:4222
+      queuegroup: dummysigner
+      requestTimeOut: 10s

@@ -1,0 +1,44 @@
+pre-authorization-bridge:
+  image: 
+    pullPolicy: Always
+  ingress:
+   enabled: true
+   annotations:
+     kubernetes.io/ingress.class: nginx
+     cert-manager.io/cluster-issuer: letsencrypt-prod
+   hosts:
+     - host: cloud-wallet.xfsc.dev
+       paths:
+         - path: /.well-known/openid-configuration
+           pathtype: ImplementationSpecific
+           port: 8080
+         - path: /token
+           pathtype: ImplementationSpecific
+           port: 8080
+   tls:
+     - secretName: xfsc-wildcard
+       hosts:
+         - cloud-wallet.xfsc.dev
+  config:
+    nats:
+      url: nats://nats.nats.svc.cluster.local:4222
+      queuegroup: preauth
+      timeoutInSec: 10
+    logLevel: debug
+    servingPort: 8080
+    database:
+      username: default
+      password: pass
+      hosts: redis-master.default.svc.cluster.local:6379
+      port: 6379
+      db: 0
+      IsCluster: false
+    oAuth:
+      serverUrl: https://auth-cloud-wallet.xfsc.dev/realms/master/protocol/openid-connect/token
+      clientId: bridge
+      clientSecret: preauthbridge-oauth
+    wellKnown:
+      issuer: https://cloud-wallet.xfsc.dev
+      token_endpoint: https://cloud-wallet.xfsc.dev/token
+      grant_types_supported:
+        - urn:ietf:params:oauth:grant-type:pre-authorized_code

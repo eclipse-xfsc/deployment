@@ -1,0 +1,257 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./nginx:/etc/nginx/certs
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8080:8080"
+    depends_on:
+      - cache
+      - policy
+      - task
+      - signer
+      - infohub
+
+  policy:
+    container_name: policy
+    build:
+      context: ../policy
+      dockerfile: deployment/compose/Dockerfile
+    volumes:
+      - "../policy:/go/src/gitlab.eclipse.org/eclipse/xfsc/tsa/policy"
+    env_file:
+      - ./env/policy.env
+    environment:
+      - USE_NGROK=false
+      - NGROK_TOKEN=${NGROK_TOKEN}
+      - NGROK_STATIC_DOMAIN=${NGROK_STATIC_DOMAIN}
+    ports:
+      - "8081:8080"
+    depends_on:
+      mongo:
+        condition: service_started
+      cache:
+        condition: service_started
+      task:
+        condition: service_started
+      signer:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+
+  task:
+    container_name: task
+    build:
+      context: ../task
+      dockerfile: deployment/compose/Dockerfile
+    volumes:
+      - "../task:/go/src/gitlab.eclipse.org/eclipse/xfsc/tsa/task"
+    env_file:
+      - ./env/task.env
+    ports:
+      - "8082:8080"
+    depends_on:
+      mongo:
+        condition: service_started
+      cache:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+
+  cache:
+    container_name: cache
+    build:
+      context: ../cache
+      dockerfile: deployment/compose/Dockerfile
+    volumes:
+      - "../cache:/go/src/gitlab.eclipse.org/eclipse/xfsc/tsa/cache"
+    env_file:
+      - ./env/cache.env
+    ports:
+      - "8083:8080"
+    depends_on:
+      redis:
+        condition: service_started
+      nats:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+
+  infohub:
+    container_name: infohub
+    build:
+      context: ../infohub
+      dockerfile: deployment/compose/Dockerfile
+    volumes:
+      - "../infohub:/go/src/gitlab.eclipse.org/eclipse/xfsc/tsa/infohub"
+    env_file:
+      - ./env/infohub.env
+    ports:
+      - "8084:8080"
+    depends_on:
+      mongo:
+        condition: service_started
+      policy:
+        condition: service_started
+      signer:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+
+  signer:
+    container_name: signer
+    build:
+      context: ../signer
+      dockerfile: deployment/compose/Dockerfile
+    volumes:
+      - "../signer:/go/src/gitlab.eclipse.org/eclipse/xfsc/tsa/signer"
+    env_file:
+      - ./env/signer.env
+    ports:
+      - "8085:8080"
+      - "2112:2112"
+    depends_on:
+      vault:
+        condition: service_started
+      vault-init:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+
+  login:
+    container_name: login
+    build:
+      context: ../login
+      dockerfile: deployment/compose/Dockerfile
+    volumes:
+      - "../login:/go/src/gitlab.eclipse.org/eclipse/xfsc/tsa/login"
+    env_file:
+      - ./env/login.env
+    ports:
+      - "8087:8080"
+    depends_on:
+      policy:
+        condition: service_started
+      mailhog:
+        condition: service_started
+
+  didresolver:
+    container_name: didresolver
+    hostname: didresolver
+    image: universalresolver/uni-resolver-web:latest
+    ports:
+      - "9090:8080"
+    depends_on:
+      - driver-didkit
+      - indy-did-driver
+      - uni-resolver-driver-did-uport
+
+  driver-didkit:
+    image: ghcr.io/spruceid/didkit-http:latest
+    environment:
+      PORT: 3000
+      HOST: 0.0.0.0
+    ports:
+      - "9091:3000"
+
+  indy-did-driver:
+    image: ghcr.io/idunion/indy-did-resolver/indy-did-driver:latest
+    ports:
+      - "9092:8080"
+
+  uni-resolver-driver-did-uport:
+    image: uport/uni-resolver-driver-did-uport:2.4.0
+    ports:
+      - "9093:8081"
+
+  redis:
+    image: "redis:alpine"
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  mongo:
+    hostname: mongo
+    container_name: mongo
+    image: mongo:3.6
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_REPLICA_SET_NAME: rs0
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo/docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./volumes/mongodb:/data/db
+    healthcheck:
+      test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
+    restart: on-failure
+    command: "--bind_ip_all --replSet rs0"
+
+  vault:
+    hostname: vault
+    container_name: vault
+    image: vault:1.12.0
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_API_ADDR: "http://0.0.0.0:8200"
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./volumes/vault/file:/vault/file:rw
+      - ./vault:/vault/config:rw
+    cap_add:
+      - IPC_LOCK
+    entrypoint: vault server -dev -dev-listen-address="0.0.0.0:8200" -dev-root-token-id="root"
+
+  vault-init:
+    container_name: vault-init
+    image: vault:1.12.0
+    volumes:
+      - ./vault/vault-init.sh:/vault-init.sh
+    depends_on:
+      - vault
+    restart: "no"
+    entrypoint: sh -c "/vault-init.sh"
+
+  nats:
+    hostname: nats
+    container_name: nats
+    image: 'nats:latest'
+    ports:
+      - "8222:8222"
+      - "6222:6222"
+      - "4222:4222"
+
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:18.0.0
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command:
+      - start-dev
+      - --import-realm
+      - --health-enabled=true
+    volumes:
+      - ./keycloak/config.json:/opt/keycloak/data/import/config.json
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f localhost:8080/health || exit 1" ]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+      start_period: 5s
+    ports:
+      - "8500:8080"
+
+  mailhog:
+    image: jcalonso/mailhog
+    ports:
+      - "1025:1025" # smtp server
+      - "8025:8025" # web ui

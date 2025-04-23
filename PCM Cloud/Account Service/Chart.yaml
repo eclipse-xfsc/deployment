@@ -1,0 +1,9 @@
+apiVersion: v1
+appVersion: v1.0.0
+description: CPCM Accoount Service
+name: account-service
+version: 1.0.0
+dependencies:
+  - name: account-service
+    version: 0.1.0-main
+    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm-cloud

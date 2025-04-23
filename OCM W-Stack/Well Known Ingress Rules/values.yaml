@@ -1,0 +1,4 @@
+ingress:
+  hostname: cloud-wallet.xfsc.dev
+  enabled: true
+  tenantName: tenant_space

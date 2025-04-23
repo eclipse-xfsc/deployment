@@ -1,0 +1,9 @@
+{
+    "services": {
+       	"did:web:test":[{
+                    "id":"did:example:123#linked-domain",
+                    "type": "LinkedDomains", 
+                    "serviceEndpoint": "https://bar.example.com"
+                }]
+            }
+}
