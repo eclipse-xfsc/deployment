@@ -1,0 +1,45 @@
+kong:
+  image:
+    repository: kong/kong
+    tag: "3.5"
+
+  env:
+    prefix: /kong_prefix/
+    database: "postgres"
+  
+  migrations:
+    # Enable pre-upgrade migrations (run "kong migrations up")
+    preUpgrade: false
+    # Enable post-upgrade migrations (run "kong migrations finish")
+    postUpgrade: false
+
+  postgresql:
+    enabled: true
+    auth:
+      username: kong
+      database: kong
+    service:
+      ports:
+        postgresql: "5432"
+
+  admin:
+    enabled: true
+    http:
+      enabled: true
+    tls:
+      enabled: false
+
+  proxy:
+    type: ClusterIP
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hostname: cloud-wallet.xfsc.dev
+      annotations:
+        nginx.ingress.kubernetes.io/use-regex: "true" 
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+      path: /api/dynamic/plugins(/|$)(.*)
+      pathType: ImplementationSpecific
+      tls: xfsc-wildcard
+    tls:
+      enabled: false

@@ -1,0 +1,8 @@
+apiVersion: v2
+name: kong-chart
+description: A Helm chart for deploying Kong API gateway in DB-less mode
+version: 0.1.0
+dependencies:
+  - name: kong
+    version: 2.32.0  # Replace with the desired version of Kong
+    repository: https://charts.konghq.com

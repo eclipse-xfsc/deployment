@@ -1,0 +1,13 @@
+apiVersion: v2
+name: keycloak
+description: Keycloak is a high performance Java-based identity and access management solution. It lets developers add an authentication layer to their applications with minimum effort.
+version: 0.10.0
+dependencies:
+  - name: keycloak
+    version: 18.0.2  # Replace with the desired version of Kong
+    repository: oci://registry-1.docker.io/bitnamicharts
+keywords:
+  - keycloak
+  - access-management
+sources:
+  - https://github.com/bitnami/charts/tree/main/bitnami/keycloak

@@ -1,0 +1,14 @@
+plugin-discovery:
+  image:
+    repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm-cloud/plugin-discovery
+    tag: main
+
+  service:
+    port: 8080
+
+  cors:
+    active: true
+    origins: "*"
+
+  kong:
+    host: kong-service-kong-admin.kong.svc.cluster.local:8001

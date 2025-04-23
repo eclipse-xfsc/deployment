@@ -1,0 +1,85 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-diddocument-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-DID did:web:{{ .Values.ingress.hostname }};
+      proxy_set_header X-NAMESPACE {{ .Values.ingress.tenantName }};
+    nginx.ingress.kubernetes.io/rewrite-target: /v1/did/document
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: {{ .Values.ingress.hostname }}
+    http:
+      paths:
+      - path: /.well-known/did.json
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: signer
+            port:
+              number: 8080
+  tls:
+  - hosts:
+      - {{ .Values.ingress.hostname }}
+    secretName: xfsc-wildcard
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-diddconfig-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-ORIGIN {{ .Values.ingress.hostname }};
+      proxy_set_header X-NAMESPACE {{ .Values.ingress.tenantName }};
+    nginx.ingress.kubernetes.io/rewrite-target: /v1/did/configuration
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: {{ .Values.ingress.hostname }}
+    http:
+      paths:
+      - path: /.well-known/did-configuration.json
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: signer
+            port:
+              number: 8080
+  tls:
+  - hosts:
+      - {{ .Values.ingress.hostname }}
+    secretName: xfsc-wildcard
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-didjwk-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-NAMESPACE {{ .Values.ingress.tenantName }};
+    nginx.ingress.kubernetes.io/rewrite-target: /v1/jwks
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: {{ .Values.ingress.hostname }}
+    http:
+      paths:
+      - path: /.well-known/jwks.json
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: signer
+            port:
+              number: 8080
+  tls:
+  - hosts:
+      - {{ .Values.ingress.hostname }}
+    secretName: xfsc-wildcard

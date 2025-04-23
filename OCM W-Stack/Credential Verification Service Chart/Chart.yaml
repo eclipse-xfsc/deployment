@@ -1,0 +1,8 @@
+apiVersion: v2
+name: credential-verification-service
+description: A Helm chart for deploying a credential verfication service
+version: 0.1.0-tag
+dependencies:
+  - name: credential-verification-service
+    version: 1.0.2
+    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack

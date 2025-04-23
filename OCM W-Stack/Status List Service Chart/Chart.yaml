@@ -1,0 +1,9 @@
+apiVersion: v1
+appVersion: v1.0.0
+description: Status List Service
+name: status-list-service
+version: 1.0.0
+dependencies:
+  - name: status-list-service
+    version: 1.0.3-main
+    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack

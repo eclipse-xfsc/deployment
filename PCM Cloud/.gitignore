@@ -1,0 +1,4 @@
+.DS_Store
+**/Chart.lock
+**/charts/**
+requirements.lock

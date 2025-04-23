@@ -1,0 +1,20 @@
+account-service:
+  image:
+    repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm-cloud/account-service
+    tag: main
+ 
+  service:
+    port: 8080
+
+  cors:
+    active: true
+    origins: "*"
+  config: 
+    keycloak:
+      realmName: cloudpcm
+    db:
+      host: postgres-postgresql.postgres.svc.cluster.local
+      dbName: accounts 
+      user: accountservice 
+      passwordSecretName: account-db
+      passwordSecretKey: postgresql-password

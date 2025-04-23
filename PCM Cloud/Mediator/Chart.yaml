@@ -1,0 +1,9 @@
+apiVersion: v1
+appVersion: v1.0.0
+description: Mediator
+name: mediator
+version: 1.0.2
+dependencies:
+  - name: aries-mediator-service
+    version: 1.0.1
+    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm

@@ -1,0 +1,9 @@
+apiVersion: v2
+appVersion: v1.0.0
+description: Credential Retrieval Service
+name: credential-retrieval-service
+version: 1.0.0
+dependencies:
+  - name: credential-retrieval-service
+    version: 1.0.1
+    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
