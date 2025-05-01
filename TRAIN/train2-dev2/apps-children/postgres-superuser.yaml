@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres-superuser
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: postgres
+    name: in-cluster
+  project: train2-dev2
+  source:
+     repoURL: "https://gitlab.eclipse.org/eclipse/xfsc/train/infrastructure-as-code.git"
+     path: "train2-dev2/postgres"
+     targetRevision: main
+     helm:
+      valueFiles:
+       - values-postgres-superuser.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        maxDuration: 3m0s
+        factor: 2
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

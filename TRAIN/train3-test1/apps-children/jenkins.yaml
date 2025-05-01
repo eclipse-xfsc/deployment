@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: cao-jenkins
+    name: in-cluster
+  project: train3-test1
+  sources:
+  - chart: jenkins
+    helm:
+      releaseName: cao-jenkins
+      valueFiles:
+        - $values/train3-test1/values/values-jenkins.yaml
+    repoURL: https://charts.jenkins.io
+    targetRevision: 4.7.2
+  - repoURL: https://gitlab.eclipse.org/eclipse/xfsc/train/infrastructure-as-code.git
+    targetRevision: HEAD
+    ref: values

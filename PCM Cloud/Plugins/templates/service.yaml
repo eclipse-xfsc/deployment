@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-service
+  labels:
+    app: {{ .Release.Name }}
+    xfsc.kubernetes.io/component: xfsc.pcm.plugin
+  annotations:
+    xfsc.kubernetes.io/configuration: | 
+              {"version":"v1","route":"/plugin-template", "name":"Plugin template", "serviceguid":"19bafa36-8415-44e9-a2de-32852fefa6ef","routeguid":"30959362-e35b-4eb4-afe5-e8fdd6a3fecd"}
+spec:
+  selector:
+    app: {{ .Release.Name }}
+  ports:
+    - protocol: TCP
+      name: {{ .Release.Name }}-{{.Values.service.pluginPortNamePostfix}}
+      port: {{ .Values.nginxProxy.port }}
+      targetPort: {{ .Values.nginxProxy.port }}
+    - protocol: TCP
+      name: {{ .Release.Name }}-backend-app-port
+      port: {{ .Values.backend.port }}
+      targetPort: {{ .Values.backend.port }}
+    - protocol: TCP
+      name: {{ .Release.Name }}-frontend-app-port
+      port: {{ .Values.frontend.port }}
+      targetPort: {{ .Values.frontend.port }}
+  type: {{ .Values.service.type }}

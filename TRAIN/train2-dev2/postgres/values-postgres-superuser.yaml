@@ -1,0 +1,88 @@
+# this is for argo type deployments of this chart (set to true)
+ignoreHelmHooks: true
+
+postgres:
+- name: postgres-superuser
+  enabled: true
+  enableSuperuserAccess: true
+  instances: 1
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+  storage:  
+    size: 8Gi
+    storageClass: cinder-default
+  superuserSecret:
+    description: The secret containing the superuser password. If not
+        defined a new secret will be created with a randomly generated password
+    properties:
+        name: superuser-secret
+    required:
+    - superuser-secret  
+  pooler:
+    - enabled: true
+      type: rw
+      instances: 1
+      pgbouncer:
+        poolMode: session
+        authQuerySecret:
+          name: "postgres-superuser"
+        authQuery: SELECT usename, passwd FROM pg_shadow WHERE usename=$1
+
+# https://github.com/cloudnative-pg/cloudnative-pg/blob/main/docs/src/api_reference.md#ClusterSpec
+# postgres:
+# - name: example-db
+#   enabled: true
+#   description: # optional
+#   instances: 3 #default 
+#   imageName: ghcr.io/cloudnative-pg/postgresql:15.0 # optional https://github.com/cloudnative-pg/postgres-containers/pkgs/container/postgresql
+#   postgresql:
+#     # toYaml if specified
+#   replica:
+#     # toYaml if specified 
+#   minSyncReplicas: 1 # optional
+#   maxSyncReplicas: 3 # optional
+#   superuserSecret: 
+#     name: # optional secretRefName could be set
+#   primaryUpdateStrategy: unsupervised
+#   primaryUpdateMethod: switchover
+#   startDelay: 300 # optional
+#   stopDelay: 300 # optional
+#   affinity:
+#     # toYaml if specified
+#   resources:
+#     # toYaml if specified
+#   bootstrap:
+#     # toYaml if specified
+#   nodeMaintenanceWindow:
+#     inProgress: false
+#     reusePVC: false
+#   storage:
+#     size: 10Gi # default 1Gi
+#     storageClass: cinder-default 
+#     resizeInUseVolumes: true
+#     pvcTemplate:
+#       # toYaml if specified
+#   walStorage:
+#     size: 10Gi # default 1Gi
+#     storageClass: cinder-default 
+#     resizeInUseVolumes: true
+#     pvcTemplate:
+#       # toYaml if specified
+#   backup:
+#       # toYaml if specified
+#   scheduledBackup:
+#     enabled: true
+#     backupOwnerReference: self
+#     schedule: "0 0 0 * * *"
+#     suspend: false
+#   pooler:
+#   - name:  # optional
+#     enabled: true
+#     type: rw
+#     instances: 1
+#     template: 
+#       # toYaml if specified
+#     pgbouncer:
+#       poolMode: session

@@ -1,0 +1,92 @@
+{{- if .Values.postgres}}
+{{- range $pg := .Values.postgres }}
+{{- if .enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .name | quote }}
+  namespace: {{ $.Release.Namespace | quote }}
+  # labels:
+  #   app: {{ .name }}
+  # {{- if not $.Values.ignoreHelmHooks }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "25"
+  {{- end }}
+spec:
+  {{- if hasKey . "imageName" }}
+  imageName: {{ .imageName | quote }}
+  {{- end }}
+  instances: {{ .instances | default 3 }}
+  {{- if hasKey . "startDelay" }}
+  startDelay: {{ .startDelay }}
+  {{- end }}
+  {{- if hasKey . "stopDelay" }}
+  stopDelay: {{ .stopDelay }}
+  {{- end }}
+  primaryUpdateStrategy: {{ .primaryUpdateStrategy | default "unsupervised" }}
+  primaryUpdateMethod: {{ .primaryUpdateMethod | default "switchover" }}
+  {{- if hasKey . "minSyncReplicas" }}
+  minSyncReplicas: {{ .minSyncReplicas }}
+  {{- end }}
+  {{- if hasKey . "maxSyncReplicas" }}
+  maxSyncReplicas: {{ .maxSyncReplicas }}
+  {{- end }}
+  {{- if hasKey . "superuserSecret" }}
+  superuserSecret:
+    name: {{ .superuserSecret.name | quote }}
+  {{- end }}
+  {{- if hasKey . "postgresql" }}
+  postgresql:
+    {{- .postgresql | toYaml | trim | nindent 4 }}
+  {{- end }}
+  {{- if hasKey . "replica" }}
+  replica:
+    {{- .replica | toYaml | trim | nindent 4 }}
+  {{- end }}
+  {{- if hasKey . "affinity" }}
+  affinity:
+    {{- .affinity | toYaml | trim | nindent 4 }}
+  {{- end }}
+  {{- if hasKey . "resources" }}
+  resources:
+    {{- .resources | toYaml | trim | nindent 4 }}
+  {{- end }}
+  {{- if hasKey . "bootstrap" }}
+  bootstrap:
+    {{- .bootstrap | toYaml | trim | nindent 4 }}
+  {{- end }}
+  {{- if hasKey . "nodeMaintenanceWindow" }}
+  nodeMaintenanceWindow:
+    inProgress: {{ .nodeMaintenanceWindow.inProgress | default false }}
+    reusePVC: {{ .nodeMaintenanceWindow.reusePVC | default true }}
+  {{- end }}
+  storage:
+    {{- if hasKey .storage "storageClass" }}
+    storageClass: {{ .storage.storageClass | quote }}
+    {{- end }}
+    size: {{ .storage.size | quote }}
+    resizeInUseVolumes: {{ .storage.resizeInUseVolumes | default true }}
+    {{- if hasKey .storage "pvcTemplate" }}
+    pvcTemplate: 
+      {{- .storage.pvcTemplate | toYaml | trim | nindent 6 }}
+    {{- end }}
+  {{- if hasKey . "walStorage" }}
+  walStorage:
+    {{- if hasKey .walStorage "storageClass" }}
+    storageClass: {{ .walStorage.storageClass | quote }}
+    {{- end }}
+    size: {{ .walStorage.size | quote }}
+    resizeInUseVolumes: {{ .walStorage.resizeInUseVolumes | default true }}
+    {{- if hasKey .walStorage "pvcTemplate" }}
+    pvcTemplate: 
+      {{- .walStorage.pvcTemplate | toYaml | trim | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- if hasKey . "backup" }}
+  backup:
+    {{- .backup | toYaml | trim | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

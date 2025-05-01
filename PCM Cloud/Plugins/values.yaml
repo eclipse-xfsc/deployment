@@ -1,0 +1,43 @@
+backend:
+  image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm-cloud/backend-template:main
+  port: 8080
+  name: PluginBackend
+  tenant: tenant_space
+  keycloak:
+    url: http://keycloak.keycloak.svc.cluster.local
+    realmName: react-keycloak
+    tokenTTL: 250ns
+  nats:
+    url: nats.nats.svc.cluster.local:4222
+    queueGroup: plugin-backend
+  crypto:
+    namespace: pluginBackend
+
+
+nginxProxy:
+  image: nginx:latest
+  port: 8090
+
+frontend:
+  image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm-cloud/plugin-frontend-template:dev
+  port: 3000
+
+service:
+  type: ClusterIP
+  name: localhost
+  port: 8090
+  pluginPortNamePostfix: proxy-app-port # kubernetes operator detects used port by this postfix https://gitlab.eclipse.org/eclipse/xfsc/personal-credential-manager-cloud/plugin-kubernetes-operator/-/blob/main/README.md
+  cors:
+    active: true
+    origins: '*'
+    methods: 'PUT, GET, POST, OPTIONS, DELETE'
+    allowCredentials: true
+    headers: 'append,delete,entries,foreach,get,has,keys,set,values,Accept,Authorization,Content-Type,DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range'
+    maxAge: 86400
+
+
+signer:
+  url: http://signer.default.svc.cluster.local:8080
+
+imagePullPolicy: Always
+hostname: cloud-wallet.xfsc.dev

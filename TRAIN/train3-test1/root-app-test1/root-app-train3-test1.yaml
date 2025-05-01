@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app-train3-test1
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  source:
+    path: infrastructure-as-code/
+    repoURL: https://gitlab.eclipse.org/eclipse/xfsc/train/infrastructure-as-code.git
+    targetRevision: main
+  destination:
+    name: in-cluster
+    namespace: argocd
+  project: train3-test1
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        maxDuration: 3m0s
+        factor: 2
+        

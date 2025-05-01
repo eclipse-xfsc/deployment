@@ -1,0 +1,39 @@
+{{- if .Values.postgres}}
+{{- range $pg := .Values.postgres }}
+{{- if .enabled }}
+{{- if hasKey . "pooler" }}
+{{- range $pooler := $pg.pooler }}
+{{- if .enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  {{- if .name }}
+  name: {{ .name | quote }}
+  {{- else }}
+  name: {{ printf "%s-%s" $pg.name .type | quote }}
+  {{- end }}
+  namespace: {{ $.Release.Namespace | quote }}
+  # labels:
+  #   app: {{ .name }}
+  # {{- if not $.Values.ignoreHelmHooks }}
+  annotations:
+    "helm.sh/hook": "post-install,post-upgrade"
+    "helm.sh/hook-weight": "25"
+  {{- end }}
+spec:
+  cluster:
+    name: {{ $pg.name | quote }}
+  type: {{ .type | default "rw" | quote }}
+  instances: {{ .instances | default 3 }}
+  pgbouncer:
+    {{- .pgbouncer | toYaml | trim | nindent 4 }}
+  {{- if hasKey . "template" }}
+  template:
+    {{- .template | toYaml | trim | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

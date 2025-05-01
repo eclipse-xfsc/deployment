@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: vault
+    name: in-cluster
+  project: train3-test1
+  source:
+    helm:
+      valueFiles:
+        - $values/hashicorp-vault/deployment/helm/values.yaml
+    path: hashicorp-vault/deployment/helm
+    repoURL: 'https://gitlab.eclipse.org/eclipse/xfsc/dev-ops/helm-charts.git'
+    targetRevision: HEAD

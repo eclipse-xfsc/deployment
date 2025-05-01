@@ -1,0 +1,22 @@
+{{- if not .Values.ignoreHelmHooks }}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cluster-check 
+  annotations:
+    "helm.sh/hook": "post-install,post-upgrade"
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+  namespace: {{ .Release.Namespace }}
+spec:
+  containers:
+  - name: crd-check 
+    image: alpine/k8s:1.25.3
+    imagePullPolicy: IfNotPresent
+    command: ['sh', '-c', 'while [ true ]; do kubectl get crd clusters.postgresql.cnpg.io poolers.postgresql.cnpg.io backups.postgresql.cnpg.io scheduledbackups.postgresql.cnpg.io; if [ $? -eq 0 ]; then break; fi ; sleep 5s; done']
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 0
+  serviceAccount: default
+  serviceAccountName: default
+{{- end }}

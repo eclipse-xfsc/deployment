@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: postgres
+    name: in-cluster
+  project: train4-test2
+  source:
+     repoURL: "https://gitlab.eclipse.org/eclipse/xfsc/train/infrastructure-as-code.git"
+     path: "train4-test2/postgres"
+     targetRevision: feature-grafana
+     helm:
+      valueFiles:
+       - values-postgres.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        maxDuration: 3m0s
+        factor: 2
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

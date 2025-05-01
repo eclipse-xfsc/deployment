@@ -1,0 +1,79 @@
+# my-app-chart/templates/configMap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-nginx-conf-configmap
+data:
+  nginx.conf: |-
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        server {
+            listen {{.Values.service.port}};
+            server_name {{.Values.service.name}};
+
+            location /application/ {
+                {{- if .Values.service.cors.active }}
+                if ($request_method = 'OPTIONS') {
+                    add_header 'Access-Control-Allow-Origin' '{{.Values.service.cors.origins}}' always;
+                    add_header 'Access-Control-Allow-Methods' '{{.Values.service.cors.methods}}' always;
+                    add_header 'Access-Control-Allow-Credentials' '{{.Values.service.cors.allowCredentials}}' always;
+                    add_header 'Access-Control-Allow-Headers' '{{.Values.service.cors.headers}}' always;
+                    add_header 'Access-Control-Max-Age' '{{.Values.service.cors.maxAge}}' always;
+                    return 204;
+                }
+                {{- end }}
+                add_header 'Access-Control-Allow-Origin' '{{.Values.service.cors.origins}}' always;
+                add_header 'Access-Control-Allow-Methods' '{{.Values.service.cors.methods}}' always;
+                add_header 'Access-Control-Allow-Credentials' '{{.Values.service.cors.allowCredentials}}' always;
+                add_header 'Access-Control-Allow-Headers' '{{.Values.service.cors.headers}}' always;
+                add_header 'Access-Control-Max-Age' '{{.Values.service.cors.maxAge}}' always;
+                proxy_pass http://{{ .Release.Name }}-service.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.backend.port }}/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            
+            location /main.js {
+                proxy_pass http://{{ .Release.Name }}-service.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.frontend.port }}/main.js;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            location /.well-known/did.json {
+                proxy_pass {{ .Values.signer.url }}/v1/did/document;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-DID did:web:{{ .Values.hostname }}:api:dynamic:plugins:plugin-template;
+                proxy_set_header X-NAMESPACE tenant_space;
+
+            }
+
+            location /.well-known/did-configuration.json {
+                proxy_pass {{ .Values.signer.url }}/v1/did/configuration;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-ORIGIN {{ .Values.hostname }};
+                proxy_set_header X-NAMESPACE tenant_space;
+            }
+
+            location /.well-known/jwks.json {
+                proxy_pass {{ .Values.signer.url }}/v1/jwks;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-NAMESPACE tenant_space;
+            }
+        }
+    }

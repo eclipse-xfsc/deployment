@@ -1,0 +1,4 @@
+apiVersion: v2
+name: plugin-template
+description: A Helm chart for deploying plugin template
+version: 0.1.0

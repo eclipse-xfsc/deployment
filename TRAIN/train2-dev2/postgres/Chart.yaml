@@ -1,0 +1,9 @@
+apiVersion: v2
+name: postgres
+description: |
+  This chart install and configures: 
+  * Postgres Cluster Template
+  * Pooler Template
+  * Backup Template
+type: application
+version: "0"

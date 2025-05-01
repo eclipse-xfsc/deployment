@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cassandra
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: cassandra
+    name: in-cluster
+  project: train2-dev2
+  sources:
+  - chart: cassandra
+    helm:
+      releaseName: cassandra
+      valueFiles:
+        - $values/train2-dev2/values/cassandra.yaml
+    repoURL: https://charts.bitnami.com/bitnami
+    targetRevision: 10.9.0
+  - repoURL: https://gitlab.eclipse.org/eclipse/xfsc/train/infrastructure-as-code.git
+    targetRevision: HEAD
+    ref: values

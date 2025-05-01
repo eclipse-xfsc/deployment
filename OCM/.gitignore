@@ -1,0 +1,11 @@
+aries-mediator-service/.aws
+aries-mediator-service/*.db-wal
+aries-mediator-service/*.db-shm
+aries-mediator-service/.env
+aries-mediator-service/postgres-db
+aries-mediator-service/acapy/controller/node_modules/
+aries-mediator-service/.DS_Store
+
+volumes/
+
+tasks.md

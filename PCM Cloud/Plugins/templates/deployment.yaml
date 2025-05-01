@@ -1,0 +1,58 @@
+# my-app-chart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: {{ .Release.Name }}-backend-container
+        image: {{ .Values.backend.image }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.backend.port }}
+        env:
+          - name: "PLUGIN_NAME"
+            value: {{.Values.backend.name}}
+          - name: "PLUGIN_TENANT"
+            value: {{.Values.backend.tenant}}
+          - name: "PLUGIN_KEYCLOAK_URL"
+            value: {{.Values.backend.keycloak.url}}
+          - name: "PLUGIN_KEYCLOAK_REALMNAME"
+            value: {{.Values.backend.keycloak.realmName}}
+          - name: "PLUGIN_KEYCLOAK_TOKENTTL"
+            value: {{.Values.backend.keycloak.tokenTTL}}
+          - name: "PLUGIN_NATS_URL"
+            value: {{.Values.backend.nats.url}}
+          - name: "PLUGIN_NATS_QUEUEGROUP"
+            value: {{.Values.backend.nats.queueGroup}}
+          - name: "PLUGIN_CRYPTO_NAMESPACE"
+            value: {{.Values.backend.crypto.namespace}}
+
+
+      - name: {{ .Release.Name }}-nginx-proxy
+        image: {{ .Values.nginxProxy.image }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.nginxProxy.port }}
+        volumeMounts:
+        - name: {{ .Release.Name }}-nginx-conf-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+      - name: {{ .Release.Name }}-frontend-container
+        image: {{ .Values.frontend.image }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.frontend.port }}
+      volumes:
+      - name: {{ .Release.Name }}-nginx-conf-volume
+        configMap:
+          name: {{ .Release.Name }}-nginx-conf-configmap

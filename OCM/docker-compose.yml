@@ -1,0 +1,100 @@
+version: "3.3"
+
+services:
+
+  conn-m:
+    container_name: ocm-connection-manager
+    build:
+      context: ../connection-manager
+      dockerfile: deployment/dev/Dockerfile
+    ports:
+      - "3003:3003"
+    env_file:
+      ./env/connection-manager.env
+    depends_on:
+      - db
+      - nats
+      - ssi
+
+  att-m:
+    container_name: ocm-attestation-manager
+    build:
+      context: ../attestation-manager
+      dockerfile: deployment/dev/Dockerfile
+    ports:
+      - "3005:3005"
+    env_file:
+      ./env/attestation-manager.env
+    depends_on:
+      - db
+      - nats
+      - ssi
+
+  proof-m:
+    container_name: ocm-proof-manager
+    build:
+      context: ../proof-manager
+      dockerfile: deployment/ci/Dockerfile
+    ports:
+      - "3007:3007"
+    env_file:
+      ./env/proof-manager.env
+    depends_on:
+      - db
+      - nats
+      - ssi
+
+
+  pri-m:
+    container_name: ocm-principal-manager
+    build:
+      context: ../principal-manager
+      dockerfile: deployment/dev/Dockerfile
+    ports:
+      - "3008:3008"
+    env_file:
+      ./env/principal-manager.env
+    depends_on:
+      - db
+      - nats
+      - ssi
+
+  ssi:
+    container_name: ocm-ssi-abstraction
+    build:
+      context: ../ssi-abstraction
+      dockerfile: deployment/dev/Dockerfile
+    ports:
+      - "3009:3009"
+      - "3010:3010"
+      - "4000:4000"
+    env_file:
+      ./env/ssi-abstraction.env
+    depends_on:
+      - db
+      - nats
+
+  db:
+    container_name: db
+    image: postgres:latest
+    volumes:
+      - ./volumes/postgres-data:/postgres/postgres-data:z
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "root" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+
+  nats:
+    container_name: nats
+    image: nats
+    ports:
+      - '4222:4222' #Nats server port
+      - '8222:8222' #Nats server Monitering port
