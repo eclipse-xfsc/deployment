@@ -11,7 +11,7 @@ well-known-service:
      - host: cloud-wallet.xfsc.dev
        paths:
          - path: /.well-known/openid-credential-issuer
-           pathtype: Exact
+           pathtype: ImplementationSpecific
            port: 8080
    tls:
      - secretName: xfsc-wildcard

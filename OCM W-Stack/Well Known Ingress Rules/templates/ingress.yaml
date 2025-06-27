@@ -19,13 +19,15 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: signer
+            name: {{ .Values.ingress.service.backend }}
             port:
-              number: 8080
+              number: {{ .Values.ingress.service.port }}
+  {{ if .Values.ingress.tls }}
   tls:
   - hosts:
       - {{ .Values.ingress.hostname }}
-    secretName: xfsc-wildcard
+    secretName: {{ .Values.ingress.tls.secret }}
+  {{ end }}
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -48,14 +50,16 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: signer
+            name: {{ .Values.ingress.service.backend }}
             port:
-              number: 8080
+              number: {{ .Values.ingress.service.port }}
+  
+  {{ if .Values.ingress.tls }}
   tls:
   - hosts:
       - {{ .Values.ingress.hostname }}
-    secretName: xfsc-wildcard
-
+    secretName: {{ .Values.ingress.tls.secret }}
+  {{ end }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -76,10 +80,12 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: signer
+            name: {{ .Values.ingress.service.backend }}
             port:
-              number: 8080
+              number: {{ .Values.ingress.service.port }}
+  {{ if .Values.ingress.tls }}
   tls:
   - hosts:
       - {{ .Values.ingress.hostname }}
-    secretName: xfsc-wildcard
+    secretName: {{ .Values.ingress.tls.secret }}
+  {{ end}}

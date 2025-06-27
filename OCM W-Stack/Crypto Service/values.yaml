@@ -1,0 +1,8 @@
+signer: #Sub Helm Chart Name
+  useConfigMap: false
+  configMapName: my-configmap
+  useSecretRef: false
+  secretRefName: my-secret
+  signer: 
+    vault:
+      secret: vault

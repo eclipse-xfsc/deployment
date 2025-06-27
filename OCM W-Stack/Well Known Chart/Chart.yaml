@@ -2,7 +2,7 @@ apiVersion: v1
 appVersion: v1.0.0
 description: Well Known Service
 name: well-known-service
-version: 1.0.0
+version: 1.0.1
 dependencies:
   - name: well-known-service
     version: 1.0.1-main

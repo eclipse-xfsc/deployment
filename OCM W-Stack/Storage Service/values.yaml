@@ -59,7 +59,7 @@ storage-service:
       passwordSecret: cassandra
       passwordKey: cassandra-password
     crypto:
-      signKey: storage
+      signKey: storagekey
       namespace: transit
     service:
       profiles: API

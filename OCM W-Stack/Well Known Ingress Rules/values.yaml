@@ -2,3 +2,8 @@ ingress:
   hostname: cloud-wallet.xfsc.dev
   enabled: true
   tenantName: tenant_space
+  service: 
+    backend: signer
+    port: 8080
+  tls: 
+    secret: xfsc-wildcard

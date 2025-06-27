@@ -1,0 +1,9 @@
+apiVersion: v1
+appVersion: v1.0.0
+description: Sd-Jwt Service
+name: sd-jwt-service
+version: 1.0.1
+dependencies:
+  - name: sd-jwt-service
+    version: 1.0.0
+    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services

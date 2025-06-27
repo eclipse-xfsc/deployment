@@ -173,3 +173,15 @@ vault secrets enable -path=example_tenant_id transit
 ```
 
 4. Create for the tenant id a new cassandra key space for the tenant id.
+
+# Important Considerations for the Deployment
+
+1. Collect the infrastructure tasks, means Redis, Postgres, Cassandra, Nats, Vault and other components excepting the application services, and deploy it first in HA setup with a proper user and secret management (e.g. by using Hashicorp Vault Injection, Terraform Scripting, Ansible Playbooks, External Secret Operator etc.)
+2. Limit the Infrastructure Items properly for resource management
+3. Consider the right order of the application Components: 
+  - Start with signer service first
+  - Universal Resolver
+  - sd jwt service
+  - storage service
+  - statuslist service
+  - ...

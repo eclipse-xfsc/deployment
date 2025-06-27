@@ -1,0 +1,10 @@
+sd-jwt-service:
+  image:
+    #repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services
+    name: sd-jwt-service
+    # -- Image tag
+    # Uses .Chart.AppVersion if empty
+    tag: "latest"
+  config:
+    signUrl: http://signer.default.svc.cluster.local:8080/v1/sign
+    resolverUrl: http://universal-resolver-service:8080/1.0/identifiers/
