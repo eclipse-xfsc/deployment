@@ -24,7 +24,7 @@ configuration-service:
     enabled: true
     annotations:
       kubernetes.io/ingress.class: nginx
-      nginx.ingress.kubernetes.io/rewrite-target: /$2
+      nginx.ingress.kubernetes.io/rewrite-target: /configuration
       nginx.ingress.kubernetes.io/enable-cors: "true"
       nginx.ingress.kubernetes.io/cors-allow-origin: "*"
       nginx.ingress.kubernetes.io/cors-allow-methods: "GET, OPTIONS"
@@ -32,7 +32,7 @@ configuration-service:
     hosts:
       - host: cloud-wallet.xfsc.dev
         paths:
-          - path: /api/configuration(/|$)(.*)
+          - path: /api/configuration
             port: 8080
     tls:
       - secretName: xfsc-wildcard
