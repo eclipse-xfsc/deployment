@@ -1,4 +1,4 @@
-web-ui-service:
+web-ui:
   service:
   type: ClusterIP
 
