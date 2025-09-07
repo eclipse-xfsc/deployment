@@ -1,5 +1,5 @@
 ingress:
-  hostname: cloud-wallet.xfsc.dev
+  hostname: cloud-wallet.DOMAIN
   enabled: true
   tenantName: tenant_space
   service: 
