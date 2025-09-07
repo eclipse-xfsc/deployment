@@ -1,188 +1,120 @@
-# Deployment
+# OCM-W-Stack Deployment Guide
 
-## Local Bootstrapping
+## 1. Overview
+This guide provides step-by-step instructions to deploy an **end-to-end instance of OCM-W-Stack** on a Kubernetes cluster. The OCM-W-Stack enables secure, centralized credential management and integrates seamlessly with enterprise infrastructure.  
 
-Docker compose setup can be used to bootstrap the local environment. Please use this bootstrapping [readme](https://gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/bdd/-/blob/main/bootstrap/README.md?ref_type=heads) used for running integration tests.
-This [repository](https://gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/bdd) contains the docker-compose and necessary configurations to run the services locally. 
+Deployment leverages **Helm charts, kubectl, and automation scripts** to ensure reproducibility, scalability, and maintainability.
 
-## Minikube Usage
+---
 
-### Security Notice
+## 2. Prerequisites
 
-This setup is for demo purposes, so the vault is not sealed and the traffic inside the cluster not secured. Be aware of this, and dont use this setup in production.
+### 2.1 Infrastructure Requirements
+- **Kubernetes cluster**  
+  - Minimum version: `1.22+`  
+  - At least 3 nodes (4 vCPU, 16 GB RAM recommended per node for production).  
+  - Network policies enabled for security.  
 
-### Reverse Proxy
+- **Ingress Controller**  
+  - NGINX ingress controller or equivalent.  
+  - Configured with TLS termination.  
 
-If you plan to open the kube to the public, install nginx [Reverse Proxy](https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04) 
-and add config to /etc/nginx/[nginx.conf](./Reverse%20Proxy/nginx.conf) before you run the install script
+- **DNS**  
+  - Wildcard DNS entry `*.DOMAIN` pointing to your ingress load balancer IP/hostname.  
 
+### 2.2 Software Requirements
+Ensure the following utilities are installed on the deployment host:
+- `kubectl` (aligned with your cluster version)  
+- `helm` (v3.10+)  
+- `curl`  
+- `jq`  
+- `openssl`  
+- `sed`
 
-### Local Minikube 
+### 2.3 Security Requirements
+- **TLS Certificate**: Valid **full chain certificate** (`fullchain.pem`).  
+- **Private Key**: Matching key (`privkey.pem`).  
+- **Storage**: Certificates should be stored securely with restricted permissions (`chmod 600`).  
 
-If you wanna use minikube, install minikube according to the [docu](https://minikube.sigs.k8s.io/docs/start) 
+### 2.4 Access Requirements
+- **Kubeconfig**: Path to the cluster configuration file with admin access.  
+- **Email Address**: Valid email for Let’s Encrypt notifications and system alerts.  
 
-Install Helm in your /usr/local/bin.
+---
 
-Enable: minikube addons enable ingress
+## 3. Deployment Instructions
 
-Follow step [1-3](https://minikube.sigs.k8s.io/docs/handbook/addons/ingress-dns/#Mac)
+### 3.1 Script Preparation
+1. Download the deployment script (`deploy.sh`) from the OCM-W-Stack release package.  
+2. Grant execution permissions:  
+   ```bash
+   chmod +x deploy.sh
+   ```
 
-Install the reverse proxy if you plan
+### 3.2 Script Execution
+Run the deployment script with the following parameters:
 
-After this all helms can be install via helm install service name or by using the [install script](./install.sh)
-
-### Remote
-If you plan to setup it remote, dont forget to open your loadbalancer/vm with a public IP and set a domain on it via DNS records. After this, ensure that the kube admin api is locally mapped to the machine by using NAT rules: 
-
-DNAT: 
-
-```
-sudo iptables -t nat -A PREROUTING -p tcp --dport 8443 -j DNAT --to-destination 192.168.49.2:8443
-sudo iptables -t nat -A POSTROUTING -p tcp --dport 443 -d 192.168.49.2 -j MASQUERADE
-```
-
-if this is not working use: 
-
-```
-ptables -A FORWARD -p tcp -d 192.168.49.2 --dport 443 -j ACCEPT
-``` 
-
-Then you can open port 8443 to the public and export your kube yaml: 
-
-```
-kubectl config view --minify --flatten > kubeconfig.yaml
-```
-
-With this you can access the cluster from outside. 
-
-Note: Ensure that the kubeconfig contains the right ip to access the service. 
-
-## Scaling
-
-The application can be scaled horizontally by running multiple instances of the application. The application is stateless and can be scaled horizontally. The application can be deployed on Kubernetes or any other container orchestration platform.
-
-To configure autoscaling for a Kubernetes deployment using Helm, you typically need to:
-Enable the Horizontal Pod Autoscaler (HPA) in your Helm chart.
-Define the autoscaling parameters in your values.yaml file or directly in the Helm chart.
-
-1. Define values in your values.yaml file:
-```yaml
-autoscaling:
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 50
+```bash
+./deploy.sh NAMESPACE DOMAIN CERT_PATH KEY_PATH EMAIL KUBECONFIG
 ```
 
-2. Create an HPA resource:
-
-```yaml
-{{- if .Values.autoscaling.enabled }}
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: {{ include "mychart.fullname" . }}
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: {{ include "mychart.fullname" . }}
-  minReplicas: {{ .Values.autoscaling.minReplicas }}
-  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
-{{- end }}
-```
-See the [Horizontal Pod Autoscaler documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/) for more information.
-
-## Tenant creation
-
-Tenant isolation is managed by ingress forwarding rules. Each tenant has a `tenant_id` which is used by ocm-w-stack to identify the tenant.To register a new tenant, the following steps are required:
-
-1. Create am ingress resource
-
-```yaml
-{{- if .Values.ingress.enabled }}
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ template "app.name" . }}
-  namespace: {{ .Release.Namespace }}
-  annotations:
-{{ toYaml .Values.ingress.annotations | indent 4 }}
-  labels:
-    {{- include "app.labels" . | nindent 4 }}
-spec:
-  ingressClassName: nginx
-  tls:
-  {{- range .Values.ingress.tls }}
-    - hosts:
-      {{- range .hosts }}
-        - {{ . | quote }}
-      {{- end }}
-      secretName: {{ .secretName }}
-  {{- end }}
-  rules:
-  {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
-        paths:
-        {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType}}
-            backend:
-              service:
-                name: {{ template "app.name" $ }}
-                port:
-                  number: {{ .port }}
-        {{- end }}
-  {{- end }}
-{{- end }}
+#### Example:
+```bash
+./deploy.sh ocm example.com ./certs/fullchain.pem ./certs/privkey.pem ops@example.com ~/.kube/config
 ```
 
-2. Define ingress config in values.yaml
+**Arguments:**
+- `NAMESPACE` → Kubernetes namespace where the stack will be deployed.  
+- `DOMAIN` → Base domain (e.g., `example.com`).  
+- `CERT_PATH` → Path to TLS full chain certificate.  
+- `KEY_PATH` → Path to TLS private key.  
+- `EMAIL` → Ops email address for alerts and notifications.  
+- `KUBECONFIG` → Path to kubeconfig file.  
 
-```yaml
-ingress:
-  enabled: true
-  annotations:
-    nginx.org/client-max-body-size: 2K #Maximum Size of Credentials which are uploadable
-    nginx.ingress.kubernetes.io/rewrite-target: /v1/tenants/example_tenant_id/example_path/$2
-  hosts:
-    - host: example.dev
-      paths:
-        - path: /api/example_path(/|$)(.*)
-          port: 8080
-          pathType: ImplementationSpecific
+---
 
-  tls:
-    - secretName: example-wildcard
-      hosts:
-        - example.dev
+## 4. Deployment Workflow
+
+1. **Namespace Creation**  
+   Script creates or validates the specified namespace.  
+
+2. **TLS Secret Injection**  
+   TLS certificate and private key are stored as Kubernetes secrets.  
+
+3. **Helm Chart Installation**  
+   - OCM-W-Stack components are deployed via Helm.  
+   - Configurations include ingress rules, service accounts, and RBAC.  
+
+4. **Ingress Setup**  
+   Wildcard ingress is configured for `*.DOMAIN`.  
+
+5. **Verification & Health Checks**  
+   - Script validates pod readiness.
+
+---
+
+## 5. Post-Deployment Validation
+
+Run the following checks after deployment:
+
+```bash
+kubectl get pods -n <NAMESPACE>
+kubectl get svc -n <NAMESPACE>
+kubectl get ingress -n <NAMESPACE>
 ```
 
-3. Create a new secret engine in the used vault instance
+Validate access via:  
+- **UI** → `https://ocm.DOMAIN`  
+- **API** → `https://api.ocm.DOMAIN/v1/health`  
 
-```shell
-vault secrets enable -path=example_tenant_id transit
+Confirm certificate validity:  
+```bash
+openssl s_client -connect ocm.DOMAIN:443 -servername ocm.DOMAIN
 ```
 
-4. Create for the tenant id a new cassandra key space for the tenant id.
+## 6. Output
+If successful, deployment produces:  
+- A fully functional **OCM-W-Stack instance** accessible via `https://cloud-wallet.DOMAIN`.  
+- Ingress secured with the provided TLS certificate.  
 
-# Important Considerations for the Deployment
-
-1. Collect the infrastructure tasks, means Redis, Postgres, Cassandra, Nats, Vault and other components excepting the application services, and deploy it first in HA setup with a proper user and secret management (e.g. by using Hashicorp Vault Injection, Terraform Scripting, Ansible Playbooks, External Secret Operator etc.)
-2. Limit the Infrastructure Items properly for resource management
-3. Consider the right order of the application Components: 
-  - Start with signer service first
-  - Universal Resolver
-  - sd jwt service
-  - storage service
-  - statuslist service
-  - ...
-  - ...
+---
