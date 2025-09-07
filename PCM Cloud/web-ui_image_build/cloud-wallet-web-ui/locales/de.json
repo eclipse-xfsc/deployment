@@ -1,0 +1,179 @@
+{
+  "IndexHeader": {
+    "federation": "Föderation",
+    "credentials": "Anmeldeinformationen",
+    "selection": "Auswahl",
+    "dids": "DIDs",
+    "offering": "Angebot",
+    "issuance": "Ausstellung"
+  },
+  "Auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "to-the-login": "Zum Login"
+  },
+  "IndexBanner": {
+    "title": "Willkommen bei der GXFS-Demoföderation",
+    "subtitle": "Die Demoföderation verwendet den entwickelten Code und bietet einen ersten Eindruck von den Gaia-X-Föderationsdiensten. Die Dienste sind als Referenzimplementierung gedacht."
+  },
+  "ReadMore": {
+    "title": "Neue Delta-Studie: Fortschritte und Herausforderungen bei der Umsetzung von Gaia-X-Föderationsdiensten",
+    "description": "Die Delta-Studie, konzipiert als Fortsetzung der Studie 'Strategien zum Aufbau von Gaia-X-Ökosystemen unter Verwendung von Gaia-X-Föderationsdiensten', gibt Einblicke in den aktuellen Stand und die Herausforderungen der GXFS-Implementierung in verschiedenen Förderprojekten."
+  },
+  "Footer": {
+    "eco": "eco - Verband der Internetwirtschaft",
+    "light-street": "Light Street. 43h",
+    "cologne": "50825 Köln",
+    "germany": "Deutschland",
+    "email": "E-Mail",
+    "tel": "Tel",
+    "imprint": "Impressum",
+    "privacy": "Datenschutzerklärung",
+    "cookie": "Cookie-Einstellungen ändern",
+    "rights": "Alle Rechte vorbehalten"
+  },
+  "CookieSettings": {
+    "privacy-reference": "Datenschutzeinstellungen",
+    "description": "Hier finden Sie eine Übersicht über alle verwendeten Cookies. Sie können Ihre Zustimmung zu ganzen Kategorien geben oder weitere Informationen anzeigen und bestimmte Cookies auswählen.",
+    "button": "Alle akzeptieren",
+    "essencial": "Notwendig",
+    "essencial-description": "Essenzielle Cookies ermöglichen grundlegende Funktionen und sind für die einwandfreie Funktion der Website erforderlich.",
+    "show-cookies": "Cookie-Informationen anzeigen",
+    "hide-cookies": "Cookie-Informationen ausblenden",
+    "info-name": "Borlabs Cookie",
+    "info-provider": "Eigentümer dieser Website",
+    "info-purpose": "Speichert die vom Besucher in der Cookie Box von Borlabs Cookie ausgewählten Einstellungen.",
+    "info-cookie-name": "borlabs-cookie",
+    "info-expiry": "1 Jahr",
+    "imprint": "Impressum",
+    "name-label": "Name",
+    "provider-label": "Anbieter",
+    "purpose-label": "Zweck",
+    "cookie-name-label": "Cookie-Name",
+    "expiry-label": "Ablaufdatum"
+  },
+  "WalletMenu": {
+    "credentials": "Anmeldeinformationen",
+    "overview": "Übersicht",
+    "issuance": "Ausstellung",
+    "presentation": "Präsentationsauswahl",
+    "presentations": "Präsentationen",
+    "offering": "Angebot",
+    "settings": "Einstellungen",
+    "plugin-overview": "Plugin-Übersicht",
+    "pairing-management": "Geräteverwaltung",
+    "identity-overview": "Identitätsübersicht",
+    "backup": "Sicherung",
+    "history": "Verlauf"
+  },
+  "CredentialsOverview": {
+    "title": "Ihre Dokumente",
+    "date": "Datum",
+    "view": "Anzeigen",
+    "issued-at": "Ausgestellt am",
+    "search": "Suche"
+  },
+  "CredentialsSelection": {
+    "title": "Anmeldeinformationen"
+  },
+  "SettingsPluginOverview": {
+    "title": "Plugins",
+    "show-on-menu": "Im Menü anzeigen",
+    "see-details": "See Details",
+    "plugin-details": "Plugin-Details"
+  },
+  "SettingsPairingManagement": {
+    "title": "Geräte",
+    "see-details": "Siehe Einzelheiten",
+    "connection-details": "Verbindungsdetails",
+    "block": "Blockieren",
+    "unblock": "Entsperren",
+    "delete": "Löschen",
+    "block-success": "Gerät erfolgreich blockiert!",
+    "delete-success": "Gerät erfolgreich gelöscht!"
+  },
+  "NoData": {
+    "no-data": "Keine Daten gefunden"
+  },
+  "LocaleSwitcher": {
+    "locale": "Gebietsschema"
+  },
+  "Settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "history-limit": "Verlaufslimit",
+    "save": "Einstellungen speichern",
+    "save-success": "Einstellungen erfolgreich gespeichert!",
+    "empty-history-limit": "Verlaufslimit darf nicht leer sein!",
+    "invalid-history-limit": "Verlaufslimit muss eine Zahl sein!",
+    "negative-history-limit": "Verlaufslimit muss eine positive Zahl sein!",
+    "user-id": "Benutzer-ID"
+  },
+  "Presentation": {
+    "title": "Präsentation",
+    "select-presentation": "Wählen Sie Präsentation",
+    "drag-and-drop": "Ziehen Sie die Anmeldeinformationen per Drag-and-Drop nach rechts, um sie für die Präsentation auszuwählen.",
+    "selected-credentials": "Ausgewählte Anmeldeinformationen",
+    "confirm": "bestätigen",
+    "select-did": "Wählen Sie DID...",
+    "presentation-transmitted": "Präsentation erfolgreich übertragen!",
+    "create-did": "Erstellen Sie vor dem Fortfahren eine neue DID",
+    "go-to-did-creation": "Gehe zu DIDs",
+    "no-credentials": "Keine Anmeldeinformationen gefunden!"
+  },
+  "PresentationsList": {
+    "title": "Präsentation",
+    "presentation": "Präsentation:"
+  },
+  "Backup": {
+    "title": "Sicherung",
+    "download": "Herunterladen",
+    "upload": "Hochladen",
+    "delete": "Löschen",
+    "add": "Backup hinzufügen",
+    "submit": "Einreichen",
+    "delete-success": "Backup erfolgreich gelöscht!",
+    "backup-name": "Sicherungsnamen",
+    "backup-name-placeholder": "Geben Sie den Sicherungsnamen ein"
+  },
+  "History": {
+    "title": "Geschichte",
+    "length": "Zeige {length} von {total} Einträgen"
+  },
+  "Issuance": {
+    "title": "Ausgabe",
+    "select": "Wählen",
+    "success-message": "Anmeldeinformationen erfolgreich ausgestellt",
+    "copy": "Kopieren",
+    "copy-crendential": "Kopieren Sie den folgenden Link, um die Anmeldeinformationen anzubieten",
+    "schema": "Schema",
+    "copied": "Der Link wurde in die Zwischenablage kopiert!",
+    "scan-qr": "Scannen Sie den QR-Code oder klicken Sie auf die Schaltfläche unten, um den Anmeldeinformationen-Link zu kopieren"
+  },
+  "Offering": {
+    "title": "Angebot",
+    "accept": "Akzeptieren",
+    "deny": "Ablehnen",
+    "add": "Hinzufügen",
+    "offering-action-blocked": "Dieses Angebot wurde bereits akzeptiert oder abgelehnt",
+    "offering-link": "Angebot-Link",
+    "enter-offering": "Geben Sie den Angebotslink ein",
+    "submit": "Einreichen",
+    "empty-offering": "Angebotslink darf nicht leer sein!",
+    "create-success": "Angebot erfolgreich erstellt!",
+    "accept-success": "Angebot erfolgreich akzeptiert!",
+    "deny-success": "Angebot erfolgreich abgelehnt!",
+    "did-empty": "DID darf nicht leer sein!"
+  },
+  "Did": {
+    "title": "DID",
+    "add": "DID hinzufügen",
+    "submit": "Einreichen",
+    "key-type-placeholder": "Geben Sie den Schlüsseltyp ein",
+    "empty-key-type": "Schlüsseltyp darf nicht leer sein!",
+    "create-success": "DID erfolgreich erstellt!"
+  },
+  "Plugin": {
+    "not-found": "Plugin nicht gefunden"
+  }
+}

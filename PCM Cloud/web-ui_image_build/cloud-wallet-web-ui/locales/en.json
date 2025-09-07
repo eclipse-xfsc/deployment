@@ -1,0 +1,179 @@
+{
+  "IndexHeader": {
+    "federation": "Federation",
+    "credentials": "Credentials",
+    "selection": "Selection",
+    "dids": "DIDs",
+    "offering": "Offering",
+    "issuance": "Issuance"
+  },
+  "Auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "to-the-login": "To the Login"
+  },
+  "IndexBanner": {
+    "title": "Welcome to the GXFS Demo Federation",
+    "subtitle": "The Demo Federation uses the developed code and provides a first-hand impression of Gaia-X Federation Services. The services are intended as a reference implementation."
+  },
+  "ReadMore": {
+    "title": "New Delta study: Progress and challenges in implementing Gaia-X Federation Services",
+    "description": "The Delta study, designed as a continuation of the study Strategies for building Gaia-X ecosystems using Gaia-X Federation Services, provides insights into the current status and challenges of GXFS implementation in various funding projects."
+  },
+  "Footer": {
+    "eco": "eco – Association of the Internet Industry",
+    "light-street": "Light Street. 43h",
+    "cologne": "50825 Cologne",
+    "germany": "Germany",
+    "email": "E-Mail",
+    "tel": "Tel",
+    "imprint": "Imprint",
+    "privacy": "Privacy Policy",
+    "cookie": "Change Cookie Settings",
+    "rights": "All rights reserved"
+  },
+  "CookieSettings": {
+    "privacy-reference": "Privacy Preference",
+    "description": "Here you will find an overview of all cookies used. You can give your consent to whole categories or display further information and select certain cookies.",
+    "button": "Accept all",
+    "essencial": "Essential",
+    "essencial-description": "Essential cookies enable basic functions and are necessary for the proper function of the website.",
+    "show-cookies": "Show Cookie Information",
+    "hide-cookies": "Hide Cookie Information",
+    "info-name": "Borlabs Cookie",
+    "info-provider": "Owner of this website",
+    "info-purpose": "Saves the visitors preferences selected in the Cookie Box of Borlabs Cookie.",
+    "info-cookie-name": "borlabs-cookie",
+    "info-expiry": "1 Year",
+    "imprint": "Imprint",
+    "name-label": "Name",
+    "provider-label": "Provider",
+    "purpose-label": "Purpose",
+    "cookie-name-label": "Cookie Name",
+    "expiry-label": "Cookie Expiry"
+  },
+  "WalletMenu": {
+    "credentials": "Credentials",
+    "overview": "Overview",
+    "issuance": "Issuance",
+    "presentation": "Presentation Selection",
+    "presentations": "Presentations",
+    "offering": "Offering",
+    "settings": "Settings",
+    "plugin-overview": "Plugin Overview",
+    "pairing-management": "Pairing Management",
+    "identity-overview": "Identity Overview",
+    "backup": "Backup",
+    "history": "History"
+  },
+  "CredentialsOverview": {
+    "title": "Your Documents",
+    "date": "Date",
+    "view": "View",
+    "issued-at": "Issued at",
+    "search": "Search"
+  },
+  "CredentialsSelection": {
+    "title": "Credentials"
+  },
+  "SettingsPluginOverview": {
+    "title": "Plugins",
+    "show-on-menu": "Show on Menu",
+    "see-details": "See Details",
+    "plugin-details": "Plugin Details"
+  },
+  "SettingsPairingManagement": {
+    "title": "Devices",
+    "see-details": "See Details",
+    "connection-details": "Connection Details",
+    "block": "Block",
+    "unblock": "Unblock",
+    "delete": "Delete",
+    "block-success": "Device blocked successfully!",
+    "delete-success": "Device deleted successfully!"
+  },
+  "NoData": {
+    "no-data": "No data found"
+  },
+  "LocaleSwitcher": {
+    "locale": "Locale"
+  },
+  "Settings": {
+    "title": "Settings",
+    "language": "Language",
+    "history-limit": "History Limit",
+    "save": "Save Settings",
+    "save-success": "Settings saved successfully!",
+    "empty-history-limit": "History limit cannot be empty!",
+    "invalid-history-limit": "History limit must be a number!",
+    "negative-history-limit": "History limit must be a positive number!",
+    "user-id": "User Id"
+  },
+  "Presentation": {
+    "title": "Presentation Selection",
+    "select-presentation": "Select Presentation",
+    "drag-and-drop": "Drag and drop the credentials to the right to select them for the presentation.",
+    "selected-credentials": "Selected Credentials",
+    "confirm": "confirm",
+    "select-did": "Select DID...",
+    "presentation-transmitted": "Presentation transmitted successfully!",
+    "create-did": "Create a new DID before proceeding",
+    "go-to-did-creation": "Go to DIDs",
+    "no-credentials": "No credentials found!"
+  },
+  "PresentationsList": {
+    "title": "Presentations",
+    "presentation": "Presentation:"
+  },
+  "Backup": {
+    "title": "Backup",
+    "download": "Download",
+    "upload": "Upload",
+    "delete": "Delete",
+    "add": "Add Backup",
+    "submit": "Submit",
+    "delete-success": "Backup deleted successfully!",
+    "backup-name": "Backup Name",
+    "backup-name-placeholder": "Enter the backup name"
+  },
+  "History": {
+    "title": "History",
+    "length": "Showing {length} of {total} entries"
+  },
+  "Issuance": {
+    "title": "Issuance",
+    "select": "Select",
+    "success-message": "Issuance successful!",
+    "copy": "Copy",
+    "copy-credential": "Copy the following link to offer the credential",
+    "schema": "Schema",
+    "copied": "The link was copied to the clipboard!",
+    "scan-qr": "Scan the QR code or click the button bellow to copy the credential link"
+  },
+  "Offering": {
+    "title": "Offering",
+    "accept": "Accept",
+    "deny": "Deny",
+    "add": "Add Offering",
+    "offering-action-blocked": "This offering was already accepted or denied",
+    "offering-link": "Offering Link",
+    "enter-offering": "Enter the offering link",
+    "submit": "Submit",
+    "empty-offering": "Offering link cannot be empty!",
+    "accept-success": "Offering accepted successfully!",
+    "create-success": "Offering created successfully!",
+    "deny-success": "Offering denied successfully!",
+    "did-empty": "DID cannot be empty!"
+  },
+  "Did": {
+    "title": "DIDs",
+    "add": "Add DID",
+    "submit": "Submit",
+    "key-type-placeholder": "Select the key type",
+    "empty-key-type": "Key Type cannot be empty!",
+    "create-success": "DID created successfully!"
+  },
+  "Plugin": {
+    "not-found": "Plugin not found"
+  }
+}
