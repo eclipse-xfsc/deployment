@@ -1,16 +1,10 @@
 didcomm-connector:
-# Default values for didcomm-connector.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
   replicaCount: 1
-
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services
     name: didcomm-connector
     pullPolicy: Always
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: "refactoring"
+    tag: "latest"
 
   imagePullSecrets: []
   nameOverride: ""
@@ -26,15 +20,8 @@ didcomm-connector:
   podLabels: {}
 
   podSecurityContext: {}
-    # fsGroup: 2000
 
   securityContext: {}
-    # capabilities:
-    #   drop:
-    #   - ALL
-    # readOnlyRootFilesystem: true
-    # runAsNonRoot: true
-    # runAsUser: 1000
 
   service:
     type: ClusterIP
@@ -47,7 +34,7 @@ didcomm-connector:
       nginx.ingress.kubernetes.io/use-regex: "true" 
       nginx.ingress.kubernetes.io/rewrite-target: /$2
     hosts:
-      - host: cloud-wallet.xfsc.dev
+      - host: cloud-wallet.DOMAIN
         paths:
           - path: /api/didcomm(/|$)(.*)
             port: 9090
@@ -55,26 +42,15 @@ didcomm-connector:
     tls: 
       - secretName: xfsc-wildcard
         hosts:
-          - cloud-wallet.xfsc.dev
+          - cloud-wallet.DOMAIN
 
   resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
 
   autoscaling:
     enabled: false
     minReplicas: 1
     maxReplicas: 100
     targetCPUUtilizationPercentage: 80
-    # targetMemoryUtilizationPercentage: 80
 
   nodeSelector: {}
 
@@ -83,27 +59,26 @@ didcomm-connector:
   affinity: {}
 
   config:
-    env: DEV # DEV, PROD
-    logLevel: "debug" # info, debug, warning, error
+    env: DEV
+    logLevel: "debug"
     label: Cloud Wallet Mediator
     port: 9090
-    url: "https://cloud-wallet.xfsc.dev/api/didcomm"
+    url: "https://cloud-wallet.DOMAIN/api/didcomm"
     tokenExpiration: 1
     didcomm:
-      resolverUrl: "http://universal-resolver-service.default.svc.cluster.local:8080"
+      resolverUrl: "http://universal-resolver-service.NAMESPACE.svc.cluster.local:8080"
       messageEncrypted: false
 
-    # config for cloudEventProdvider
     messaging:
       protocol: "nats"
       nats:
-        url: nats://nats.nats.svc.cluster.local:4222
+        url: nats://nats.NAMESPACE.svc.cluster.local:4222
         topic: "didcomm-connector"
-        queueGroup: didcomm # optional
-        timeoutInSec: 10 # optional
+        queueGroup: didcomm
+        timeoutInSec: 10
     database:
       inMemory: false
-      host: cassandra.cassandra.svc.cluster.local:9042
+      host: cassandra.NAMESPACE.svc.cluster.local:9042
       port: 9042
       user: "cassandra"
       password:
@@ -111,4 +86,3 @@ didcomm-connector:
         passwordKey: cassandra-password
       keyspace: didcomm_space
       dbName: cassandra
-
