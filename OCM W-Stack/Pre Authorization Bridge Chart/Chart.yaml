@@ -4,5 +4,5 @@ description: pre-authorization-bridge deployment
 version: 0.1.0
 dependencies:
   - name: pre-authorization-bridge
-    version: 1.0.1  # Replace with the desired version of Kong
+    version: 1.0.1
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
