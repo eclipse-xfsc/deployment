@@ -1,0 +1,41 @@
+@import '../../scss/main.scss';
+@import '../../../node_modules/bootstrap/scss/mixins';
+@import '../../../node_modules/bootstrap/scss/functions';
+@import '../../../node_modules/bootstrap/scss/variables';
+
+$offset: 4rem;
+
+.card-document {
+  height: 260px;
+  width: 400px;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+  border: 1px solid gray;
+  background-image: url('../../../public/eu_id_card.png');
+
+  &:first-child {
+    margin-top: 1rem;
+  }
+
+  &:not(:first-child) {
+    margin-top: -$offset;
+  }
+
+  &:hover,
+  &:focus-within {
+    transform: translateY(-$offset/3);
+
+    & ~ .card-document {
+      transform: translateY($offset);
+    }
+  }
+
+  &:hover {
+    border: 1px solid $primary;
+    cursor: pointer;
+  }
+
+  &.movable {
+    cursor: move;
+  }
+}

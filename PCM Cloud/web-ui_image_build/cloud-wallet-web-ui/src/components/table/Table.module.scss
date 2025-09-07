@@ -1,0 +1,32 @@
+@import '../../scss/main.scss';
+@import '../../../node_modules/bootstrap/scss/mixins';
+@import '../../../node_modules/bootstrap/scss/functions';
+@import '../../../node_modules/bootstrap/scss/variables';
+
+.table {
+  // overflow-x: auto;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.icon {
+  width: 5rem;
+  height: 5rem;
+  color: $primary;
+}
+
+.table-cell {
+  max-width: 200px;
+  word-wrap: break-word;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}

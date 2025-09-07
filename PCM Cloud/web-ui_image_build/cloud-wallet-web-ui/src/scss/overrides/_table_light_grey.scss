@@ -1,0 +1,14 @@
+@import './../_variables';
+.table-light-grey {
+  background-color: $very-light-grey !important;
+}
+.table-light-grey > :not(caption) > * > * {
+  background-color: $very-light-grey !important;
+}
+.table-light-grey thead > tr:first-child {
+  border-bottom: 2px solid $grey;
+}
+
+.table-light-grey tfoot > tr:first-child {
+  border-top: 2px solid $grey;
+}

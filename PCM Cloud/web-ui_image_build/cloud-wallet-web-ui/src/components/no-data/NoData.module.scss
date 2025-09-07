@@ -1,0 +1,14 @@
+@import '../../scss/main.scss';
+@import '../../../node_modules/bootstrap/scss/mixins';
+@import '../../../node_modules/bootstrap/scss/functions';
+@import '../../../node_modules/bootstrap/scss/variables';
+
+.icon {
+  width: 5rem;
+  height: 5rem;
+  color: $primary;
+}
+
+.no-data {
+  height: 60vh;
+}

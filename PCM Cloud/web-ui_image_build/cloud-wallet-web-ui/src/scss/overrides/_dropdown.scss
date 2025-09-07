@@ -1,0 +1,70 @@
+@import '../_variables';
+
+.dropdown-toggle {
+  &::after {
+    content: url(/icons/icon_down_dark.svg);
+    border: 0;
+    vertical-align: -0.2em;
+    margin-left: 0.055em;
+    width: 24px;
+  }
+
+  &:hover {
+    color: $info;
+    &::after {
+      content: url(/icons/icon_down_magenta.svg);
+    }
+  }
+}
+
+// dropdown marked as active when it contains an active item
+.dropdown:has(.dropdown-item.active) {
+  color: $info;
+  .dropdown-toggle {
+    &::after {
+      content: url(/icons/icon_down_magenta.svg);
+    }
+  }
+}
+
+.dropdown {
+  text-align: left;
+  font: $font-medium-bold;
+  letter-spacing: 0;
+  color: $dark;
+}
+
+.dropdown:hover .dropdown-menu {
+  padding: 0.5rem 0;
+  opacity: 1;
+  visibility: visible;
+}
+
+.dropdown-menu {
+  padding: 0;
+  inset: -0.25rem auto auto 0 !important;
+  border: 1px solid #e9eaea;
+  border-radius: 4px;
+  box-shadow: 0px 6px 8px #00000052;
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.2s;
+}
+
+.dropdown-item {
+  text-align: left;
+  font: normal normal normal 18px/27px Titillium Web;
+  letter-spacing: 0px;
+  color: $dark;
+  padding: 0.5rem;
+
+  &:hover,
+  &:focus {
+    background-color: white;
+  }
+  &:hover,
+  &.active {
+    background-color: white;
+    color: $info;
+  }
+}

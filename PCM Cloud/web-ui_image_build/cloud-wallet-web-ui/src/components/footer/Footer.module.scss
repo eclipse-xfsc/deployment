@@ -1,0 +1,132 @@
+@import '../../scss/main.scss';
+
+footer.footer-container {
+  background-color: $secondary;
+  padding-top: 1.5rem;
+
+  a,
+  div.underlined-link,
+  p {
+    color: $white !important;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  p {
+    line-height: 1.6rem;
+  }
+}
+
+.contact {
+  @include media-breakpoint-down(md) {
+    display: grid;
+    gap: 2rem;
+  }
+}
+
+.footer-container a {
+  text-decoration: underline !important;
+}
+
+.footer-container .non-underlined-link {
+  text-decoration: none !important;
+}
+
+.center-text {
+  text-align: center;
+}
+
+.copyright-section {
+  border-top: 5px solid rgba(255, 255, 255, 0.1);
+}
+
+.divider {
+  background-color: rgba(255, 255, 255, 0.1);
+  height: 1px;
+  margin-top: 40px;
+  margin-bottom: 0 !important;
+}
+
+.bold-divider {
+  margin: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  height: 5px;
+  position: absolute;
+  width: 100vw;
+  right: 0;
+}
+
+div.self-center {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  @include media-breakpoint-down(sm) {
+    align-items: center;
+  }
+}
+
+.justify-content-md-center {
+  display: flex;
+  justify-content: center;
+}
+
+.copyright-row {
+  margin-top: 30px;
+  text-align: center;
+}
+
+// cookie
+.gaia-logo {
+  display: block;
+  align-self: center;
+  width: 40px;
+  height: 40px;
+  margin-right: 8px;
+}
+
+.cookie-info-container {
+  background-color: #f7f7f7;
+  margin-top: 16px;
+}
+.cookie-info-title {
+    font: $font-small-bold;
+    letter-spacing: 0;
+    color: #555555;
+}
+.cookie-info-description {
+  font: $font-xxxxs-normal;
+  letter-spacing: 0;
+  color: #555555;
+
+}
+.cookie-info-toggle-text {
+  font: $font-xxxxs-normal;
+  color: #0063E3 !important;
+  margin: 0;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+.cookie-info-table {
+  width: 100%;
+  margin-bottom: 8px;
+  td:first-child {
+    padding-left: 8px !important;
+    width: 30%;
+  }
+  td {
+    background-color: $white;
+    border: 1px solid #f7f7f7;
+    font: $font-xxxxs-normal;
+    letter-spacing: 0;
+    color: #555555;
+    padding-left: 8px !important;
+  }
+}
+
+.cookie-settings-container {
+  background: linear-gradient(to right, rgba(185, 0, 255, 1) 15%, rgba(0, 0, 148, 1) 60%, rgba(70, 218, 255, 1));
+  height: 320px !important;
+}

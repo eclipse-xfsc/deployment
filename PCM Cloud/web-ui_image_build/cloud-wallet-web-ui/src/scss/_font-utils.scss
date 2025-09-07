@@ -1,0 +1,93 @@
+@import './_variables';
+
+.gxfs-font-white-xxl-bold {
+  text-align: left;
+  font: $font-xxl-bold;
+  letter-spacing: 0;
+  color: $white;
+  opacity: 1;
+}
+
+.gxfs-font-primary-medium {
+  text-align: left;
+  font: $font-medium-bold;
+  letter-spacing: 0;
+  color: $primary;
+  opacity: 1;
+}
+.gxfs-font-dark-medium {
+  text-align: left;
+  font: $font-medium-bold;
+  letter-spacing: 0;
+  color: $dark;
+  opacity: 1;
+}
+.gxfs-font-dark-medium-normal {
+  text-align: left;
+  font: $font-medium-normal;
+  letter-spacing: 0;
+  color: $dark;
+  opacity: 1;
+}
+.gxfs-font-dark-medium-normal-underline {
+  text-decoration: underline;
+  font: $font-medium-normal;
+  letter-spacing: 0;
+  color: $dark;
+}
+.gxfs-font-white-small-normal {
+  text-align: left;
+  font: $font-small-normal;
+  letter-spacing: 0;
+  color: $white;
+  opacity: 1;
+}
+.gxfs-font-dark-midsmall-bold-underline {
+  text-decoration: underline;
+  font: $font-midsmall-bold;
+  letter-spacing: 0;
+  color: $dark;
+}
+.gxfs-font-dark-midsmall-bold {
+  font: $font-midsmall-bold;
+  letter-spacing: 0;
+  color: $dark;
+}
+.gxfs-font-dark-midsmall-normal {
+  font: $font-midsmall-normal;
+  letter-spacing: 0;
+  color: $dark;
+}
+.gxfs-font-dark-xxs-normal {
+  font: $font-xxs-normal;
+  letter-spacing: 0;
+  color: $dark;
+}
+.gxfs-font-dark-small-bold {
+  text-align: left;
+  font: $font-small-bold;
+  letter-spacing: 0;
+  color: $dark;
+  opacity: 1;
+}
+.gxfs-font-dark-small-normal {
+  text-align: left;
+  font: $font-small-normal;
+  letter-spacing: 0;
+  color: $dark;
+  opacity: 1;
+}
+.gxfs-font-light-grey-small-normal {
+  text-align: left;
+  font: $font-small-normal;
+  letter-spacing: 0;
+  color: $light-grey;
+  opacity: 1;
+}
+.gxfs-font-white-xxxs-normal {
+  font: $font-xxxs-normal;
+  letter-spacing: 0;
+  color: $white;
+}
+
+

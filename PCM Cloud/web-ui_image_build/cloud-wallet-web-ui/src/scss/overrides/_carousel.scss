@@ -1,0 +1,18 @@
+.carousel-indicators {
+  margin-bottom: 0.5rem;
+
+  button {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 100%;
+    background-color: transparent !important;
+    border: 2px solid white !important;
+    opacity: 1 !important;
+  }
+  .active {
+    width: 16px !important;
+    height: 16px !important;
+    background-color: white !important;
+    border: none !important;
+  }
+}

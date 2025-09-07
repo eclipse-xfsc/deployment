@@ -1,0 +1,20 @@
+@import '~bootstrap/scss/mixins';
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+
+.small-and-xs-only {
+  @include media-breakpoint-up(md) {
+    display: none;
+  }
+}
+.extra-extra-large-only {
+  @include media-breakpoint-down(xxl) {
+    display: none;
+  }
+}
+
+.media-breakpoint-up-medium {
+  @include media-breakpoint-down(md) {
+    display: none;
+  }
+}

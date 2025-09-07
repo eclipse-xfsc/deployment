@@ -1,0 +1,11 @@
+@import './../_variables';
+
+.form-control {
+  background: white;
+  font: $font-small-normal;
+  border: 1px solid #707070;
+  border-radius: 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 8px;
+}

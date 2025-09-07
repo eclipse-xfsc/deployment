@@ -1,0 +1,74 @@
+@import '../../scss/main.scss';
+@import '../../../node_modules/bootstrap/scss/mixins';
+@import '../../../node_modules/bootstrap/scss/functions';
+@import '../../../node_modules/bootstrap/scss/variables';
+
+.navbar {
+  padding: 0.5rem 1rem;
+  background-color: $white;
+}
+
+.navbar-left {
+  height: 100%;
+  width: 100%;
+
+  @extend .flex-center;
+  justify-content: flex-start;
+
+  .search-input-group {
+    width: 70%;
+
+    @include media-breakpoint-down(sm) {
+      display: none;
+    }
+
+    @include media-breakpoint-down(md) {
+      width: 100%;
+    }
+
+    input {
+      background-color: transparent;
+    }
+  }
+}
+
+.navbar-toggle {
+  @include media-breakpoint-down(sm) {
+    display: flex !important;
+  }
+}
+
+.nav-action-item {
+  .dropdown-toggle::after {
+    display: none;
+  }
+}
+
+.icon {
+  color: $black !important;
+  width: 22px;
+}
+
+.nav {
+  width: 100%;
+  margin-right: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  @include media-breakpoint-down(sm) {
+    margin-right: 0;
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  
+  span {
+    color: $black !important;
+    font-weight: 500;
+  }
+}

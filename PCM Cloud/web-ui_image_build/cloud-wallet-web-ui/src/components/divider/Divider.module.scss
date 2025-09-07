@@ -1,0 +1,17 @@
+.divider {
+  display: block;
+  overflow: hidden;
+  background-color: #e5e5e5;
+}
+
+.vertical {
+  margin: 9px 0;
+  height: 100%;
+  width: 1px;
+}
+
+.horizontal {
+  margin: 0 9px;
+  height: 1px;
+  width: 100%;
+}

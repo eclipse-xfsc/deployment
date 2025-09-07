@@ -1,0 +1,31 @@
+@import '../../scss/main.scss';
+@import '../../../node_modules/bootstrap/scss/mixins';
+@import '../../../node_modules/bootstrap/scss/functions';
+@import '../../../node_modules/bootstrap/scss/variables';
+
+.benefits {
+  margin-top: 4rem;
+  background-color: $white;
+  border-radius: 8px;
+
+  display: flex;
+  flex-wrap: wrap;
+
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  
+  .card {
+    width: 336px;
+    border: none;
+
+    @include media-breakpoint-down(lg) {
+      width: 100%;
+    }
+
+    .title {
+      color: $primary;
+    }
+  }
+}

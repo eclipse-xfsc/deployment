@@ -1,0 +1,7 @@
+@import '../../scss/main.scss';
+
+.btn-search {
+  &:has(.search-input) {
+    padding: 4px 10px;
+  }
+}

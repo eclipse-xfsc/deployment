@@ -1,0 +1,67 @@
+$container-max-widths: (
+  sm: 100%,
+  md: 100%,
+  lg: 960px,
+  xl: 960px,
+  xxl: 960px,
+);
+
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px,
+);
+
+$primary: #000094;
+$secondary: #0c1b5a;
+$info: #ba00ff;
+$info-active: #c7c7c7;
+$dark: #2a2a2a;
+$grey: #e9eaea;
+$light-dark: #464646;
+$success: #13812d;
+$danger: #d40000;
+$light-grey: #9b9b9b;
+$medium-light-grey: #f2f2f2;
+$very-light-grey: #ededed;
+$dark-blue: #0c1b5a;
+$white: #ffffff;
+
+$table-bg: $grey;
+$table-border-color: #707070;
+
+$line-margin: -0.5rem;
+$grid-gutter-width: 2rem;
+$nav-link-color: $primary;
+$nav-link-disabled-color: $primary;
+$nav-link-hover-color: $primary;
+$nav-light-link-color: $primary;
+$nav-light-link-disabled-color: $primary;
+$nav-light-link-hover-color: $primary;
+$navbar-nav-link-padding-x: 16px;
+$navbar-light-active-color: $primary;
+$navbar-color: $primary;
+$navbar-light-color: $primary;
+$navbar-light-hover-color: $primary;
+$dropdown-color: $primary;
+$dropdown-link-color: $primary;
+
+$offcanvas-horizontal-width: 300px;
+$modal-footer-bg: $grey;
+
+$font-xxl-bold: normal normal 600 26px/37px Titillium Web;
+
+$font-medium-bold: normal normal 600 20px/31px Titillium Web;
+$font-medium-normal: normal normal normal 20px/31px Titillium Web;
+$font-midsmall-bold: normal normal 600 19px/29px Titillium Web;
+$font-midsmall-normal: normal normal normal 19px/29px Titillium Web;
+$font-small-normal: normal normal normal 18px/27px Titillium Web;
+$font-small-bold: normal normal 600 18px/27px Titillium Web;
+$font-xxs-normal: normal normal normal 16px/23px Titillium Web;
+$font-xxs-bold: normal normal 600 16px/23px Titillium Web;
+
+$font-xxxs-normal: normal normal normal 14px/21px Titillium Web;
+$font-xxxxs-normal: normal normal normal 12px/19px Titillium Web;

@@ -1,0 +1,56 @@
+@import '../../scss/main.scss';
+@import '../../../node_modules/bootstrap/scss/mixins';
+@import '../../../node_modules/bootstrap/scss/functions';
+@import '../../../node_modules/bootstrap/scss/variables';
+
+.logo-wrapper {
+  position: absolute;
+  margin-left: 1rem;
+  padding: 2rem;
+  z-index: 11 !important;
+  background-color: $white;
+  box-shadow: 0px 3px 6px #00000054;
+
+  @include media-breakpoint-down(md) {
+    display: none;
+  }
+
+  @include media-breakpoint-down(xl) {
+    margin-left: 0;
+  }
+}
+
+.gaia-logo {
+  object-fit: contain;
+  cursor: pointer;
+
+  @include media-breakpoint-down(xl) {
+    width: 138px;
+  }
+
+  @include media-breakpoint-down(lg) {
+    width: 90px;
+  }
+}
+
+.header {
+  display: flex;
+  height: 70px;
+}
+
+.navigation {
+  margin-left: 30%;
+}
+
+.account-icon {
+  color: $black !important;
+  width: 22px;
+}
+
+.account-icon-wrapper {
+  span {
+    color: $black !important;
+    font-weight: 500;
+  }
+}
+

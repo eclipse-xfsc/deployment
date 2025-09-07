@@ -1,0 +1,26 @@
+@import '../../../node_modules/bootstrap/scss/mixins';
+@import '../../../node_modules/bootstrap/scss/functions';
+@import '../../../node_modules/bootstrap/scss/variables';
+@import '../_variables';
+
+.modal-body {
+  background-color: $grey;
+  border-bottom: 2px solid #ffffff;
+}
+.modal-footer {
+  border-radius: 0;
+}
+
+.modal-content {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.modal-header,
+.modal-body,
+.modal-footer {
+  @include media-breakpoint-down(sm) {
+    padding-left: calc(0.5 * var(--bs-modal-padding));
+    padding-right: calc(0.5 * var(--bs-modal-padding));
+  }
+}

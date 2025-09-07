@@ -1,0 +1,17 @@
+@import '../variables.scss';
+@import '../../../node_modules/bootstrap/scss/mixins';
+@import '../../../node_modules/bootstrap/scss/functions';
+@import '../../../node_modules/bootstrap/scss/variables';
+
+.navbar-expand-md .navbar-nav .nav-link {
+  padding-right: 0;
+  padding-left: 16px;
+  @include media-breakpoint-up(xl) {
+    padding-left: 32px;
+  }
+}
+
+// remove color transition because pseudo content can not transit
+.nav-link {
+  transition: none;
+}

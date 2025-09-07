@@ -1,0 +1,73 @@
+@import '../../scss/main.scss';
+
+.selection-wrapper {
+  overflow-x: auto;
+}
+
+.cards-container {
+  max-width: 50%;
+  max-height: 82vh;
+  min-width: 420px;
+}
+
+.tabs {
+  flex-wrap: nowrap;
+  overflow-y: auto;
+}
+
+.selection-container {
+  width: 30vw;
+  min-width: 400px;
+  height: 82vh;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.selection-box {
+  border: 4px dotted $primary;
+  height: 100%;
+  border-radius: 1rem;
+  display: flex;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  &.is-over {
+    border: 8px solid $primary;
+  }
+
+  &:hover {
+    border: 8px solid $primary;
+  }
+
+  .empty-presentation {
+    align-self: center;
+    max-width: 84%;
+    text-align: center;
+  }
+
+  &:has(.presentation-box) > .empty-presentation {
+    display: none;
+  }
+}
+
+.add-presentation-container {
+  height: 84vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  .presentation-box {
+    text-align: center;
+  }
+}
+
+.presentation-box {
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
