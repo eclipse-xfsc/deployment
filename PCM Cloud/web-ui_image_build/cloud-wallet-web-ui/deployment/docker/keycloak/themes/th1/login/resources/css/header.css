@@ -1,0 +1,27 @@
+.custom-header {
+    width: 100%;
+    height: 132px;
+    background-color: white;
+    text-align: left;
+}
+@media (max-width: 1200px) {
+    .custom-header {
+        height: 92px;
+    }
+}
+.login-pf-page {
+    padding-top: 0;
+    flex: 1;
+}
+
+.gaia-logo {
+    margin: 1rem;
+    object-fit: contain;
+    cursor: pointer;
+
+}
+@media (max-width: 1200px) {
+    .gaia-logo {
+        width: 138px;
+    }
+}

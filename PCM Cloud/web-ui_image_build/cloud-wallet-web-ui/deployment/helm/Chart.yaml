@@ -1,0 +1,4 @@
+apiVersion: v2
+name: web-ui
+description: A Helm chart for deploying a web UI application
+version: 0.1.0

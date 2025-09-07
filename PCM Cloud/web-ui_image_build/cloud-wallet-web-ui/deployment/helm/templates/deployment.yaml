@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web-ui-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-app
+  template:
+    metadata:
+      labels:
+        app: frontend-app
+    spec:
+      containers:
+        - name: frontend-container
+          image: "{{ .Values.frontendContainer.image }}:{{ .Values.frontendContainer.tag }}"
+          imagePullPolicy: {{ .Values.frontendContainer.imagePullPolicy }} # Set the imagePullPolicy here
+          ports:
+            - containerPort: {{ .Values.frontendContainer.port }}
