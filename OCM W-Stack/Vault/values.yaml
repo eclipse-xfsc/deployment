@@ -3,20 +3,11 @@ vault:
     enabled: true
   server:
     enabled: true
-    # Setzen des Dev-Mode-Parameters
     dev: 
       enabled: true
-
-      devRootToken: "test"
-
-    # Setzen des Dev-Token (optional)
-    # beachte: Das Dev-Token wird normalerweise vom Vault bei Dev-Start generiert
-    # daher ist es nicht notwendig, dies hier anzugeben
-    devRootToken: "test"
-
-    # Weitere Optionen
+      devRootToken: root
     ha:
-      enabled: false  # Setze auf true, wenn du High Availability benötigst
+      enabled: false
     resources:
       requests:
         cpu: "100m"
@@ -31,4 +22,4 @@ vault:
       listener:
         tcp:
           address: "0.0.0.0:8200"
-          tls_disable: true  # TLS aktivieren, wenn notwendig
+          tls_disable: true
