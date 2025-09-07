@@ -1,0 +1,10 @@
+@import '../../../../scss/main.scss';
+
+.cards-container {
+  margin-top: 1rem;
+  gap: 2rem;
+  height: 82vh;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
