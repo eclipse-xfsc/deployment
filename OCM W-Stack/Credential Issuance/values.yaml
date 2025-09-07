@@ -1,8 +1,6 @@
 issuance-service:
-
   image:
     pullPolicy: Always
-
 
   ingress:
    enabled: true
@@ -11,7 +9,7 @@ issuance-service:
      cert-manager.io/cluster-issuer: letsencrypt-prod
      nginx.ingress.kubernetes.io/rewrite-target: /v1/tenants/tenant_space/credential
    hosts:
-     - host: cloud-wallet.xfsc.dev
+     - host: cloud-wallet.DOMAIN
        paths:
          - path: /api/issuance/credential
            port: 8080
@@ -19,14 +17,13 @@ issuance-service:
    tls:
      - secretName: xfsc-wildcard
        hosts:
-         - cloud-wallet.xfsc.dev
-
+         - cloud-wallet.DOMAIN
 
   config:
-    jwksUrl: https://auth-cloud-wallet.xfsc.dev/realms/master/protocol/openid-connect/certs
-    audience: https://cloud-wallet.xfsc.dev
+    jwksUrl: https://auth-cloud-wallet.DOMAIN/realms/master/protocol/openid-connect/certs
+    audience: https://cloud-wallet.DOMAIN
     nats:
-      url: nats://nats.nats.svc.cluster.local:4222
+      url: nats://nats.NAMESPACE.svc.cluster.local:4222
       timeoutInSec: 10
     logLevel: info
     servingPort: 8080
