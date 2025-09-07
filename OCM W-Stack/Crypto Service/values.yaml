@@ -1,4 +1,4 @@
-signer: #Sub Helm Chart Name
+signer:
   useConfigMap: false
   configMapName: my-configmap
   useSecretRef: false
