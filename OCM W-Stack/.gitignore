@@ -1,3 +1,4 @@
 */charts
 *.lock
 *.tgz
+*.bak
