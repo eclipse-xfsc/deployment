@@ -4,17 +4,51 @@ account-service:
     tag: main
  
   service:
+    host: cloud-wallet.DOMAIN
     port: 8080
+    serverMode: production
+    logLevel: info
 
   cors:
     active: true
     origins: "*"
-  config: 
-    keycloak:
-      realmName: cloudpcm
+  
+  config:
+    backupLinkTTL: 300s
+    nats:
+      withNats: true
+      url: nats.OCMNAMESPACE.svc.cluster.local:4222
+      queueGroup: account-service
+      timeoutInSec: 10s
+      keycloak:
+        realmName: master
+    didcomm:
+      url: http://didcomm-connector.OCMNAMESPACE.svc.cluster.local:9090
+    vault:
+      address: http://vault.OCMNAMESPACE.svc.cluster.local:8200
+      tokenName: vault
+      tokenKey: token
     db:
-      host: postgres-postgresql.postgres.svc.cluster.local
-      dbName: accounts 
-      user: accountservice 
-      passwordSecretName: account-db
-      passwordSecretKey: postgresql-password
+      host: postgres-postgresql.OCMNAMESPACE.svc.cluster.local
+      dbName: accounts
+      secretName: account-db
+      userkey: postgresql-username
+      passwordKey: postgresql-password
+    keycloak:
+      url: http://keycloak.OCMNAMESPACE.svc.cluster.local
+      realmName: master
+      tokenTTL: 300s
+      excludeEndpoints: /v1/tenants/:tenantId/api/accounts/credentials/backup/:id/:bid
+    storage:
+      url: http://storage-service.OCMNAMESPACE.svc.cluster.local:8080/v1/tenants/tenant_space/storage
+      withAuth: false
+    signer:
+      url: http://signer.OCMNAMESPACE.svc.cluster.local:8080
+    retrieval:
+      url: http://credential-retrieval-service.OCMNAMESPACE.svc.cluster.local:8080/v1/tenants/tenant_space
+      offeringTopic: offering
+    credentialVerifier:
+      url: http://credential-verification-service.OCMNAMESPACE.svc.cluster.local:8080/v1/tenants/tenant_space/internal
+
+    pluginDiscovery:
+      url: http://plugin-discovery-service-service.PCMNAMESPACE.svc.cluster.local:8080/v1/tenants/tenant_space
