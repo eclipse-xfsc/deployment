@@ -1,0 +1,30 @@
+# ArgoCD Application Definition
+source:
+  repoURL: "{{ .RepoURL }}"
+  path: "{{ .Path }}"
+  targetRevision: "{{ .TargetRevision }}"
+
+applications:
+  - name: apps-of-apps
+    namespace: argocd
+    enabled: true
+    k8sAPI: https://kubernetes.default.svc
+    project: my-project
+    sourcePath: "."
+    sourceRef: "main"
+    chartName: "my-name"
+    ignoreDifferences:
+      - group: admissionregistration.k8s.io
+        kind: ValidatingWebhookConfiguration
+        name: cert-manager-webhook
+        jsonPointers:
+          - /webhooks/0/namespaceSelector/matchExpressions/2
+    helmValues:
+      - my_chart/values.yaml # Include values from the Helm chart
+
+  - name: example-app
+    enabled: true
+    sourcePath: "."
+    helmValues:
+      - my_chart/values.yaml # Include values from the Helm chart
+      - my_chart/example-values.yaml # Include additional example-specific values

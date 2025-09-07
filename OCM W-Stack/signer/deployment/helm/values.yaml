@@ -1,0 +1,96 @@
+replicaCount: 2
+
+image:
+  repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io
+  name: tsa/signer
+  tag: branch-fix-did-doc-context
+  pullPolicy: Always
+useConfigMap: false
+configMapName: my-configmap
+useSecretRef: false
+secretRefName: my-secret
+podAnnotations: {}
+resources:
+  requests:
+    cpu: 150m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 70
+
+metrics:
+  enabled: true
+  port: 2112
+
+log:
+  level: "debug"
+  encoding: json
+
+security:
+  runAsNonRoot: false
+  runAsUid: 0
+  runAsGid: 0
+
+service:
+  port: 8080
+
+signer:
+  version: 0.26.0
+  http:
+    host: ""
+    port: 8080
+    timeout:
+      idle: 120s
+      read: 10s
+      write: 10s
+
+  vault:
+    addr: http://vault.NAMESPACE.svc.cluster.local:8200
+    secret: vault
+    enginePath: /opt/plugins/hashicorp-vault-provider.so
+    enabled: true
+  nats:
+    enabled: true
+    natsHost: nats://nats.NAMESPACE.svc.cluster.local:4222
+    topic: signer-topic
+  sdjwt:
+    url: http://sd-jwt-service.NAMESPACE.svc.cluster.local:3000
+
+ingress:
+  enabled: false
+istio:
+  injection:
+    pod: false
+
+env:
+  - name: SDJWT_SERVICE_URL
+    value: "http://sd-jwt-service.NAMESPACE.svc.cluster.local:3000"
+  - name: VAULT_ADRESS
+    value: "http://vault.NAMESPACE.svc.cluster.local:8200"
+  - name: ENGINE_PATH
+    value: "/opt/plugins/hashicorp-vault-provider.so"
+  - name: CLOUDEVENTPROVIDER_MESSAGING_NATS_URL
+    value: "nats://nats.NAMESPACE.svc.cluster.local:4222"
+  - name: NATS_HOST
+    value: "nats://nats.NAMESPACE.svc.cluster.local:4222"
+  - name: CLOUDEVENTPROVIDER_MESSAGING_PROTOCOL
+    value: "nats"
+  - name: NATS_TOPIC
+    value: "signer-topic"
+  - name: VAULT_ADDR
+    value: "https://vault.NAMESPACE.svc:8200"
+  - name: TRANSIT_MOUNT_PATH
+    value: "transit"
+  - name: TRANSIT_KEY_NAME
+    value: "SDJWTCredential"
+  - name: VAULT_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: "vault"
+        key: "token"

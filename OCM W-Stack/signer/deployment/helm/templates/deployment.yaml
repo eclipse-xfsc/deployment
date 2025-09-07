@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ template "app.name" . }}"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+    app.kubernetes.io/instance: {{ include "app.revision" . }}
+    app.kubernetes.io/part-of: rse
+    {{ include "app.istioLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "app.labels" . | nindent 8 }}
+      annotations:
+        {{- include "app.metricsAnnotations" . | nindent 8 }}
+        {{- if .Values.podAnnotations }}
+        {{ toYaml .Values.podAnnotations | indent 8 }}
+        {{- end }}
+    spec:
+      securityContext:
+          {{- include "app.securitycontext" . | nindent 8 }}
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
+      {{- end }}
+      containers:
+      - name: {{ template "app.name" . }}
+        image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ default .Chart.AppVersion .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+        {{- if .Values.useSecretRef }}
+        envFrom:
+          - secretRef:
+            name: {{ .Values.secretRefName }}
+        {{- else if .Values.useConfigMap }}
+        envFrom:
+          - configMapRef:
+              name: {{ .Values.configMapName }}
+        {{- else }}
+        env:
+          - name: VERSION
+            value: {{ .Values.signer.version}}
+          - name: LOG_LEVEL
+            value: {{ .Values.log.level | default "INFO" }}
+          - name: LOG_ENCODING
+            value: {{ .Values.log.encoding | default "json" }}
+          - name: HTTP_HOST
+            value: {{ .Values.signer.http.host | quote }}
+          - name: HTTP_PORT
+            value: {{ .Values.signer.http.port | quote }}
+          - name: HTTP_IDLE_TIMEOUT
+            value: {{ .Values.signer.http.timeout.idle | quote }}
+          - name: HTTP_READ_TIMEOUT
+            value: {{ .Values.signer.http.timeout.read | quote }}
+          - name: HTTP_WRITE_TIMEOUT
+            value: {{ .Values.signer.http.timeout.write | quote }}
+          - name: SDJWT_SERVICE_URL
+            value: {{ .Values.signer.sdjwt.url }}
+        {{- if .Values.signer.vault }} 
+          {{- if .Values.signer.vault.enabled }} 
+          - name: VAULT_ADRESS
+            value: {{ .Values.signer.vault.addr | quote }}
+          - name: ENGINE_PATH
+            {{- if .Values.signer.vault.enginePath }}
+            value: {{ .Values.signer.vault.enginePath | quote }}
+            {{- else }}
+            value: /opt/plugins/hashicorp-vault-provider.so
+            {{- end }}
+          {{- if .Values.signer.vault.secret }}
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.signer.vault.secret | quote }}
+                key: token
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.signer.local }} 
+          {{- if .Values.signer.local.enabled }} 
+          - name: ENGINE_PATH
+            value: /opt/plugins/hashicorp-vault-provider.so
+          {{- end }}
+          {{- end }}
+          {{- if .Values.signer.policy }}
+          {{- if .Values.signer.policy.serviceEndpointPolicy }}
+          - name: SERVICE_POLICY
+            value: {{ .Values.signer.policy.serviceEndpointPolicy | quote }}
+          {{- end }}
+          {{- if .Values.signer.policy.termsOfUsePolicy }}
+          - name: TERMSOFUSE_POLICY
+            value: {{ .Values.signer.policy.termsOfUsePolicy | quote }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.signer.nats }}
+          - name: CLOUDEVENTPROVIDER_MESSAGING_NATS_URL
+            value: {{ .Values.signer.nats.natsHost | quote }}
+          - name: NATS_HOST
+            value: {{ .Values.signer.nats.natsHost | quote }}
+          - name: CLOUDEVENTPROVIDER_MESSAGING_PROTOCOL
+            value: "nats"
+          - name: NATS_TOPIC
+            value: {{ .Values.signer.nats.topic }}
+          {{- end }}
+          {{- if .Values.secretEnv }}
+          {{- range $key, $value := .Values.secretEnv }}
+          - name: "{{ $key }}"
+            valueFrom:
+              secretRef:
+                name: "{{ $value.name }}"
+          {{- end }}
+          {{- end }}
+          {{- if .Values.extraVars }}
+          {{ toYaml .Values.extraVars | indent 8 }}
+          {{- end }}
+        {{- end }}
+        ports:
+        {{- if .Values.metrics.enabled }}
+          - name: monitoring
+            containerPort: {{ .Values.metrics.port }}
+        {{- end }}
+          - name: http
+            containerPort: {{ .Values.signer.http.port }}
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: {{ .Values.signer.http.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 2
+          failureThreshold: 2
+          timeoutSeconds: 5
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
