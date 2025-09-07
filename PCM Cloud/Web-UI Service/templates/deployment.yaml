@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web-ui-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-app
+  template:
+    metadata:
+      labels:
+        app: frontend-app
+    spec:
+      {{- if .Values.frontendContainer.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.frontendContainer.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: frontend-container
+          image: "{{ .Values.frontendContainer.image }}:{{ .Values.frontendContainer.tag }}"
+          imagePullPolicy: {{ .Values.frontendContainer.imagePullPolicy }}   
+          ports:
+            - containerPort: {{ .Values.frontendContainer.port }}
+          env:
+            {{- range $k, $v := .Values.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
