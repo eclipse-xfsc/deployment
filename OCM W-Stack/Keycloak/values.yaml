@@ -1,201 +1,59 @@
 keycloak:
-  ## @section Keycloak parameters
   auth:
-    ## @param auth.adminUser Keycloak administrator user
-    ##
-    adminUser: admin
-    ## @param auth.existingSecret Existing secret containing Keycloak admin password
-    ##
     existingSecret: keycloak-init-secrets
-    ## @param auth.passwordSecretKey Key where the Keycloak admin password is being stored inside the existing secret.
-    ##
-    passwordSecretKey: ""
-    ## @param auth.annotations Additional custom annotations for Keycloak auth secret object
-    ##
+    passwordSecretKey: "password"
     annotations: {}
   extraVolumes:
     - name: xfsc-themes
       emptyDir: { }
-
   extraVolumeMounts:
     - mountPath: /opt/bitnami/keycloak/themes
       name: xfsc-themes
       subPath: themes
-
-  initContainers:
-    - name: xfsc-themes
-      image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/dev-ops/keycloak:main
-      imagePullPolicy: IfNotPresent
-      securityContext:
-        runAsUser: 1001
-      command: [ "/bin/bash","-c" ]
-      args:
-        - |
-          echo "Copying theme..."
-          cp -R /opt/keycloak/themes /opt/bitnami/keycloak/themes
-          echo "Finished copying themes."
-      volumeMounts:
-        - mountPath: /opt/bitnami/keycloak
-          name: xfsc-themes
-
-  ## @param replicaCount Number of Keycloak replicas to deploy
-  ##
   replicaCount: 1
-  ## @param extraEnvVars Extra environment variables to be set on Keycloak container
-  ## Example:
-  ## extraEnvVars:
-  ##   - name: FOO
-  ##     value: "bar"
-  ##
   extraEnvVars:
     - name: KC_HOSTNAME_URL
-      value: https://auth-cloud-wallet.xfsc.dev
+      value: https://auth-cloud-wallet.DOMAIN
     - name: KC_HOSTNAME_ADMIN_URL
-      value: https://auth-cloud-wallet.xfsc.dev
-  ## @param containerPorts.http Keycloak HTTP container port
-  ## @param containerPorts.https Keycloak HTTPS container port
-  ## @param containerPorts.infinispan Keycloak infinispan container port
-  ##
+      value: https://auth-cloud-wallet.DOMAIN
   containerPorts:
     http: 8080
     https: 8443
     infinispan: 7800
-
   tls:
     enabled: true
     usePem: true
     existingSecret: xfsc-wildcard
-
   ingress:
-    ## @param ingress.enabled Enable ingress record generation for Keycloak
-    ##
     enabled: true
-    ## @param ingress.ingressClassName IngressClass that will be be used to implement the Ingress (Kubernetes 1.18+)
-    ## This is supported in Kubernetes 1.18+ and required if you have more than one IngressClass marked as the default for your cluster .
-    ## ref: https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/
-    ##
     ingressClassName: nginx
-    ## @param ingress.pathType Ingress path type
-    ##
     pathType: ImplementationSpecific
-    ## @param ingress.apiVersion Force Ingress API version (automatically detected if not set)
-    ##
     apiVersion: ""
-    ## @param ingress.hostname Default host for the ingress record (evaluated as template)
-    ##
-    hostname: auth-cloud-wallet.xfsc.dev
-    ## @param ingress.path [string] Default path for the ingress record (evaluated as template)
-    ##
+    hostname: auth-cloud-wallet.DOMAIN
     path: "{{ .Values.httpRelativePath }}"
-    ## @param ingress.servicePort Backend service port to use
-    ## Default is http. Alternative is https.
-    ##
     servicePort: http
-    ## @param ingress.annotations [object] Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.
-    ## Use this parameter to set the required annotations for cert-manager, see
-    ## ref: https://cert-manager.io/docs/usage/ingress/#supported-annotations
-    ## e.g:
-    ## annotations:
-    ##   kubernetes.io/ingress.class: nginx
-    ##   cert-manager.io/cluster-issuer: cluster-issuer-name
-    ##
     annotations:
       nginx.ingress.kubernetes.io/ssl-redirect: "false"
       nginx.ingress.kubernetes.io/configuration-snippet: |
         proxy_set_header X-Forwarded-For $host;       
         proxy_set_header X-Forwarded-Proto $scheme;       
         proxy_set_header Upgrade $http_upgrade;       
-        proxy_set_header Connection ‘upgrade’;       
+        proxy_set_header Connection 'upgrade';       
         proxy_set_header Host $host;
       nginx.ingress.kubernetes.io/proxy-buffer-size: 256k
       nginx.ingress.kubernetes.io/proxy-buffers-number: '4'
       cert-manager.io/cluster-issuer: letsencrypt-prod
-    ## @param ingress.labels Additional labels for the Ingress resource.
-    ## e.g:
-    ## labels:
-    ##   app: keycloak
-    ##
     labels: { }
-    ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.hostname` parameter
-    ## TLS certificates will be retrieved from a TLS secret with name: `{{- printf "%s-tls" (tpl .Values.ingress.hostname .) }}`
-    ## You can:
-    ##   - Use the `ingress.secrets` parameter to create this TLS secret
-    ##   - Rely on cert-manager to create it by setting the corresponding annotations
-    ##   - Rely on Helm to create self-signed certificates by setting `ingress.selfSigned=true`
-    ##
     tls: false
-    ## @param ingress.selfSigned Create a TLS secret for this ingress record using self-signed certificates generated by Helm
-    ##
     selfSigned: false
-    ## @param ingress.extraHosts An array with additional hostname(s) to be covered with the ingress record
-    ## e.g:
-    ## extraHosts:
-    ##   - name: keycloak.local
-    ##     path: /
-    ##
     extraHosts: [ ]
-    ## @param ingress.extraPaths Any additional arbitrary paths that may need to be added to the ingress under the main host.
-    ## For example: The ALB ingress controller requires a special rule for handling SSL redirection.
-    ## extraPaths:
-    ## - path: /*
-    ##   backend:
-    ##     serviceName: ssl-redirect
-    ##     servicePort: use-annotation
-    ##
     extraPaths: [ ]
-    ## @param ingress.extraTls The tls configuration for additional hostnames to be covered with this ingress record.
-    ## see: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
-    ## extraTls:
-    ## - hosts:
-    ##     - keycloak.local
-    ##   secretName: keycloak.local-tls
-    ##
     extraTls:
       - hosts:
-          - auth-cloud-wallet.xfsc.dev
+          - auth-cloud-wallet.DOMAIN
         secretName: xfsc-wildcard
-    ## @param ingress.secrets If you're providing your own certificates, please use this to add the certificates as secrets
-    ## key and certificate should start with -----BEGIN CERTIFICATE----- or
-    ## -----BEGIN RSA PRIVATE KEY-----
-    ##
-    ## name should line up with a tlsSecret set further up
-    ## If you're using cert-manager, this is unneeded, as it will create the secret for you if it is not set
-    ##
-    ## It is also possible to create and manage the certificates outside of this helm chart
-    ## Please see README.md for more information
-    ## e.g:
-    ## - name: keycloak.local-tls
-    ##   key:
-    ##   certificate:
-    ##
     secrets: [ ]
-    ## @param ingress.extraRules Additional rules to be covered with this ingress record
-    ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
-    ## e.g:
-    ## extraRules:
-    ## - host: airflow.local
-    ##     http:
-    ##       path: /
-    ##       backend:
-    ##         service:
-    ##           name: airflow-svc
-    ##           port:
-    ##             name: http
-    ##
     extraRules: [ ]
-
-  ## @section Database parameters
-
-  ## PostgreSQL chart configuration
-  ## ref: https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
-  ## @param postgresql.enabled Switch to enable or disable the PostgreSQL helm chart
-  ## @param postgresql.auth.postgresPassword Password for the "postgres" admin user. Ignored if `auth.existingSecret` with key `postgres-password` is provided
-  ## @param postgresql.auth.username Name for a custom user to create
-  ## @param postgresql.auth.password Password for the custom user to create
-  ## @param postgresql.auth.database Name for a custom database to create
-  ## @param postgresql.auth.existingSecret Name of existing secret to use for PostgreSQL credentials
-  ## @param postgresql.architecture PostgreSQL architecture (`standalone` or `replication`)
-  ##
   postgresql:
     enabled: true
     auth:
