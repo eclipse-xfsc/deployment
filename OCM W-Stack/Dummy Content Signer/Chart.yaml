@@ -2,9 +2,9 @@ apiVersion: v2
 name: dummycontentsigner
 description: dummycontentsigner deployment
 type: application
-version: 1.0.0
+version: 1.0.3
 appVersion: "1.0.0"
 dependencies:
   - name: dummycontentsigner
-    version: 1.0.2-main
+    version: 1.0.3-latest
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
