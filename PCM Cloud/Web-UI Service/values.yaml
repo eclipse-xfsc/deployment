@@ -1,9 +1,28 @@
-web-ui:
-  service:
+service:
   type: ClusterIP
 
-  frontendContainer:
-    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm-cloud/web-ui
-    imagePullPolicy: Always
-    tag: main
-    port: 3000
+frontendContainer:
+  imagePullSecret: regcred
+  image: REGISTRY_REPO
+  tag: custom-webui
+  imagePullPolicy: Always
+  port: 3000
+
+env:
+  NEXT_PUBLIC_API_URL: "https://cloud-wallet.DOMAIN/api"
+  NEXT_PUBLIC_ENV_URL: "https://cloud-wallet.DOMAIN/"
+  NEXT_PUBLIC_API_URL_ACCOUNT_SERVICE: "https://cloud-wallet.DOMAIN/api/accounts"
+  NEXT_PUBLIC_API_URL_CONFIG_SERVICE: "https://cloud-wallet.DOMAIN/api/configuration"
+  KEYCLOAK_BASE_URL: "https://auth-cloud-wallet.DOMAIN"
+  KEYCLOAK_AUTH_URL: "https://auth-cloud-wallet.DOMAIN"
+  KEYCLOAK_REALM: "master"
+  KEYCLOAK_CLIENT_ID: "webui"
+
+ingress:
+  host: cloud-wallet.DOMAIN
+  tls:
+    secretName: xfsc-wildcard
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: web-ui-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required"
