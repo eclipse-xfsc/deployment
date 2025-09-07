@@ -11,4 +11,4 @@ plugin-discovery:
     origins: "*"
 
   kong:
-    host: kong-service-kong-admin.kong.svc.cluster.local:8001
+    host: kong-service-kong-admin.PCMNAMESPACE.svc.cluster.local:8001
