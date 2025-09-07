@@ -103,15 +103,6 @@ kubectl get svc -n <NAMESPACE>
 kubectl get ingress -n <NAMESPACE>
 ```
 
-Validate access via:  
-- **UI** → `https://ocm.DOMAIN`  
-- **API** → `https://api.ocm.DOMAIN/v1/health`  
-
-Confirm certificate validity:  
-```bash
-openssl s_client -connect ocm.DOMAIN:443 -servername ocm.DOMAIN
-```
-
 ## 6. Output
 If successful, deployment produces:  
 - A fully functional **OCM-W-Stack instance** accessible via `https://cloud-wallet.DOMAIN`.  
