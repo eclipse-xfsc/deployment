@@ -1,9 +1,4 @@
-apiVersion: v1
-appVersion: v1.0.0
-description: CPCM Web UI
-name: web-ui-service
-version: 1.0.1
-dependencies:
-  - name: web-ui
-    version: 0.1.0-main
-    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm-cloud
+apiVersion: v2
+name: web-ui
+description: A Helm chart for deploying a web UI application
+version: 0.2.1
