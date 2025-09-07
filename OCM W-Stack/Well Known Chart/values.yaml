@@ -8,7 +8,7 @@ well-known-service:
      cert-manager.io/cluster-issuer: letsencrypt-prod
      nginx.ingress.kubernetes.io/rewrite-target: /v1/tenants/tenant_space/.well-known/openid-credential-issuer
    hosts:
-     - host: cloud-wallet.xfsc.dev
+     - host: cloud-wallet.DOMAIN
        paths:
          - path: /.well-known/openid-credential-issuer
            pathtype: ImplementationSpecific
@@ -16,22 +16,22 @@ well-known-service:
    tls:
      - secretName: xfsc-wildcard
        hosts:
-         - cloud-wallet.xfsc.dev
+         - cloud-wallet.DOMAIN
   config:
     loglevel: DEBUG
     isdev: false
     postgres:
-      host: postgres-postgresql.postgres.svc.cluster.local       
+      host: postgres-postgresql.NAMESPACE.svc.cluster.local       
       port: 5432
       database: wellknown
-      user: wellknown   
+      user: postgres
       password: 
         key: postgresql-password
         name: wellknown-db-secret
       params: sslmode:disable
     nats:
-      url: nats.nats.svc.cluster.local:4222
+      url: nats.NAMESPACE.svc.cluster.local:4222
       queuegroup: wellknown
-    issuer: cloud-wallet.xfsc.dev
+    issuer: cloud-wallet.DOMAIN
     importer:
       broadcast:
