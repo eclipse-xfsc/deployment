@@ -3,12 +3,13 @@ kind: AppProject
 metadata:
   name: infra
   namespace: argocd
+  annotations:
+    "helm.sh/resource-policy": keep
 spec:
   sourceRepos:
     - 'https://github.com/eclipse-xfsc/deployment.git'
-
   destinations:
-    - namespace: 'infra'
+    - namespace: '*'
       server: '*'
 
   clusterResourceWhitelist:
