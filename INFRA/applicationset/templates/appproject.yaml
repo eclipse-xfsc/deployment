@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: infra
+  namespace: argocd
+spec:
+  sourceRepos:
+    - 'https://github.com/eclipse-xfsc/deployment.git'
+
+  destinations:
+    - namespace: 'infra'
+      server: '*'
+
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

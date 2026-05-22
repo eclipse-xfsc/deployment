@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: infra
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://github.com/eclipse-xfsc/deployment.git
+        revision: {{ .Values.tag }}
+        directories:
+          - path: INFRA/*
+  template:
+    metadata:
+      name: |
+          {{ "{{ .path.basename }}" }}
+    spec:
+      project: infra
+      source:
+        repoURL: https://github.com/eclipse-xfsc/deployment.git
+        targetRevision:  {{ .Values.tag }}
+        path: |
+          {{ "{{ .path.path }}" }}
+        helm:
+          valueFiles:
+            - values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: |
+          {{ "{{ .path.basename }}" }}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
