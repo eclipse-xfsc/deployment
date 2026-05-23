@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: infra
+  name: {{ .Values.name }}
   namespace: argocd
   annotations:
     "helm.sh/resource-policy": keep

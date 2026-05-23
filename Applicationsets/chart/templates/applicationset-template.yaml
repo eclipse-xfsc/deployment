@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: infra
+  name: {{ .Values.name }}
   namespace: argocd
 spec:
   goTemplate: true
@@ -10,12 +10,12 @@ spec:
         repoURL: https://github.com/eclipse-xfsc/deployment.git
         revision: {{ .Values.tag }}
         directories:
-          - path: INFRA/*
+          - path: {{ .Values.path }}
   template:
     metadata:
       name: '{{ "{{ .path.basename | trim }}" }}'
     spec:
-      project: infra
+      project: {{ .Values.name }}
       source:
         repoURL: https://github.com/eclipse-xfsc/deployment.git
         targetRevision:  {{ .Values.tag }}
