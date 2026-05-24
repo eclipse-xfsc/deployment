@@ -1,19 +1,23 @@
-auth:
-  existingSecret: minio-credentials
-mode: standalone
-persistence:
-  enabled: true
-  size: 10Gi
+minio:
+  auth:
+    existingSecret: minio-credentials
+  mode: standalone
+  persistence:
+    enabled: true
+    size: 10Gi
 
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
 
-service:
-  type: ClusterIP
-  port: 9000
+  statefulset:
+    replicaCount: 1
 
-consoleService:
-  type: ClusterIP
-  port: 9001
+  service:
+    type: ClusterIP
+    port: 9000
+
+  consoleService:
+    type: ClusterIP
+    port: 9001
