@@ -1,0 +1,194 @@
+# values.yaml
+promtail:
+  enabled: true
+  config:
+    clients:
+      - url: http://observability-loki.observability.svc.cluster.local:3100/loki/api/v1/push
+
+otelcollector:
+  enabled: true
+  mode: deployment
+  image:
+    repository: otel/opentelemetry-collector-contrib
+
+  service:
+    enabled: true
+
+  ports:
+    otlp:
+      enabled: true
+      containerPort: 4317
+      servicePort: 4317
+      protocol: TCP
+    otlp-http:
+      enabled: true
+      containerPort: 4318
+      servicePort: 4318
+      protocol: TCP
+    prometheus:
+      enabled: true
+      containerPort: 8889
+      servicePort: 8889
+      protocol: TCP
+
+  serviceMonitor:
+    enabled: true
+
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 512
+      batch: {}
+
+    exporters:
+      prometheus:
+        endpoint: 0.0.0.0:8889
+
+      otlp/tempo:
+        endpoint: observability-tempo.observability.svc.cluster.local:4317
+        tls:
+          insecure: true
+
+      otlp/jaeger:
+        endpoint: observability-jaeger.observability.svc.cluster.local:4317
+        tls:
+          insecure: true
+
+      debug:
+        verbosity: basic
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlp/tempo, otlp/jaeger, debug]
+
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [prometheus, debug]
+
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug]
+
+monitoring:
+  enabled: true
+
+  grafana:
+    enabled: true
+
+  alertmanager:
+    enabled: true
+
+  prometheus:
+    enabled: true
+    prometheusSpec:
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+
+loki:
+    enabled: true
+    gateway:
+       enabled: false
+    deploymentMode: SingleBinary
+
+    loki:
+
+      auth_enabled: false
+
+      commonConfig:
+
+        replication_factor: 1
+
+      schemaConfig:
+
+        configs:
+
+          - from: "2024-04-01"
+
+            store: tsdb
+
+            object_store: filesystem
+
+            schema: v13
+
+            index:
+
+              prefix: loki_index_
+
+              period: 24h
+
+      storage:
+
+        type: filesystem
+
+      storage_config:
+
+        filesystem:
+
+          directory: /var/loki/chunks
+
+    singleBinary:
+
+      replicas: 1
+
+      persistence:
+
+        enabled: true
+
+        size: 10Gi
+
+    read:
+
+      replicas: 0
+
+    write:
+
+      replicas: 0
+
+    backend:
+
+      replicas: 0
+
+tempo:
+  enabled: true
+
+  tempo:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+
+  service:
+    type: ClusterIP
+
+  persistence:
+    enabled: true
+    size: 10Gi
+
+jaeger:
+  enabled: true
+
+  allInOne:
+    enabled: true
+
+  storage:
+    type: memory
+
+alerts:
+  enabled: true
+  namespace: observability

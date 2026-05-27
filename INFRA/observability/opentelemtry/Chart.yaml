@@ -1,0 +1,44 @@
+# Chart.yaml
+apiVersion: v2
+name: observability
+description: Wrapper for OTel, Prometheus, Grafana, Alertmanager, Loki, Tempo and Jaeger
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: opentelemetry-collector
+    alias: otelcollector
+    version: ">=0.120.0"
+    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+    condition: otelcollector.enabled
+
+  - name: kube-prometheus-stack
+    alias: monitoring
+    version: ">=85.0.0"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: monitoring.enabled
+
+  - name: loki
+    alias: loki
+    version: ">=6.0.0"
+    repository: https://grafana.github.io/helm-charts
+    condition: loki.enabled
+
+  - name: tempo
+    alias: tempo
+    version: ">=1.10.0"
+    repository: https://grafana.github.io/helm-charts
+    condition: tempo.enabled
+
+  - name: jaeger
+    alias: jaeger
+    version: ">=4.8.0"
+    repository: https://jaegertracing.github.io/helm-charts
+    condition: jaeger.enabled
+
+  - name: promtail
+    alias: promtail
+    version: ">=6.16.0"
+    repository: https://grafana.github.io/helm-charts
+    condition: promtail.enabled

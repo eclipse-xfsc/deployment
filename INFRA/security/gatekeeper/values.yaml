@@ -1,0 +1,20 @@
+# values.yaml
+gatekeeper:
+  replicas: 1
+
+  audit:
+    replicas: 1
+
+  controllerManager:
+    exemptNamespaces:
+      - kube-system
+      - gatekeeper-system
+      - argocd
+      - kube-public
+      - kube-node-lease
+
+  validatingWebhookTimeoutSeconds: 3
+
+  postInstall:
+    labelNamespace:
+      enabled: false

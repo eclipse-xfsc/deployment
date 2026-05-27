@@ -1,0 +1,118 @@
+global:
+  kms:
+    type: transit
+    # manual | awskms | gcpckms | azurekeyvault | transit
+
+    createSecret: true
+
+    aws:
+      secretName: openbao-aws-kms
+      region: eu-central-1
+      kmsKeyId: alias/openbao-unseal
+      accessKeyId: ""
+      secretAccessKey: ""
+
+    gcp:
+      secretName: openbao-gcp-kms
+      project: ""
+      region: global
+      keyRing: openbao
+      cryptoKey: openbao-unseal
+      credentialsJson: ""
+
+    azure:
+      secretName: openbao-azure-kms
+      tenantId: ""
+      clientId: ""
+      clientSecret: ""
+      vaultName: ""
+      keyName: openbao-unseal
+
+    transit:
+      secretName: openbao-transit-token
+      address: http://openbao.sec.svc.cluster.local:8200
+      token: "s.KJMUOpUjvpb14MzusK5q69tU"
+      keyName: autounseal
+      mountPath: transit/
+
+openbao:
+  injector:
+    enabled: false
+
+  server:
+    authDelegator:
+      enabled: false
+    ha:
+      enabled: true
+      raft:
+        enabled: true
+        config: |
+          ui = true
+
+          listener "tcp" {
+            address = "[::]:8200"
+            cluster_address = "[::]:8201"
+            tls_disable = 1
+          }
+
+          storage "raft" {
+            path = "/openbao/data"
+          }
+
+          {{- if eq .Values.global.kms.type "awskms" }}
+          seal "awskms" {
+            region     = "{{ .Values.global.kms.aws.region }}"
+            kms_key_id = "{{ .Values.global.kms.aws.kmsKeyId }}"
+          }
+          {{- end }}
+
+          {{- if eq .Values.global.kms.type "gcpckms" }}
+          seal "gcpckms" {
+            project    = "{{ .Values.global.kms.gcp.project }}"
+            region     = "{{ .Values.global.kms.gcp.region }}"
+            key_ring   = "{{ .Values.global.kms.gcp.keyRing }}"
+            crypto_key = "{{ .Values.global.kms.gcp.cryptoKey }}"
+          }
+          {{- end }}
+
+          {{- if eq .Values.global.kms.type "azurekeyvault" }}
+          seal "azurekeyvault" {
+            tenant_id  = "{{ .Values.global.kms.azure.tenantId }}"
+            vault_name = "{{ .Values.global.kms.azure.vaultName }}"
+            key_name   = "{{ .Values.global.kms.azure.keyName }}"
+          }
+          {{- end }}
+
+          {{- if eq .Values.global.kms.type "transit" }}
+          seal "transit" {
+            address    = "{{ .Values.global.kms.transit.address }}"
+            key_name   = "{{ .Values.global.kms.transit.keyName }}"
+            mount_path = "{{ .Values.global.kms.transit.mountPath }}"
+          }
+          {{- end }}
+
+    # extraEnvironmentVars:
+    #   AWS_REGION: "{{ .Values.global.kms.aws.region }}"
+
+    extraSecretEnvironmentVars:
+    #   - envName: AWS_ACCESS_KEY_ID
+    #     secretName: openbao-aws-kms
+    #     secretKey: AWS_ACCESS_KEY_ID
+    #   - envName: AWS_SECRET_ACCESS_KEY
+    #     secretName: openbao-aws-kms
+    #     secretKey: AWS_SECRET_ACCESS_KEY
+    #   - envName: GOOGLE_APPLICATION_CREDENTIALS_JSON
+    #     secretName: openbao-gcp-kms
+    #     secretKey: GOOGLE_APPLICATION_CREDENTIALS_JSON
+    #   - envName: AZURE_CLIENT_ID
+    #     secretName: openbao-azure-kms
+    #     secretKey: AZURE_CLIENT_ID
+    #   - envName: AZURE_CLIENT_SECRET
+    #     secretName: openbao-azure-kms
+    #     secretKey: AZURE_CLIENT_SECRET
+    #   - envName: AZURE_TENANT_ID
+    #     secretName: openbao-azure-kms
+    #     secretKey: AZURE_TENANT_ID
+        - envName: BAO_TOKEN
+          secretName: openbao-transit-token
+          secretKey: token
