@@ -1,0 +1,60 @@
+{{ $name := .Release.Name }}
+{{ $ns := .Release.Namespace }}
+
+{{ $otelHttp := printf "http://%s-otelcollector.%s.svc.cluster.local:4318" $name $ns }}
+{{ $otelGrpc := printf "%s-otelcollector.%s.svc.cluster.local:4317" $name $ns }}
+{{ $tempoGrpc := printf "%s-tempo.%s.svc.cluster.local:4317" $name $ns }}
+{{ $jaegerGrpc := printf "%s-jaeger.%s.svc.cluster.local:4317" $name $ns }}
+{{ $lokiPush := printf "http://%s-loki.%s.svc.cluster.local:3100/loki/api/v1/push" $name $ns }}
+{{ $prometheus := printf "http://%s-monitoring-kube-prometheus-prometheus.%s.svc.cluster.local:9090" $name $ns }}
+
+apiVersion: observability.xsfc.io/v1alpha1
+kind: TelemetryConfig
+metadata:
+  name: default
+  namespace: {{ $ns }}
+spec:
+  tracing:
+    enabled: {{ and .Values.otelcollector.enabled (or .Values.tempo.enabled .Values.jaeger.enabled) }}
+    protocol: otlp-http
+    endpoint: {{ $otelHttp | quote }}
+    grpcEndpoint: {{ $otelGrpc | quote }}
+    port: 4318
+    insecure: true
+    backend: otel-collector
+
+    tempo:
+      enabled: {{ .Values.tempo.enabled }}
+      endpoint: {{ $tempoGrpc | quote }}
+
+    jaeger:
+      enabled: {{ .Values.jaeger.enabled }}
+      endpoint: {{ $jaegerGrpc | quote }}
+
+  metrics:
+    enabled: {{ and .Values.otelcollector.enabled .Values.monitoring.enabled .Values.monitoring.prometheus.enabled }}
+    protocol: otlp-http
+    endpoint: {{ $otelHttp | quote }}
+    grpcEndpoint: {{ $otelGrpc | quote }}
+    port: 4318
+    backend: otel-collector
+
+    prometheus:
+      enabled: {{ and .Values.monitoring.enabled .Values.monitoring.prometheus.enabled }}
+      endpoint: {{ $prometheus | quote }}
+      scrapePort: 8889
+      scrapePath: /metrics
+
+  logging:
+    enabled: {{ and .Values.promtail.enabled .Values.loki.enabled }}
+    protocol: stdout
+    endpoint: ""
+    port: 0
+    backend: loki
+
+    loki:
+      enabled: {{ .Values.loki.enabled }}
+      endpoint: {{ $lokiPush | quote }}
+
+    promtail:
+      enabled: {{ .Values.promtail.enabled }}

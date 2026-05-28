@@ -1,0 +1,166 @@
+# crds/telemetryconfig.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: telemetryconfigs.observability.xsfc.io
+spec:
+  group: observability.xsfc.io
+  scope: Namespaced
+  names:
+    plural: telemetryconfigs
+    singular: telemetryconfig
+    kind: TelemetryConfig
+    shortNames:
+      - tc
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - name: Tracing
+          type: string
+          jsonPath: .spec.tracing.endpoint
+        - name: Metrics
+          type: string
+          jsonPath: .spec.metrics.endpoint
+        - name: Logging
+          type: string
+          jsonPath: .spec.logging.protocol
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - tracing
+                - metrics
+                - logging
+              properties:
+                tracing:
+                  type: object
+                  required:
+                    - enabled
+                    - protocol
+                    - endpoint
+                  properties:
+                    enabled:
+                      type: boolean
+                    protocol:
+                      type: string
+                      enum:
+                        - otlp-grpc
+                        - otlp-http
+                    endpoint:
+                      type: string
+                    grpcEndpoint:
+                      type: string
+                    port:
+                      type: integer
+                    insecure:
+                      type: boolean
+                    backend:
+                      type: string
+                      enum:
+                        - tempo
+                        - jaeger
+                        - otel-collector
+                        - none
+                    tempo:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        endpoint:
+                          type: string
+                    jaeger:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        endpoint:
+                          type: string
+
+                metrics:
+                  type: object
+                  required:
+                    - enabled
+                    - protocol
+                    - endpoint
+                  properties:
+                    enabled:
+                      type: boolean
+                    protocol:
+                      type: string
+                      enum:
+                        - otlp-grpc
+                        - otlp-http
+                        - prometheus
+                    endpoint:
+                      type: string
+                    grpcEndpoint:
+                      type: string
+                    port:
+                      type: integer
+                    path:
+                      type: string
+                    scrape:
+                      type: boolean
+                    backend:
+                      type: string
+                      enum:
+                        - prometheus
+                        - otel-collector
+                        - none
+                    prometheus:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        endpoint:
+                          type: string
+                        scrapePort:
+                          type: integer
+                        scrapePath:
+                          type: string
+
+                logging:
+                  type: object
+                  required:
+                    - enabled
+                    - protocol
+                  properties:
+                    enabled:
+                      type: boolean
+                    protocol:
+                      type: string
+                      enum:
+                        - stdout
+                        - otlp-grpc
+                        - otlp-http
+                        - promtail
+                        - fluentbit
+                    endpoint:
+                      type: string
+                    port:
+                      type: integer
+                    backend:
+                      type: string
+                      enum:
+                        - loki
+                        - otel-collector
+                        - none
+                    loki:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        endpoint:
+                          type: string
+                    promtail:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean

@@ -1,3 +1,19 @@
 cert-manager:
+  enabled: true
   namespace: cert-manager
   installCRDs: true
+
+serviceMonitor:
+  enabled: true
+  namespace: observability
+  interval: 30s
+  labels:
+    release: observability
+
+prometheusRule:
+  enabled: true
+  namespace: observability
+  expiringSoonSeconds: 604800
+  for: 1h
+  labels:
+    release: observability

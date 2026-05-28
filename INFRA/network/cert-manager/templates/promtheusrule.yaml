@@ -1,0 +1,44 @@
+# templates/prometheusrule.yaml
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-cert-manager-alerts
+  namespace: {{ .Values.prometheusRule.namespace | default .Release.Namespace }}
+  labels:
+    {{- with .Values.prometheusRule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: cert-manager.rules
+      rules:
+        - alert: CertManagerCertificateExpiringSoon
+          expr: |
+            certmanager_certificate_expiration_timestamp_seconds - time() < {{ .Values.prometheusRule.expiringSoonSeconds | default 604800 }}
+          for: {{ .Values.prometheusRule.for | default "1h" }}
+          labels:
+            severity: warning
+          annotations:
+            summary: Certificate expires soon
+            description: Certificate {{ "{{ $labels.name }}" }} in namespace {{ "{{ $labels.namespace }}" }} expires soon.
+
+        - alert: CertManagerCertificateExpired
+          expr: |
+            certmanager_certificate_expiration_timestamp_seconds - time() <= 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Certificate expired
+            description: Certificate {{ "{{ $labels.name }}" }} in namespace {{ "{{ $labels.namespace }}" }} has expired.
+
+        - alert: CertManagerControllerDown
+          expr: |
+            up{job=~".*cert-manager.*"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: cert-manager controller is down
+{{- end }}

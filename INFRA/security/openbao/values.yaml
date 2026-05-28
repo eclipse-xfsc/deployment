@@ -31,7 +31,7 @@ global:
     transit:
       secretName: openbao-transit-token
       address: http://openbao.sec.svc.cluster.local:8200
-      token: "s.KJMUOpUjvpb14MzusK5q69tU"
+      token: ""
       keyName: autounseal
       mountPath: transit/
 

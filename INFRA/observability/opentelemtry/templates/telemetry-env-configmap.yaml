@@ -1,0 +1,29 @@
+# templates/telemetry-env-configmap.yaml
+{{ $name := .Release.Name }}
+{{ $ns := .Release.Namespace }}
+{{ $otelHttp := printf "http://%s-otelcollector.%s.svc.cluster.local:4318" $name $ns }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telemetry-env
+  namespace: {{ $ns }}
+  labels:
+    type.xsfc.io: telemetry
+    app.kubernetes.io/component: telemetry
+data:
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ $otelHttp | quote }}
+  OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: {{ printf "%s/v1/traces" $otelHttp | quote }}
+  OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: {{ printf "%s/v1/metrics" $otelHttp | quote }}
+  OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: {{ printf "%s/v1/logs" $otelHttp | quote }}
+
+  OTEL_TRACES_EXPORTER: {{ ternary "otlp" "none" .Values.otelcollector.enabled | quote }}
+  OTEL_METRICS_EXPORTER: {{ ternary "otlp" "none" .Values.otelcollector.enabled | quote }}
+  OTEL_LOGS_EXPORTER: "none"
+
+  OTEL_SERVICE_NAME: "telemtry.xfsc.io"
+  OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=kubernetes,k8s.namespace.name={{ $ns }}"
+
+  OTEL_PROPAGATORS: "tracecontext,baggage"
