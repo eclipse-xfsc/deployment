@@ -32,7 +32,7 @@ spec:
       endpoint: {{ $jaegerGrpc | quote }}
 
   metrics:
-    enabled: {{ and .Values.otelcollector.enabled .Values.monitoring.enabled .Values.monitoring.prometheus.enabled }}
+    enabled: {{ and .Values.otelcollector.enabled .Values.monitoring.enabled .Values.monitoring.prometheus.enabled | default true }}
     protocol: otlp-http
     endpoint: {{ $otelHttp | quote }}
     grpcEndpoint: {{ $otelGrpc | quote }}

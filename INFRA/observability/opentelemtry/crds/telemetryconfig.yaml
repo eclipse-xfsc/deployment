@@ -6,6 +6,8 @@ metadata:
 spec:
   group: observability.xsfc.io
   scope: Namespaced
+  metrics:
+      enabled: true
   names:
     plural: telemetryconfigs
     singular: telemetryconfig

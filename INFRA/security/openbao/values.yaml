@@ -1,6 +1,6 @@
 global:
   kms:
-    type: transit
+    type: manual
     # manual | awskms | gcpckms | azurekeyvault | transit
 
     createSecret: true
@@ -35,6 +35,13 @@ global:
       keyName: autounseal
       mountPath: transit/
 
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  port: http
+  labels:
+    release: observability
+
 openbao:
   injector:
     enabled: false
@@ -57,6 +64,14 @@ openbao:
 
           storage "raft" {
             path = "/openbao/data"
+          }
+
+          telemetry {
+
+            prometheus_retention_time = "30s"
+
+            disable_hostname = true
+
           }
 
           {{- if eq .Values.global.kms.type "awskms" }}
@@ -113,6 +128,6 @@ openbao:
     #   - envName: AZURE_TENANT_ID
     #     secretName: openbao-azure-kms
     #     secretKey: AZURE_TENANT_ID
-        - envName: BAO_TOKEN
-          secretName: openbao-transit-token
-          secretKey: token
+    # - envName: BAO_TOKEN
+    #   secretName: openbao-transit-token
+    #   secretKey: token

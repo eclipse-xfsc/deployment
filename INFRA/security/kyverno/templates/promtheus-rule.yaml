@@ -1,0 +1,72 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-kyverno-rules
+  namespace: {{ .Values.serviceMonitor.namespace | default .Release.Namespace }}
+  labels:
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: kyverno.rules
+      rules:
+        - alert: KyvernoDown
+          expr: absent(up{job=~".*kyverno.*"} == 1)
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Kyverno metrics are missing
+            description: No Kyverno metrics target is currently up.
+
+        - alert: KyvernoAdmissionHighLatency
+          expr: |
+            histogram_quantile(
+              0.99,
+              sum(rate(kyverno_admission_review_duration_seconds_bucket[5m])) by (le)
+            ) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Kyverno admission p99 latency is high
+            description: Kyverno admission p99 latency is above 1s.
+
+        - alert: KyvernoAdmissionCriticalLatency
+          expr: |
+            histogram_quantile(
+              0.99,
+              sum(rate(kyverno_admission_review_duration_seconds_bucket[5m])) by (le)
+            ) > 5
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Kyverno admission p99 latency is critical
+            description: Kyverno admission p99 latency is above 5s.
+
+        - alert: KyvernoAdmissionRequestErrors
+          expr: |
+            sum(rate(kyverno_admission_requests_total{request_allowed="false"}[5m])) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Kyverno is rejecting admission requests
+            description: Kyverno rejected admission requests in the last 5 minutes.
+
+        - alert: KyvernoPolicyExecutionHighLatency
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum(rate(kyverno_policy_execution_duration_seconds_bucket[5m])) by (le, policy_name)
+            ) > 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Kyverno policy execution latency is high
+            description: Policy {{ "{{" }} $labels.policy_name {{ "}}" }} has p95 execution latency above 1s.
+{{- end }}

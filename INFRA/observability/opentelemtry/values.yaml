@@ -85,21 +85,61 @@ otelcollector:
           exporters: [debug]
 
 monitoring:
-  enabled: true
-
   grafana:
     enabled: true
 
-  alertmanager:
-    enabled: true
+    sidecar:
+      datasources:
+        enabled: true
+        label: grafana_datasource
+        labelValue: "1"
 
-  prometheus:
-    enabled: true
-    prometheusSpec:
-      serviceMonitorSelectorNilUsesHelmValues: false
-      podMonitorSelectorNilUsesHelmValues: false
-      ruleSelectorNilUsesHelmValues: false
+    additionalDataSources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://observability-monitoring-prometheus.observability.svc.cluster.local:9090
+        isDefault: true
+        editable: true
 
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://observability-loki.observability.svc.cluster.local:3100
+        editable: true
+
+      - name: Tempo
+        uid: tempo
+        type: tempo
+        access: proxy
+        url: http://observability-tempo.observability.svc.cluster.local:3200
+        editable: true
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: loki
+          tracesToMetrics:
+            datasourceUid: prometheus
+          serviceMap:
+            datasourceUid: prometheus
+
+      - name: Alertmanager
+        uid: alertmanager
+        type: alertmanager
+        access: proxy
+        url: http://observability-monitoring-alertmanager.observability.svc.cluster.local:9093
+        editable: true
+        jsonData:
+          implementation: prometheus
+
+      - name: Jaeger
+        uid: jaeger
+        type: jaeger
+        access: proxy
+        url: http://observability-jaeger-query.observability.svc.cluster.local:16686
+        editable: true
+        
 loki:
     enabled: true
     gateway:
