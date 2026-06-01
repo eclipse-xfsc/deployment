@@ -1,0 +1,194 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-bootstrap
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-bootstrap
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "20"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Release.Name }}-bootstrap
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ .Release.Name }}-bootstrap
+      containers:
+        - name: bootstrap
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              RELEASE_NAME="{{ .Release.Name }}"
+              NAMESPACE="{{ .Release.Namespace }}"
+
+              OPENBAO_POD="${RELEASE_NAME}-0"
+              OPENBAO_SERVICE="${RELEASE_NAME}"
+              OPENBAO_ADDR="http://${OPENBAO_SERVICE}.${NAMESPACE}.svc.cluster.local:8200"
+
+              OUTPUT_SECRET_NAME="${RELEASE_NAME}-vault"
+              POLICY_NAME="${RELEASE_NAME}-platform"
+              TOKEN_DISPLAY_NAME="${RELEASE_NAME}-platform"
+
+              SYSTEM_KV_PATH="system"
+              SYSTEM_SECRET_PATH="bootstrap/root"
+
+              echo "Waiting for OpenBao pod ${OPENBAO_POD} to exist..."
+              until kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" >/dev/null 2>&1; do
+                sleep 3
+              done
+
+              echo "Waiting for OpenBao pod ${OPENBAO_POD} to be Running..."
+              for i in $(seq 1 120); do
+                PHASE="$(kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" -o jsonpath='{.status.phase}' 2>/dev/null || true)"
+                if [ "$PHASE" = "Running" ]; then
+                  break
+                fi
+                echo "Current pod phase: ${PHASE:-unknown}"
+                sleep 3
+              done
+
+              if [ "$(kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" -o jsonpath='{.status.phase}')" != "Running" ]; then
+                echo "OpenBao pod did not reach Running phase."
+                exit 1
+              fi
+
+              echo "Waiting for OpenBao process / bao status..."
+              STATUS=""
+              for i in $(seq 1 120); do
+                set +e
+                STATUS="$(kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c 'BAO_ADDR=http://127.0.0.1:8200 bao status' 2>&1)"
+                RC=$?
+                set -e
+
+                echo "$STATUS"
+
+                if echo "$STATUS" | grep -q "Initialized"; then
+                  break
+                fi
+
+                sleep 3
+              done
+
+              if ! echo "$STATUS" | grep -q "Initialized"; then
+                echo "OpenBao process did not answer with a valid status."
+                exit 1
+              fi
+
+              echo "Checking OpenBao init status..."
+
+              if echo "$STATUS" | grep -q "Initialized.*true"; then
+                echo "OpenBao is already initialized. Checking output secret..."
+                if kubectl -n "$NAMESPACE" get secret "$OUTPUT_SECRET_NAME" >/dev/null 2>&1; then
+                  echo "Output secret ${OUTPUT_SECRET_NAME} already exists. Skipping."
+                  exit 0
+                fi
+
+                echo "OpenBao initialized but output secret missing."
+                echo "Cannot recreate non-root token without an existing admin/root token."
+                exit 1
+              fi
+
+              echo "Initializing OpenBao..."
+              INIT_OUTPUT="$(kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c 'BAO_ADDR=http://127.0.0.1:8200 bao operator init -key-shares=5 -key-threshold=3')"
+
+              UNSEAL_KEY_1="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 1/ {print $2}')"
+              UNSEAL_KEY_2="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 2/ {print $2}')"
+              UNSEAL_KEY_3="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 3/ {print $2}')"
+              UNSEAL_KEY_4="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 4/ {print $2}')"
+              UNSEAL_KEY_5="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 5/ {print $2}')"
+              ROOT_TOKEN="$(echo "$INIT_OUTPUT" | awk -F': ' '/Initial Root Token/ {print $2}')"
+
+              if [ -z "$ROOT_TOKEN" ] || [ -z "$UNSEAL_KEY_1" ] || [ -z "$UNSEAL_KEY_2" ] || [ -z "$UNSEAL_KEY_3" ]; then
+                echo "Failed to parse init output."
+                exit 1
+              fi
+
+              echo "Unsealing OpenBao..."
+              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "BAO_ADDR=http://127.0.0.1:8200 bao operator unseal '$UNSEAL_KEY_1' >/dev/null"
+              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "BAO_ADDR=http://127.0.0.1:8200 bao operator unseal '$UNSEAL_KEY_2' >/dev/null"
+              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "BAO_ADDR=http://127.0.0.1:8200 bao operator unseal '$UNSEAL_KEY_3' >/dev/null"
+
+              echo "Enabling fixed system KV engine..."
+              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
+                export BAO_ADDR=http://127.0.0.1:8200
+                export BAO_TOKEN='$ROOT_TOKEN'
+                bao secrets enable -path='$SYSTEM_KV_PATH' kv-v2 >/dev/null 2>&1 || true
+              "
+
+              echo "Storing root token and unseal keys in system KV..."
+              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
+                export BAO_ADDR=http://127.0.0.1:8200
+                export BAO_TOKEN='$ROOT_TOKEN'
+                bao kv put '$SYSTEM_KV_PATH/$SYSTEM_SECRET_PATH' \
+                  root_token='$ROOT_TOKEN' \
+                  unseal_key_1='$UNSEAL_KEY_1' \
+                  unseal_key_2='$UNSEAL_KEY_2' \
+                  unseal_key_3='$UNSEAL_KEY_3' \
+                  unseal_key_4='$UNSEAL_KEY_4' \
+                  unseal_key_5='$UNSEAL_KEY_5' >/dev/null
+              "
+
+              echo "Creating non-root policy..."
+              kubectl -n "$NAMESPACE" exec -i "$OPENBAO_POD" -- sh -c "cat > /tmp/${POLICY_NAME}.hcl" <<'POLICY_EOF'
+              path "sys/mounts/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "sys/policies/acl/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "auth/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "system/data/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "system/metadata/*" {
+                capabilities = ["read", "list"]
+              }
+              POLICY_EOF
+
+              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
+                export BAO_ADDR=http://127.0.0.1:8200
+                export BAO_TOKEN='$ROOT_TOKEN'
+                bao policy write '$POLICY_NAME' /tmp/${POLICY_NAME}.hcl >/dev/null
+              "
+
+              echo "Creating non-root service token..."
+              SERVICE_TOKEN_OUTPUT="$(kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
+                export BAO_ADDR=http://127.0.0.1:8200
+                export BAO_TOKEN='$ROOT_TOKEN'
+                bao token create \
+                  -display-name='$TOKEN_DISPLAY_NAME' \
+                  -policy='$POLICY_NAME' \
+                  -ttl='8760h'
+              ")"
+
+              SERVICE_TOKEN="$(echo "$SERVICE_TOKEN_OUTPUT" | awk '/token[[:space:]]/ && $1 == "token" {print $2; exit}')"
+
+              if [ -z "$SERVICE_TOKEN" ]; then
+                echo "Failed to extract service token."
+                exit 1
+              fi
+
+              echo "Creating Kubernetes Secret ${OUTPUT_SECRET_NAME}..."
+              kubectl -n "$NAMESPACE" create secret generic "$OUTPUT_SECRET_NAME" \
+                --from-literal=VAULT_ADDR="$OPENBAO_ADDR" \
+                --from-literal=VAULT_TOKEN="$SERVICE_TOKEN" \
+                --dry-run=client -o yaml \
+                | kubectl label --local -f - type.xsfc.io=vault app.kubernetes.io/instance="$RELEASE_NAME" -o yaml \
+                | kubectl apply -f -
+
+              echo "Bootstrap completed."
