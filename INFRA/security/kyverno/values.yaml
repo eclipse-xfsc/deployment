@@ -1,0 +1,52 @@
+kyverno:
+  crds:
+    install: true
+
+  admissionController:
+    replicas: 2
+
+    tracing:
+      enabled: true
+      address: observability-otelcollector.observability.svc.cluster.local
+      port: 4317
+      creds: ""
+
+    serviceMonitor:
+      enabled: true
+
+  backgroundController:
+    replicas: 1
+
+    tracing:
+      enabled: true
+      address: observability-otelcollector.observability.svc.cluster.local
+      port: 4317
+      creds: ""
+
+  cleanupController:
+    replicas: 1
+
+    tracing:
+      enabled: true
+      address: observability-otelcollector.observability.svc.cluster.local
+      port: 4317
+      creds: ""
+
+  reportsController:
+    replicas: 1
+
+    tracing:
+      enabled: true
+      address: observability-otelcollector.observability.svc.cluster.local
+      port: 4317
+      creds: ""
+
+  grafana:
+    enabled: false
+
+  features:
+    admissionReports:
+      enabled: true
+
+    policyReports:
+      enabled: true
