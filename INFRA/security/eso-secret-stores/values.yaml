@@ -1,0 +1,19 @@
+openbao:
+  enabled: true
+  address: "http://openbao.security.svc.cluster.local:8200"
+  mountPath: "kubernetes"
+  role: "openbao-infra-eso"
+  kvPath: "system"
+
+  serviceAccount:
+    name: external-secrets
+    namespace: external-secrets
+
+clusterSecretStore:
+  enabled: true
+  name: openbao-infra
+
+secretStore:
+  enabled: false
+  name: openbao-infra
+  namespace: default

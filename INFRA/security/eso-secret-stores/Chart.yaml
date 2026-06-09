@@ -1,0 +1,6 @@
+apiVersion: v2
+name: external-secret-store
+description: External Secret Store
+type: application
+version: 1.0.0
+appVersion: "2.5.0"

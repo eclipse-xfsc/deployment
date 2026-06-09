@@ -160,6 +160,34 @@ spec:
               }
               POLICY_EOF
 
+              echo "Creating infra ESO read policy..."
+              kubectl -n "$NAMESPACE" exec -i "$OPENBAO_POD" -- sh -c "cat > /tmp/${RELEASE_NAME}-infra-eso-read.hcl" <<'INFRA_ESO_POLICY_EOF'
+
+              path "system/infra/*" {
+                capabilities = ["read", "list"]
+              }
+              
+              INFRA_ESO_POLICY_EOF
+
+              echo "Configuring Kubernetes auth for infra ESO..."
+              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
+                export BAO_ADDR=http://127.0.0.1:8200
+                export BAO_TOKEN='$ROOT_TOKEN'
+
+                bao policy write '${RELEASE_NAME}-infra-eso-read' /tmp/${RELEASE_NAME}-infra-eso-read.hcl >/dev/null
+
+                bao auth enable -path=kubernetes kubernetes >/dev/null 2>&1 || true
+
+                bao write auth/kubernetes/config \
+                  kubernetes_host='https://kubernetes.default.svc' >/dev/null
+
+                bao write auth/kubernetes/role/${RELEASE_NAME}-infra-eso \
+                  bound_service_account_names='external-secrets' \
+                  bound_service_account_namespaces='external-secrets' \
+                  policies='${RELEASE_NAME}-infra-eso-read' \
+                  ttl='1h' >/dev/null
+              "
+
               kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
                 export BAO_ADDR=http://127.0.0.1:8200
                 export BAO_TOKEN='$ROOT_TOKEN'

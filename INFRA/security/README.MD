@@ -1,3 +1,9 @@
+# TODO
+
+- ESO installieren (Cluster Store)
+- Operator bauen (eso secret stores anlegen, kyverno rules anlegen)
+
+
 # Kyverno
 To enable kyverno within the namespace use: 
 ```
