@@ -15,7 +15,7 @@ spec:
     metadata:
       name: '{{ "{{ .path.basename | trim }}" }}'
     spec:
-      project: {{ .Values.name }}
+      project: default
       source:
         repoURL: https://github.com/eclipse-xfsc/deployment.git
         targetRevision:  {{ .Values.tag }}
@@ -25,7 +25,7 @@ spec:
             - values.yaml
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{ "{{ .path.basename | trim }}" }}'
+        namespace:  {{ .Values.name }}
       syncPolicy:
         automated:
           prune: true

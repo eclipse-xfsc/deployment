@@ -8,6 +8,14 @@ To integrate the cluster bootstrap better in the orchestration engine, an [insta
 
 # Layer
 
+# Argo CD
+
+Contains ArgoCD and all app projects
+
+# Operator
+
+The operator is an special xfsc operator and is installed first, to observe xfsc resources and injection requests for xfsc components. It has the task to decide, when an injection request has to be fullfilled or when a resource must be created (e.g. for databases, kyverno etc.)
+
 # Observability
 
 The network provides essential network components which are required to bootstrap the core functionality. 
@@ -28,16 +36,21 @@ The XFSC security has the task to provide essential security components. This co
 
 The installation of those components is made via helm install directly in the cluster to prepare the proper setup. 
 
+# Storage
+
+The storage package provides essential storage components like cassandra, postgres and redis.
+
+
 # Network
 
 The network provides essential network components which are required to bootstrap the core functionality. 
 
 |Component|Purpose|Mandatory|Install Prio|
 |--|--|--|--|
-|[Power DNS](https://github.com/PowerDNS/pdns)|Power DNS is an RFC compliant dns for usage together with cert manager|✅ |0|
-|[Cert Manager](https://cert-manager.io)|Cert Manager is used for let's encrypt certifcates. The package installs an DNS based resolver. |✅ |1|
-|[Ingress](https://developer.konghq.com/kubernetes-ingress-controller/)|The ingress manages the incoming traffic for the cluster. In this case Kong Ingress is used.|✅|2|
-|[External DNS](https://github.com/kubernetes-sigs/external-dns)|External DNS manages the connection between ingress and dns.|✅|2|
+|[Cert Manager](https://cert-manager.io)|Cert Manager is used for let's encrypt certifcates. The package installs an DNS based resolver. |✅ |0|
+|[Ingress](https://developer.konghq.com/kubernetes-ingress-controller/)|The ingress manages the incoming traffic for the cluster. In this case Kong Ingress is used.|✅|1|
+|[Power DNS](https://github.com/PowerDNS/pdns)|Power DNS is an RFC compliant dns for usage together with cert manager|✅ |2|
+|[External DNS](https://github.com/kubernetes-sigs/external-dns)|External DNS manages the connection between ingress and dns.|✅|3|
 
 ## Core
 
@@ -48,8 +61,6 @@ The core layer consits basic tools which are required for operating the xfsc sta
 
 |[Nats](https://nats.io)| Nats is used as light weight message bus to provide for the application and eventing system. |✅|3|
 |[Universal Resolver](https://github.com/decentralized-identity/universal-resolver/)| The universal resolver provides for applications the capability to resolve DIDs. |✅|3|
-
-# Storage
 
 
 # Tenant Management
