@@ -6,71 +6,126 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ .Release.Name }}-bootstrap
     app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: openbao-bootstrap
   annotations:
-    "helm.sh/hook": post-install
-    "helm.sh/hook-weight": "20"
-    "helm.sh/hook-delete-policy": before-hook-creation
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "20"
+    helm.sh/hook-delete-policy: before-hook-creation
 spec:
   backoffLimit: 3
+
   template:
     metadata:
       labels:
         app.kubernetes.io/name: {{ .Release.Name }}-bootstrap
         app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: openbao-bootstrap
+
     spec:
       restartPolicy: OnFailure
       serviceAccountName: {{ .Release.Name }}-bootstrap
+
       containers:
         - name: bootstrap
           image: bitnami/kubectl:latest
+          imagePullPolicy: IfNotPresent
+
           command:
             - /bin/bash
             - -ec
             - |
+              set -o pipefail
+
               RELEASE_NAME="{{ .Release.Name }}"
               NAMESPACE="{{ .Release.Namespace }}"
 
               OPENBAO_POD="${RELEASE_NAME}-0"
               OPENBAO_SERVICE="${RELEASE_NAME}"
-              OPENBAO_ADDR="http://${OPENBAO_SERVICE}.${NAMESPACE}.svc.cluster.local:8200"
 
-              OUTPUT_SECRET_NAME="${RELEASE_NAME}-vault"
-              POLICY_NAME="${RELEASE_NAME}-platform"
-              TOKEN_DISPLAY_NAME="${RELEASE_NAME}-platform"
+              OPENBAO_INTERNAL_ADDR="http://127.0.0.1:8200"
+              OPENBAO_EXTERNAL_ADDR="http://${OPENBAO_SERVICE}.${NAMESPACE}.svc.cluster.local:8200"
 
-              SYSTEM_KV_PATH="system"
-              SYSTEM_SECRET_PATH="bootstrap/root"
+              KUBERNETES_AUTH_PATH="kubernetes"
 
-              echo "Waiting for OpenBao pod ${OPENBAO_POD} to exist..."
+              BOOTSTRAP_SECRET_NAME="${RELEASE_NAME}-bootstrap-root"
+
+              PROVISIONER_SERVICE_ACCOUNT="{{ .Values.provisioner.serviceAccount.name }}"
+              PROVISIONER_POLICY="{{ .Values.provisioner.policyName }}"
+              PROVISIONER_ROLE="{{ .Values.provisioner.roleName }}"
+              MANAGED_RESOURCE_PREFIX="{{ .Values.provisioner.managedResourcePrefix }}"
+
+              PROVISIONER_TOKEN_TTL="{{ .Values.provisioner.tokenTTL }}"
+              PROVISIONER_TOKEN_MAX_TTL="{{ .Values.provisioner.tokenMaxTTL }}"
+
+              STORE_BOOTSTRAP_MATERIAL="{{ .Values.bootstrap.storeBootstrapMaterial }}"
+
+              bao_exec() {
+                kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- "$@"
+              }
+
+              bao_exec_root() {
+                local command="$1"
+
+                kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- \
+                  sh -ec "
+                    export BAO_ADDR='$OPENBAO_INTERNAL_ADDR'
+                    export BAO_TOKEN='$ROOT_TOKEN'
+
+                    $command
+                  "
+              }
+
+              echo "Waiting for OpenBao pod ${NAMESPACE}/${OPENBAO_POD}..."
+
               until kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" >/dev/null 2>&1; do
                 sleep 3
               done
 
-              echo "Waiting for OpenBao pod ${OPENBAO_POD} to be Running..."
+              echo "Waiting for OpenBao pod to become Running..."
+
               for i in $(seq 1 120); do
-                PHASE="$(kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" -o jsonpath='{.status.phase}' 2>/dev/null || true)"
+                PHASE="$(
+                  kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" \
+                    -o jsonpath='{.status.phase}' 2>/dev/null || true
+                )"
+
                 if [ "$PHASE" = "Running" ]; then
                   break
                 fi
+
                 echo "Current pod phase: ${PHASE:-unknown}"
                 sleep 3
               done
 
-              if [ "$(kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" -o jsonpath='{.status.phase}')" != "Running" ]; then
+              if [ "$(
+                kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" \
+                  -o jsonpath='{.status.phase}'
+              )" != "Running" ]; then
                 echo "OpenBao pod did not reach Running phase."
                 exit 1
               fi
 
-              echo "Waiting for OpenBao process / bao status..."
+              echo "Waiting for OpenBao API..."
+
               STATUS=""
+
               for i in $(seq 1 120); do
                 set +e
-                STATUS="$(kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c 'BAO_ADDR=http://127.0.0.1:8200 bao status' 2>&1)"
-                RC=$?
+
+                STATUS="$(
+                  bao_exec \
+                    sh -c "BAO_ADDR='$OPENBAO_INTERNAL_ADDR' bao status" \
+                    2>&1
+                )"
+
+                STATUS_RC=$?
+
                 set -e
 
                 echo "$STATUS"
 
+                # bao status liefert bei sealed üblicherweise einen von null
+                # verschiedenen Returncode. Daher wird die Ausgabe geprüft.
                 if echo "$STATUS" | grep -q "Initialized"; then
                   break
                 fi
@@ -79,144 +134,313 @@ spec:
               done
 
               if ! echo "$STATUS" | grep -q "Initialized"; then
-                echo "OpenBao process did not answer with a valid status."
+                echo "OpenBao API did not return a valid status."
                 exit 1
               fi
 
-              echo "Checking OpenBao init status..."
+              INITIALIZED="$(
+                echo "$STATUS" \
+                  | awk '/Initialized/ {print tolower($2); exit}'
+              )"
 
-              if echo "$STATUS" | grep -q "Initialized.*true"; then
-                echo "OpenBao is already initialized. Checking output secret..."
-                if kubectl -n "$NAMESPACE" get secret "$OUTPUT_SECRET_NAME" >/dev/null 2>&1; then
-                  echo "Output secret ${OUTPUT_SECRET_NAME} already exists. Skipping."
-                  exit 0
+              SEALED="$(
+                echo "$STATUS" \
+                  | awk '/Sealed/ {print tolower($2); exit}'
+              )"
+
+              if [ "$INITIALIZED" != "true" ]; then
+                echo "Initializing OpenBao..."
+
+                INIT_OUTPUT="$(
+                  bao_exec \
+                    sh -c "
+                      BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                        bao operator init \
+                          -key-shares=5 \
+                          -key-threshold=3
+                    "
+                )"
+
+                UNSEAL_KEY_1="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 1/ {print $2}'
+                )"
+
+                UNSEAL_KEY_2="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 2/ {print $2}'
+                )"
+
+                UNSEAL_KEY_3="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 3/ {print $2}'
+                )"
+
+                UNSEAL_KEY_4="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 4/ {print $2}'
+                )"
+
+                UNSEAL_KEY_5="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 5/ {print $2}'
+                )"
+
+                ROOT_TOKEN="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Initial Root Token/ {print $2}'
+                )"
+
+                if [ -z "$ROOT_TOKEN" ] \
+                  || [ -z "$UNSEAL_KEY_1" ] \
+                  || [ -z "$UNSEAL_KEY_2" ] \
+                  || [ -z "$UNSEAL_KEY_3" ]; then
+                  echo "Failed to parse OpenBao initialization output."
+                  exit 1
                 fi
 
-                echo "OpenBao initialized but output secret missing."
-                echo "Cannot recreate non-root token without an existing admin/root token."
-                exit 1
+                echo "Unsealing OpenBao..."
+
+                bao_exec \
+                  sh -c "
+                    BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                      bao operator unseal '$UNSEAL_KEY_1' >/dev/null
+                  "
+
+                bao_exec \
+                  sh -c "
+                    BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                      bao operator unseal '$UNSEAL_KEY_2' >/dev/null
+                  "
+
+                bao_exec \
+                  sh -c "
+                    BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                      bao operator unseal '$UNSEAL_KEY_3' >/dev/null
+                  "
+
+                if [ "$STORE_BOOTSTRAP_MATERIAL" = "true" ]; then
+                  echo "Persisting bootstrap material in Kubernetes Secret..."
+
+                  kubectl -n "$NAMESPACE" create secret generic \
+                    "$BOOTSTRAP_SECRET_NAME" \
+                    --from-literal=root_token="$ROOT_TOKEN" \
+                    --from-literal=unseal_key_1="$UNSEAL_KEY_1" \
+                    --from-literal=unseal_key_2="$UNSEAL_KEY_2" \
+                    --from-literal=unseal_key_3="$UNSEAL_KEY_3" \
+                    --from-literal=unseal_key_4="$UNSEAL_KEY_4" \
+                    --from-literal=unseal_key_5="$UNSEAL_KEY_5" \
+                    --dry-run=client \
+                    -o yaml \
+                    | kubectl label \
+                        --local \
+                        -f - \
+                        app.kubernetes.io/name="$RELEASE_NAME" \
+                        app.kubernetes.io/instance="$RELEASE_NAME" \
+                        app.kubernetes.io/component=openbao-bootstrap \
+                        -o yaml \
+                    | kubectl apply -f -
+                fi
+
+              else
+                echo "OpenBao is already initialized."
+
+                ROOT_TOKEN="$(
+                  kubectl -n "$NAMESPACE" get secret "$BOOTSTRAP_SECRET_NAME" \
+                    -o jsonpath='{.data.root_token}' 2>/dev/null \
+                    | base64 -d 2>/dev/null || true
+                )"
+
+                UNSEAL_KEY_1="$(
+                  kubectl -n "$NAMESPACE" get secret "$BOOTSTRAP_SECRET_NAME" \
+                    -o jsonpath='{.data.unseal_key_1}' 2>/dev/null \
+                    | base64 -d 2>/dev/null || true
+                )"
+
+                UNSEAL_KEY_2="$(
+                  kubectl -n "$NAMESPACE" get secret "$BOOTSTRAP_SECRET_NAME" \
+                    -o jsonpath='{.data.unseal_key_2}' 2>/dev/null \
+                    | base64 -d 2>/dev/null || true
+                )"
+
+                UNSEAL_KEY_3="$(
+                  kubectl -n "$NAMESPACE" get secret "$BOOTSTRAP_SECRET_NAME" \
+                    -o jsonpath='{.data.unseal_key_3}' 2>/dev/null \
+                    | base64 -d 2>/dev/null || true
+                )"
+
+                if [ "$SEALED" = "true" ]; then
+                  if [ -z "$UNSEAL_KEY_1" ] \
+                    || [ -z "$UNSEAL_KEY_2" ] \
+                    || [ -z "$UNSEAL_KEY_3" ]; then
+                    echo "OpenBao is sealed, but unseal keys are unavailable."
+                    exit 1
+                  fi
+
+                  echo "Unsealing existing OpenBao instance..."
+
+                  bao_exec \
+                    sh -c "
+                      BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                        bao operator unseal '$UNSEAL_KEY_1' >/dev/null
+                    "
+
+                  bao_exec \
+                    sh -c "
+                      BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                        bao operator unseal '$UNSEAL_KEY_2' >/dev/null
+                    "
+
+                  bao_exec \
+                    sh -c "
+                      BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                        bao operator unseal '$UNSEAL_KEY_3' >/dev/null
+                    "
+                fi
+
+                if [ -z "$ROOT_TOKEN" ]; then
+                  echo "OpenBao is initialized, but no bootstrap root token is available."
+                  echo "The provisioner configuration cannot be reconciled."
+                  exit 1
+                fi
               fi
 
-              echo "Initializing OpenBao..."
-              INIT_OUTPUT="$(kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c 'BAO_ADDR=http://127.0.0.1:8200 bao operator init -key-shares=5 -key-threshold=3')"
+              echo "Validating root token..."
 
-              UNSEAL_KEY_1="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 1/ {print $2}')"
-              UNSEAL_KEY_2="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 2/ {print $2}')"
-              UNSEAL_KEY_3="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 3/ {print $2}')"
-              UNSEAL_KEY_4="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 4/ {print $2}')"
-              UNSEAL_KEY_5="$(echo "$INIT_OUTPUT" | awk -F': ' '/Unseal Key 5/ {print $2}')"
-              ROOT_TOKEN="$(echo "$INIT_OUTPUT" | awk -F': ' '/Initial Root Token/ {print $2}')"
-
-              if [ -z "$ROOT_TOKEN" ] || [ -z "$UNSEAL_KEY_1" ] || [ -z "$UNSEAL_KEY_2" ] || [ -z "$UNSEAL_KEY_3" ]; then
-                echo "Failed to parse init output."
-                exit 1
-              fi
-
-              echo "Unsealing OpenBao..."
-              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "BAO_ADDR=http://127.0.0.1:8200 bao operator unseal '$UNSEAL_KEY_1' >/dev/null"
-              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "BAO_ADDR=http://127.0.0.1:8200 bao operator unseal '$UNSEAL_KEY_2' >/dev/null"
-              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "BAO_ADDR=http://127.0.0.1:8200 bao operator unseal '$UNSEAL_KEY_3' >/dev/null"
-
-              echo "Enabling fixed system KV engine..."
-              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
-                export BAO_ADDR=http://127.0.0.1:8200
-                export BAO_TOKEN='$ROOT_TOKEN'
-                bao secrets enable -path='$SYSTEM_KV_PATH' kv-v2 >/dev/null 2>&1 || true
+              bao_exec_root "
+                bao token lookup >/dev/null
               "
 
-              echo "Storing root token and unseal keys in system KV..."
-              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
-                export BAO_ADDR=http://127.0.0.1:8200
-                export BAO_TOKEN='$ROOT_TOKEN'
-                bao kv put '$SYSTEM_KV_PATH/$SYSTEM_SECRET_PATH' \
-                  root_token='$ROOT_TOKEN' \
-                  unseal_key_1='$UNSEAL_KEY_1' \
-                  unseal_key_2='$UNSEAL_KEY_2' \
-                  unseal_key_3='$UNSEAL_KEY_3' \
-                  unseal_key_4='$UNSEAL_KEY_4' \
-                  unseal_key_5='$UNSEAL_KEY_5' >/dev/null
+              echo "Ensuring Kubernetes authentication method..."
+
+              bao_exec_root "
+                bao auth enable \
+                  -path='$KUBERNETES_AUTH_PATH' \
+                  kubernetes >/dev/null 2>&1 || true
               "
 
-              echo "Creating non-root policy..."
-              kubectl -n "$NAMESPACE" exec -i "$OPENBAO_POD" -- sh -c "cat > /tmp/${POLICY_NAME}.hcl" <<'POLICY_EOF'
-              path "sys/mounts/*" {
-                capabilities = ["create", "read", "update", "delete", "list"]
-              }
+              echo "Configuring Kubernetes authentication..."
 
-              path "sys/policies/acl/*" {
-                capabilities = ["create", "read", "update", "delete", "list"]
-              }
+              bao_exec_root "
+                bao write \
+                  'auth/$KUBERNETES_AUTH_PATH/config' \
+                  kubernetes_host='https://kubernetes.default.svc' \
+                  disable_local_ca_jwt='false'
+              "
 
-              path "auth/*" {
-                capabilities = ["create", "read", "update", "delete", "list"]
-              }
+              echo "Writing generic provisioner policy..."
 
-              path "system/data/*" {
-                capabilities = ["create", "read", "update", "delete", "list"]
-              }
-
-              path "system/metadata/*" {
+              kubectl -n "$NAMESPACE" exec -i "$OPENBAO_POD" -- \
+                sh -c "cat > /tmp/${PROVISIONER_POLICY}.hcl" <<POLICY_EOF
+              # Read the currently configured mounts.
+              path "sys/mounts" {
                 capabilities = ["read", "list"]
+              }
+
+              # The XFSC OpenBao installation is dedicated to XFSC.
+              # Therefore the provisioner may manage arbitrary secret mounts.
+              path "sys/mounts/*" {
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list",
+                  "sudo"
+                ]
+              }
+
+              # Downstream Helm charts may create policies using the
+              # configured managed prefix.
+              #
+              # Examples:
+              #   ${MANAGED_RESOURCE_PREFIX}redis-tenant-a-writer
+              #   ${MANAGED_RESOURCE_PREFIX}redis-tenant-a-reader
+              #   ${MANAGED_RESOURCE_PREFIX}infra-reader
+              path "sys/policies/acl/${MANAGED_RESOURCE_PREFIX}*" {
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
+              }
+
+              # Downstream Helm charts may create Kubernetes authentication
+              # roles using the configured managed prefix.
+              path "auth/${KUBERNETES_AUTH_PATH}/role" {
+                capabilities = ["read", "list"]
+              }
+
+              path "auth/${KUBERNETES_AUTH_PATH}/role/${MANAGED_RESOURCE_PREFIX}*" {
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
+              }
+
+              # Permit introspection and renewal of the short-lived token.
+              path "auth/token/lookup-self" {
+                capabilities = ["read"]
+              }
+
+              path "auth/token/renew-self" {
+                capabilities = ["update"]
               }
               POLICY_EOF
 
-              echo "Creating infra ESO read policy..."
-              kubectl -n "$NAMESPACE" exec -i "$OPENBAO_POD" -- sh -c "cat > /tmp/${RELEASE_NAME}-infra-eso-read.hcl" <<'INFRA_ESO_POLICY_EOF'
-
-              path "system/infra/*" {
-                capabilities = ["read", "list"]
-              }
-              
-              INFRA_ESO_POLICY_EOF
-
-              echo "Configuring Kubernetes auth for infra ESO..."
-              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
-                export BAO_ADDR=http://127.0.0.1:8200
-                export BAO_TOKEN='$ROOT_TOKEN'
-
-                bao policy write '${RELEASE_NAME}-infra-eso-read' /tmp/${RELEASE_NAME}-infra-eso-read.hcl >/dev/null
-
-                bao auth enable -path=kubernetes kubernetes >/dev/null 2>&1 || true
-
-                bao write auth/kubernetes/config \
-                  kubernetes_host='https://kubernetes.default.svc' >/dev/null
-
-                bao write auth/kubernetes/role/${RELEASE_NAME}-infra-eso \
-                  bound_service_account_names='eso-external-secrets' \
-                  bound_service_account_namespaces='security' \
-                  policies='${RELEASE_NAME}-infra-eso-read' \
-                  ttl='1h' >/dev/null
+              bao_exec_root "
+                bao policy write \
+                  '$PROVISIONER_POLICY' \
+                  '/tmp/${PROVISIONER_POLICY}.hcl'
               "
 
-              kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
-                export BAO_ADDR=http://127.0.0.1:8200
-                export BAO_TOKEN='$ROOT_TOKEN'
-                bao policy write '$POLICY_NAME' /tmp/${POLICY_NAME}.hcl >/dev/null
+              echo "Creating OpenBao Kubernetes role for the provisioner..."
+
+              bao_exec_root "
+                bao write \
+                  'auth/$KUBERNETES_AUTH_PATH/role/$PROVISIONER_ROLE' \
+                  bound_service_account_names='$PROVISIONER_SERVICE_ACCOUNT' \
+                  bound_service_account_namespaces='$NAMESPACE' \
+                  policies='$PROVISIONER_POLICY' \
+                  token_ttl='$PROVISIONER_TOKEN_TTL' \
+                  token_max_ttl='$PROVISIONER_TOKEN_MAX_TTL'
               "
 
-              echo "Creating non-root service token..."
-              SERVICE_TOKEN_OUTPUT="$(kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- sh -c "
-                export BAO_ADDR=http://127.0.0.1:8200
-                export BAO_TOKEN='$ROOT_TOKEN'
-                bao token create \
-                  -display-name='$TOKEN_DISPLAY_NAME' \
-                  -policy='$POLICY_NAME' \
-                  -ttl='8760h'
-              ")"
+              echo "Writing provisioner discovery ConfigMap..."
 
-              SERVICE_TOKEN="$(echo "$SERVICE_TOKEN_OUTPUT" | awk '/token[[:space:]]/ && $1 == "token" {print $2; exit}')"
-
-              if [ -z "$SERVICE_TOKEN" ]; then
-                echo "Failed to extract service token."
-                exit 1
-              fi
-
-              echo "Creating Kubernetes Secret ${OUTPUT_SECRET_NAME}..."
-              kubectl -n "$NAMESPACE" create secret generic "$OUTPUT_SECRET_NAME" \
-                --from-literal=VAULT_ADDR="$OPENBAO_ADDR" \
-                --from-literal=VAULT_TOKEN="$SERVICE_TOKEN" \
-                --dry-run=client -o yaml \
-                | kubectl label --local -f - type.xsfc.io=vault app.kubernetes.io/instance="$RELEASE_NAME" -o yaml \
+              kubectl -n "$NAMESPACE" create configmap \
+                "${RELEASE_NAME}-provisioner" \
+                --from-literal=OPENBAO_ADDR="$OPENBAO_EXTERNAL_ADDR" \
+                --from-literal=OPENBAO_AUTH_PATH="$KUBERNETES_AUTH_PATH" \
+                --from-literal=OPENBAO_PROVISIONER_ROLE="$PROVISIONER_ROLE" \
+                --from-literal=OPENBAO_PROVISIONER_SERVICE_ACCOUNT="$PROVISIONER_SERVICE_ACCOUNT" \
+                --from-literal=OPENBAO_MANAGED_RESOURCE_PREFIX="$MANAGED_RESOURCE_PREFIX" \
+                --dry-run=client \
+                -o yaml \
+                | kubectl label \
+                    --local \
+                    -f - \
+                    type.xsfc.io=openbao-provisioner \
+                    app.kubernetes.io/name=openbao-provisioner \
+                    app.kubernetes.io/instance="$RELEASE_NAME" \
+                    -o yaml \
                 | kubectl apply -f -
 
-              echo "Bootstrap completed."
+              echo
+              echo "OpenBao bootstrap completed."
+              echo
+              echo "OpenBao address:"
+              echo "  ${OPENBAO_EXTERNAL_ADDR}"
+              echo
+              echo "Provisioner identity:"
+              echo "  ServiceAccount: ${NAMESPACE}/${PROVISIONER_SERVICE_ACCOUNT}"
+              echo "  OpenBao role:   ${PROVISIONER_ROLE}"
+              echo "  OpenBao policy: ${PROVISIONER_POLICY}"
+              echo
+              echo "Managed policy and role prefix:"
+              echo "  ${MANAGED_RESOURCE_PREFIX}"

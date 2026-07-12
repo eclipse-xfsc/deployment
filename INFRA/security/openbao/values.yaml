@@ -42,10 +42,24 @@ serviceMonitor:
   labels:
     release: observability
 
+bootstrap:
+  enabled: true
+  storeBootstrapMaterial: true
+
+provisioner:
+  serviceAccount:
+    name: openbao-provisioner
+  policyName: openbao-provisioner
+  roleName: openbao-provisioner
+  managedResourcePrefix: xfsc-
+  tokenTTL: 15m
+  tokenMaxTTL: 1h
+
 openbao:
   injector:
     enabled: false
-
+  serviceAccount:
+    name: openbao
   server:
     authDelegator:
       enabled: true
