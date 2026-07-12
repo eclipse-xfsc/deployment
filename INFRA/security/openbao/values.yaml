@@ -48,9 +48,9 @@ openbao:
 
   server:
     authDelegator:
-      enabled: false
-    ha:
       enabled: true
+    ha:
+      enabled: false
       raft:
         enabled: true
         config: |

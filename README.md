@@ -36,6 +36,10 @@ The XFSC security has the task to provide essential security components. This co
 
 The installation of those components is made via helm install directly in the cluster to prepare the proper setup. 
 
+# Application Management
+
+After the security, the kubernetes operator is installed, because it is relying on external secret operator and openbao. 
+
 # Storage
 
 The storage package provides essential storage components like cassandra, postgres and redis.

@@ -182,8 +182,8 @@ spec:
                   kubernetes_host='https://kubernetes.default.svc' >/dev/null
 
                 bao write auth/kubernetes/role/${RELEASE_NAME}-infra-eso \
-                  bound_service_account_names='external-secrets' \
-                  bound_service_account_namespaces='external-secrets' \
+                  bound_service_account_names='eso-external-secrets' \
+                  bound_service_account_namespaces='security' \
                   policies='${RELEASE_NAME}-infra-eso-read' \
                   ttl='1h' >/dev/null
               "
