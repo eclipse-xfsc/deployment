@@ -1,0 +1,19 @@
+openbao:
+  enabled: true
+  address: "http://openbao.security.svc.cluster.local:8200"
+  mountPath: "kubernetes"
+  role: "openbao-provisioner"
+  kvPath: "infrastructure"
+
+  serviceAccount:
+    name: openbao-provisioner
+    namespace: security
+
+clusterSecretStore:
+  enabled: true
+  name: infrastructure
+
+secretStore:
+  enabled: false
+  name: system
+  namespace: default

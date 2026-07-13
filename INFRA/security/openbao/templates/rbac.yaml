@@ -1,6 +1,16 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  name: {{ .Values.provisioner.serviceAccount.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openbao-provisioner
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: openbao-provisioner
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
   name: {{ .Release.Name }}-bootstrap
   namespace: {{ .Release.Namespace }}
   labels:

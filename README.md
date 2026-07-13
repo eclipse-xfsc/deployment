@@ -8,15 +8,11 @@ To integrate the cluster bootstrap better in the orchestration engine, an [insta
 
 # Layer
 
-# Argo CD
+## Argo CD
 
 Contains ArgoCD and all app projects
 
-# Operator
-
-The operator is an special xfsc operator and is installed first, to observe xfsc resources and injection requests for xfsc components. It has the task to decide, when an injection request has to be fullfilled or when a resource must be created (e.g. for databases, kyverno etc.)
-
-# Observability
+## Observability
 
 The network provides essential network components which are required to bootstrap the core functionality. 
 
@@ -36,16 +32,23 @@ The XFSC security has the task to provide essential security components. This co
 
 The installation of those components is made via helm install directly in the cluster to prepare the proper setup. 
 
-# Application Management
+## Application Management
 
 After the security, the kubernetes operator is installed, because it is relying on external secret operator and openbao. 
 
-# Storage
+|Component|Purpose|Mandatory|Install Prio|
+|--|--|--|--|
+|Infra Clusterstore| Clusterstore for the infra secrets e.g. storage |✅|0|
+|Tenants Clusterstore| Clusterstore for the tenants secrets.|✅|0|
+|[Kubernetes Operator](https://github.com/eclipse-xfsc/kubernetes-operator)| 
+The operator is an special xfsc operator and is installed first, to observe xfsc resources and injection requests for xfsc components. It has the task to decide, when an injection request has to be fullfilled or when a resource must be created (e.g. for databases, kyverno etc.)|✅|0|
+
+## Storage
 
 The storage package provides essential storage components like cassandra, postgres and redis.
 
 
-# Network
+## Network
 
 The network provides essential network components which are required to bootstrap the core functionality. 
 
@@ -67,5 +70,5 @@ The core layer consits basic tools which are required for operating the xfsc sta
 |[Universal Resolver](https://github.com/decentralized-identity/universal-resolver/)| The universal resolver provides for applications the capability to resolve DIDs. |✅|3|
 
 
-# Tenant Management
+## Tenant Management
 

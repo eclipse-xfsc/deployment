@@ -2,16 +2,16 @@ openbao:
   enabled: true
   address: "http://openbao.security.svc.cluster.local:8200"
   mountPath: "kubernetes"
-  role: "openbao-infra-eso"
-  kvPath: "system"
+  role: "openbao-provisioner"
+  kvPath: "tenants"
 
   serviceAccount:
-    name: eso-external-secrets
+    name: openbao-provisioner
     namespace: security
 
 clusterSecretStore:
   enabled: true
-  name: system
+  name: tenants
 
 secretStore:
   enabled: false
