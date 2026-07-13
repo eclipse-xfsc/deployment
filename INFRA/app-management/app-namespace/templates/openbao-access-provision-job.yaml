@@ -1,0 +1,179 @@
+{{- if and .Values.openbao.enabled .Values.provisioning.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-openbao-access" .Release.Name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Values.openbao.bootstrapProvisioner.serviceAccount.namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: openbao-access-provisioner
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-20"
+    helm.sh/hook-delete-policy: {{ .Values.provisioning.hook.deletePolicy | quote }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: openbao-access-provisioner
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ .Values.openbao.bootstrapProvisioner.serviceAccount.name }}
+      containers:
+        - name: provision
+          image: "{{ .Values.openbao.bootstrapProvisioner.image.repository }}:{{ .Values.openbao.bootstrapProvisioner.image.tag }}"
+          imagePullPolicy: {{ .Values.openbao.bootstrapProvisioner.image.pullPolicy }}
+          env:
+            - name: BAO_ADDR
+              value: {{ .Values.openbao.address | quote }}
+            - name: AUTH_MOUNT_PATH
+              value: {{ .Values.openbao.authMountPath | quote }}
+            - name: BOOTSTRAP_ROLE
+              value: {{ .Values.openbao.bootstrapProvisioner.role | quote }}
+            - name: TARGET_NAMESPACE
+              value: {{ include "app-namespace.targetNamespace" . | quote }}
+            - name: RESOURCE_SA
+              value: {{ include "app-namespace.resourceProvisionerServiceAccount" . | quote }}
+            - name: RESOURCE_POLICY
+              value: {{ include "app-namespace.resourceProvisionerPolicy" . | quote }}
+            - name: RESOURCE_ROLE
+              value: {{ include "app-namespace.resourceProvisionerRole" . | quote }}
+            - name: RESOURCE_TTL
+              value: {{ .Values.openbao.resourceProvisioner.tokenTTL | quote }}
+            - name: RESOURCE_MAX_TTL
+              value: {{ .Values.openbao.resourceProvisioner.tokenMaxTTL | quote }}
+            - name: STORE_SA
+              value: {{ include "app-namespace.storeReaderServiceAccount" . | quote }}
+            - name: STORE_POLICY
+              value: {{ include "app-namespace.storeReaderPolicy" . | quote }}
+            - name: STORE_ROLE
+              value: {{ include "app-namespace.storeReaderRole" . | quote }}
+            - name: STORE_TTL
+              value: {{ .Values.openbao.storeReader.tokenTTL | quote }}
+            - name: STORE_MAX_TTL
+              value: {{ .Values.openbao.storeReader.tokenMaxTTL | quote }}
+            - name: STORE_MOUNT
+              value: {{ .Values.openbao.storeMountPath | quote }}
+            - name: STORE_PREFIX
+              value: {{ .Values.openbao.storeSecretPrefix | quote }}
+            - name: ALLOW_ENGINE_MANAGEMENT
+              value: {{ .Values.openbao.resourceProvisioner.permissions.engineManagement | quote }}
+            - name: ALLOW_KV
+              value: {{ .Values.openbao.resourceProvisioner.permissions.kv | quote }}
+            - name: ALLOW_TRANSIT
+              value: {{ .Values.openbao.resourceProvisioner.permissions.transit | quote }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              JWT="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+              export BAO_TOKEN="$(
+                bao write -field=token \
+                  "auth/${AUTH_MOUNT_PATH}/login" \
+                  role="$BOOTSTRAP_ROLE" \
+                  jwt="$JWT"
+              )"
+              test -n "$BAO_TOKEN"
+
+              : > /tmp/resource-policy.hcl
+
+              if [ "$ALLOW_ENGINE_MANAGEMENT" = "true" ]; then
+                cat >> /tmp/resource-policy.hcl <<'POLICY'
+              path "sys/mounts" {
+                capabilities = ["read", "list"]
+              }
+
+              path "sys/mounts/*" {
+                capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+              }
+              POLICY
+              fi
+
+              if [ "$ALLOW_KV" = "true" ]; then
+                cat >> /tmp/resource-policy.hcl <<'POLICY'
+              # KV-v2 access for one-segment mounts such as apps, tenants or infra.
+              path "+/data/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "+/metadata/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "+/delete/*" { capabilities = ["update"] }
+              path "+/undelete/*" { capabilities = ["update"] }
+              path "+/destroy/*" { capabilities = ["update"] }
+              POLICY
+              fi
+
+              if [ "$ALLOW_TRANSIT" = "true" ]; then
+                cat >> /tmp/resource-policy.hcl <<'POLICY'
+              path "+/keys" {
+                capabilities = ["read", "list"]
+              }
+
+              path "+/keys/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "+/encrypt/*" { capabilities = ["update"] }
+              path "+/decrypt/*" { capabilities = ["update"] }
+              path "+/rewrap/*" { capabilities = ["update"] }
+              path "+/sign/*" { capabilities = ["update"] }
+              path "+/verify/*" { capabilities = ["update"] }
+              path "+/hmac/*" { capabilities = ["update"] }
+              POLICY
+              fi
+
+              cat >> /tmp/resource-policy.hcl <<'POLICY'
+              path "auth/token/lookup-self" { capabilities = ["read"] }
+              path "auth/token/renew-self" { capabilities = ["update"] }
+              POLICY
+
+              bao policy write "$RESOURCE_POLICY" /tmp/resource-policy.hcl
+              bao write "auth/${AUTH_MOUNT_PATH}/role/${RESOURCE_ROLE}" \
+                bound_service_account_names="$RESOURCE_SA" \
+                bound_service_account_namespaces="$TARGET_NAMESPACE" \
+                policies="$RESOURCE_POLICY" \
+                token_ttl="$RESOURCE_TTL" \
+                token_max_ttl="$RESOURCE_MAX_TTL"
+
+              if [ -n "$STORE_PREFIX" ]; then
+                STORE_DATA_PATH="${STORE_MOUNT}/data/${STORE_PREFIX}/*"
+                STORE_METADATA_PATH="${STORE_MOUNT}/metadata/${STORE_PREFIX}/*"
+              else
+                STORE_DATA_PATH="${STORE_MOUNT}/data/*"
+                STORE_METADATA_PATH="${STORE_MOUNT}/metadata/*"
+              fi
+
+              cat > /tmp/store-policy.hcl <<POLICY
+              path "${STORE_DATA_PATH}" {
+                capabilities = ["read"]
+              }
+
+              path "${STORE_METADATA_PATH}" {
+                capabilities = ["read", "list"]
+              }
+
+              path "auth/token/lookup-self" {
+                capabilities = ["read"]
+              }
+
+              path "auth/token/renew-self" {
+                capabilities = ["update"]
+              }
+              POLICY
+
+              bao policy write "$STORE_POLICY" /tmp/store-policy.hcl
+              bao write "auth/${AUTH_MOUNT_PATH}/role/${STORE_ROLE}" \
+                bound_service_account_names="$STORE_SA" \
+                bound_service_account_namespaces="$TARGET_NAMESPACE" \
+                policies="$STORE_POLICY" \
+                token_ttl="$STORE_TTL" \
+                token_max_ttl="$STORE_MAX_TTL"
+
+              echo "Configured resource role ${RESOURCE_ROLE} and store role ${STORE_ROLE}."
+{{- end }}

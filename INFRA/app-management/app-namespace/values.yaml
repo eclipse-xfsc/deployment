@@ -1,0 +1,67 @@
+targetNamespace:
+  create: true
+  name: default
+  labels: {}
+  annotations: {}
+
+openbao:
+  enabled: true
+  address: http://openbao.security.svc.cluster.local:8200
+  authMountPath: kubernetes
+
+  # Existing central identity created by the OpenBao bootstrap chart.
+  bootstrapProvisioner:
+    serviceAccount:
+      name: openbao-provisioner
+      namespace: security
+    role: openbao-provisioner
+    image:
+      repository: openbao/openbao
+      tag: latest
+      pullPolicy: IfNotPresent
+
+  # Identity used by init jobs/resource providers in the target namespace.
+  resourceProvisioner:
+    serviceAccount:
+      create: true
+      name: openbao-resource-provisioner
+      annotations: {}
+    policyName: ""
+    roleName: ""
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    permissions:
+      engineManagement: true
+      kv: true
+      transit: true
+
+  # Read-only identity used by ESO stores.
+  storeReader:
+    serviceAccount:
+      create: true
+      name: openbao-store-reader
+      annotations: {}
+    policyName: ""
+    roleName: ""
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+
+  # KV-v2 mount used by the generated ESO stores.
+  storeMountPath: apps
+  # Optional path prefix inside the mount. Empty means the full mount.
+  storeSecretPrefix: ""
+
+provisioning:
+  enabled: true
+  hook:
+    deletePolicy: before-hook-creation,hook-succeeded
+
+clusterSecretStore:
+  enabled: true
+  name: ""
+  allowedNamespaces: []
+  namespaceSelector: {}
+
+secretStore:
+  enabled: true
+  name: openbao

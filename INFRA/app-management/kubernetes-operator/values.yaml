@@ -1,0 +1,3 @@
+kubernetes-operator:
+  image:
+    tag: latest

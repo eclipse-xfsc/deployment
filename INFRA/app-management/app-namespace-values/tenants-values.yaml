@@ -1,19 +1,24 @@
-openbao:
-  enabled: true
-  address: "http://openbao.security.svc.cluster.local:8200"
-  mountPath: "kubernetes"
-  role: "openbao-provisioner"
-  kvPath: "tenants"
+targetNamespace:
+  create: true
+  name: tenants
+  labels:
+    xsfc.io/zone: tenants
 
-  serviceAccount:
-    name: openbao-provisioner
-    namespace: security
+openbao:
+  storeMountPath: tenants
+  storeSecretPrefix: ""
+  resourceProvisioner:
+    serviceAccount:
+      name: tenants-resource-provisioner
+  storeReader:
+    serviceAccount:
+      name: tenants-store-reader
 
 clusterSecretStore:
   enabled: true
-  name: tenants
+  name: tenants-openbao
+  allowedNamespaces: []
 
 secretStore:
-  enabled: false
-  name: system
-  namespace: default
+  enabled: true
+  name: openbao

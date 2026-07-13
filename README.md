@@ -34,14 +34,20 @@ The installation of those components is made via helm install directly in the cl
 
 ## Application Management
 
-After the security, the kubernetes operator is installed, because it is relying on external secret operator and openbao. 
+After the security, the application management is installed, because it is relying on external secret operator and openbao. The namepaces must be installed over the security namespace, because the service account for openbao is requried.
 
 |Component|Purpose|Mandatory|Install Prio|
 |--|--|--|--|
-|Infra Clusterstore| Clusterstore for the infra secrets e.g. storage |✅|0|
-|Tenants Clusterstore| Clusterstore for the tenants secrets.|✅|0|
+|Infra App Namespace| An namespace package for infrastructure. |✅|0|
+|OCM App Namespace| An namespace package for OCM. |✅|0|
+|Catalogue App Namespace| An namespace package for Catalogue. |✅|0|
+|OCM W-Stack App Namespace| An namespace package for OCM-Stack. |✅|0|
+|TSA App Namespace| An namespace package for TSA. |✅|0|
+|DCS App Namespace| An namespace package for DCS. |✅|0|
+|ORCE App Namespace| An namespace package for ORCE. |✅|0|
 |[Kubernetes Operator](https://github.com/eclipse-xfsc/kubernetes-operator)| 
-The operator is an special xfsc operator and is installed first, to observe xfsc resources and injection requests for xfsc components. It has the task to decide, when an injection request has to be fullfilled or when a resource must be created (e.g. for databases, kyverno etc.)|✅|0|
+The operator is an special xfsc operator and is installed first, to observe xfsc resources and injection requests for xfsc components. It has the task to decide, when an injection request has to be fullfilled or when a resource must be created (e.g. for databases, kyverno etc.)|✅|1|
+
 
 ## Storage
 

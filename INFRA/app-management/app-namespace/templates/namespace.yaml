@@ -1,0 +1,16 @@
+{{- if .Values.targetNamespace.create }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "app-namespace.targetNamespace" . }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- with .Values.targetNamespace.labels }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+{{- with .Values.targetNamespace.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+{{- end }}

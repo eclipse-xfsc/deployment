@@ -1,22 +1,22 @@
 targetNamespace:
   create: true
-  name: infrastructure
+  name: ocm
   labels:
-    xsfc.io/zone: infrastructure
+    xsfc.io/zone: ocm
 
 openbao:
-  storeMountPath: infrastructure
+  storeMountPath: ocm
   storeSecretPrefix: ""
   resourceProvisioner:
     serviceAccount:
-      name: infrastructure-resource-provisioner
+      name: ocm-resource-provisioner
   storeReader:
     serviceAccount:
-      name: infrastructure-store-reader
+      name: ocm-store-reader
 
 clusterSecretStore:
   enabled: true
-  name: infrastructure-openbao
+  name: ocm-openbao
   allowedNamespaces: []
 
 secretStore:
