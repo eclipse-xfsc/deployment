@@ -8,6 +8,10 @@ openbao:
   enabled: true
   address: http://openbao.security.svc.cluster.local:8200
   authMountPath: kubernetes
+  bootstrapSecret:
+    path: bootstrap/vault
+    vaultAddrKey: VAULT_ADDR
+    vaultTokenKey: VAULT_TOKEN
 
   # Existing central identity created by the OpenBao bootstrap chart.
   bootstrapProvisioner:
@@ -34,6 +38,12 @@ openbao:
       engineManagement: true
       kv: true
       transit: true
+    serviceToken:
+      enabled: true
+      roleName: ""
+      displayName: ""
+      period: 24h
+      explicitMaxTTL: 0
 
   # Read-only identity used by ESO stores.
   storeReader:
@@ -65,3 +75,15 @@ clusterSecretStore:
 secretStore:
   enabled: true
   name: openbao
+
+externalSecret:
+  enabled: true
+  name: openbao-connection
+  refreshInterval: 1h
+
+  storeName: openbao
+  storeKind: SecretStore
+
+  target:
+    name: openbao-connection
+    creationPolicy: Owner

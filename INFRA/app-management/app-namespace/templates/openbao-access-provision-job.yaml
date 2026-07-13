@@ -14,69 +14,196 @@ metadata:
     helm.sh/hook-delete-policy: {{ .Values.provisioning.hook.deletePolicy | quote }}
 spec:
   backoffLimit: 3
+
   template:
     metadata:
       labels:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: openbao-access-provisioner
+
     spec:
       restartPolicy: OnFailure
       serviceAccountName: {{ .Values.openbao.bootstrapProvisioner.serviceAccount.name }}
+
       containers:
         - name: provision
           image: "{{ .Values.openbao.bootstrapProvisioner.image.repository }}:{{ .Values.openbao.bootstrapProvisioner.image.tag }}"
           imagePullPolicy: {{ .Values.openbao.bootstrapProvisioner.image.pullPolicy }}
+
           env:
             - name: BAO_ADDR
               value: {{ .Values.openbao.address | quote }}
+
             - name: AUTH_MOUNT_PATH
               value: {{ .Values.openbao.authMountPath | quote }}
+
             - name: BOOTSTRAP_ROLE
               value: {{ .Values.openbao.bootstrapProvisioner.role | quote }}
+
             - name: TARGET_NAMESPACE
               value: {{ include "app-namespace.targetNamespace" . | quote }}
+
             - name: RESOURCE_SA
               value: {{ include "app-namespace.resourceProvisionerServiceAccount" . | quote }}
+
             - name: RESOURCE_POLICY
               value: {{ include "app-namespace.resourceProvisionerPolicy" . | quote }}
+
             - name: RESOURCE_ROLE
               value: {{ include "app-namespace.resourceProvisionerRole" . | quote }}
+
             - name: RESOURCE_TTL
               value: {{ .Values.openbao.resourceProvisioner.tokenTTL | quote }}
+
             - name: RESOURCE_MAX_TTL
               value: {{ .Values.openbao.resourceProvisioner.tokenMaxTTL | quote }}
+
             - name: STORE_SA
               value: {{ include "app-namespace.storeReaderServiceAccount" . | quote }}
+
             - name: STORE_POLICY
               value: {{ include "app-namespace.storeReaderPolicy" . | quote }}
+
             - name: STORE_ROLE
               value: {{ include "app-namespace.storeReaderRole" . | quote }}
+
             - name: STORE_TTL
               value: {{ .Values.openbao.storeReader.tokenTTL | quote }}
+
             - name: STORE_MAX_TTL
               value: {{ .Values.openbao.storeReader.tokenMaxTTL | quote }}
+
             - name: STORE_MOUNT
               value: {{ .Values.openbao.storeMountPath | quote }}
+
             - name: STORE_PREFIX
               value: {{ .Values.openbao.storeSecretPrefix | quote }}
+
+            - name: BOOTSTRAP_SECRET_PATH
+              value: {{ .Values.openbao.bootstrapSecret.path | quote }}
+
+            - name: VAULT_ADDR_KEY
+              value: {{ .Values.openbao.bootstrapSecret.vaultAddrKey | quote }}
+
+            - name: VAULT_TOKEN_KEY
+              value: {{ .Values.openbao.bootstrapSecret.vaultTokenKey | quote }}
+
+            - name: SERVICE_TOKEN_ENABLED
+              value: {{ .Values.openbao.resourceProvisioner.serviceToken.enabled | quote }}
+
+            - name: SERVICE_TOKEN_ROLE
+              value: {{ include "app-namespace.resourceProvisionerTokenRole" . | quote }}
+
+            - name: SERVICE_TOKEN_DISPLAY_NAME
+              value: {{ include "app-namespace.resourceProvisionerTokenDisplayName" . | quote }}
+
+            - name: SERVICE_TOKEN_PERIOD
+              value: {{ .Values.openbao.resourceProvisioner.serviceToken.period | quote }}
+
+            - name: SERVICE_TOKEN_EXPLICIT_MAX_TTL
+              value: {{ .Values.openbao.resourceProvisioner.serviceToken.explicitMaxTTL | quote }}
+
             - name: ALLOW_ENGINE_MANAGEMENT
               value: {{ .Values.openbao.resourceProvisioner.permissions.engineManagement | quote }}
+
             - name: ALLOW_KV
               value: {{ .Values.openbao.resourceProvisioner.permissions.kv | quote }}
+
             - name: ALLOW_TRANSIT
               value: {{ .Values.openbao.resourceProvisioner.permissions.transit | quote }}
+
           command:
             - /bin/sh
             - -ec
             - |
-              JWT="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+              JWT="$(
+                cat /var/run/secrets/kubernetes.io/serviceaccount/token
+              )"
+
+              echo "Logging in to OpenBao as bootstrap provisioner..."
+
               export BAO_TOKEN="$(
-                bao write -field=token \
+                bao write \
+                  -field=token \
                   "auth/${AUTH_MOUNT_PATH}/login" \
                   role="$BOOTSTRAP_ROLE" \
                   jwt="$JWT"
               )"
-              test -n "$BAO_TOKEN"
+
+              if [ -z "$BAO_TOKEN" ]; then
+                echo "OpenBao bootstrap login failed."
+                exit 1
+              fi
+
+              case "$STORE_MOUNT" in
+                "")
+                  echo "openbao.storeMountPath must not be empty."
+                  exit 1
+                  ;;
+
+                /*)
+                  echo "STORE_MOUNT must not start with '/': ${STORE_MOUNT}"
+                  exit 1
+                  ;;
+
+                *..*)
+                  echo "STORE_MOUNT must not contain '..': ${STORE_MOUNT}"
+                  exit 1
+                  ;;
+
+                */)
+                  STORE_MOUNT="${STORE_MOUNT%/}"
+                  ;;
+              esac
+
+              case "$BOOTSTRAP_SECRET_PATH" in
+                "")
+                  echo "openbao.bootstrapSecret.path must not be empty."
+                  exit 1
+                  ;;
+
+                /*)
+                  echo "BOOTSTRAP_SECRET_PATH must not start with '/'."
+                  exit 1
+                  ;;
+
+                *..*)
+                  echo "BOOTSTRAP_SECRET_PATH must not contain '..'."
+                  exit 1
+                  ;;
+
+                */)
+                  BOOTSTRAP_SECRET_PATH="${BOOTSTRAP_SECRET_PATH%/}"
+                  ;;
+              esac
+
+              echo "Ensuring KV-v2 engine at mount ${STORE_MOUNT}..."
+
+              MOUNTS_JSON="$(
+                bao secrets list -format=json
+              )"
+
+              if echo "$MOUNTS_JSON" | grep -q "\"${STORE_MOUNT}/\""; then
+                echo "Mount ${STORE_MOUNT} already exists."
+
+                MOUNT_TYPE="$(
+                  echo "$MOUNTS_JSON" |
+                    sed -n \
+                      "s/.*\"${STORE_MOUNT}\\/\"[[:space:]]*:[[:space:]]*{[^}]*\"type\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p"
+                )"
+
+                if [ -n "$MOUNT_TYPE" ] && [ "$MOUNT_TYPE" != "kv" ]; then
+                  echo "Mount ${STORE_MOUNT} exists, but is not a KV engine."
+                  echo "Detected type: ${MOUNT_TYPE}"
+                  exit 1
+                fi
+              else
+                bao secrets enable \
+                  -path="$STORE_MOUNT" \
+                  kv-v2
+              fi
+
+              echo "Generating resource provisioner policy..."
 
               : > /tmp/resource-policy.hcl
 
@@ -87,25 +214,56 @@ spec:
               }
 
               path "sys/mounts/*" {
-                capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list",
+                  "sudo"
+                ]
+              }
+              path "sys/internal/ui/mounts/*" {
+                capabilities = ["read"]
               }
               POLICY
               fi
 
               if [ "$ALLOW_KV" = "true" ]; then
                 cat >> /tmp/resource-policy.hcl <<'POLICY'
-              # KV-v2 access for one-segment mounts such as apps, tenants or infra.
+              # KV-v2 access for one-segment mounts such as apps,
+              # tenants and infra.
               path "+/data/*" {
-                capabilities = ["create", "read", "update", "delete", "list"]
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
               }
 
               path "+/metadata/*" {
-                capabilities = ["create", "read", "update", "delete", "list"]
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
               }
 
-              path "+/delete/*" { capabilities = ["update"] }
-              path "+/undelete/*" { capabilities = ["update"] }
-              path "+/destroy/*" { capabilities = ["update"] }
+              path "+/delete/*" {
+                capabilities = ["update"]
+              }
+
+              path "+/undelete/*" {
+                capabilities = ["update"]
+              }
+
+              path "+/destroy/*" {
+                capabilities = ["update"]
+              }
               POLICY
               fi
 
@@ -116,25 +274,61 @@ spec:
               }
 
               path "+/keys/*" {
-                capabilities = ["create", "read", "update", "delete", "list"]
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
               }
 
-              path "+/encrypt/*" { capabilities = ["update"] }
-              path "+/decrypt/*" { capabilities = ["update"] }
-              path "+/rewrap/*" { capabilities = ["update"] }
-              path "+/sign/*" { capabilities = ["update"] }
-              path "+/verify/*" { capabilities = ["update"] }
-              path "+/hmac/*" { capabilities = ["update"] }
+              path "+/encrypt/*" {
+                capabilities = ["update"]
+              }
+
+              path "+/decrypt/*" {
+                capabilities = ["update"]
+              }
+
+              path "+/rewrap/*" {
+                capabilities = ["update"]
+              }
+
+              path "+/sign/*" {
+                capabilities = ["update"]
+              }
+
+              path "+/verify/*" {
+                capabilities = ["update"]
+              }
+
+              path "+/hmac/*" {
+                capabilities = ["update"]
+              }
               POLICY
               fi
 
               cat >> /tmp/resource-policy.hcl <<'POLICY'
-              path "auth/token/lookup-self" { capabilities = ["read"] }
-              path "auth/token/renew-self" { capabilities = ["update"] }
+              path "auth/token/lookup-self" {
+                capabilities = ["read"]
+              }
+
+              path "auth/token/renew-self" {
+                capabilities = ["update"]
+              }
               POLICY
 
-              bao policy write "$RESOURCE_POLICY" /tmp/resource-policy.hcl
-              bao write "auth/${AUTH_MOUNT_PATH}/role/${RESOURCE_ROLE}" \
+              echo "Writing resource provisioner policy ${RESOURCE_POLICY}..."
+
+              bao policy write \
+                "$RESOURCE_POLICY" \
+                /tmp/resource-policy.hcl
+
+              echo "Writing resource provisioner Kubernetes role ${RESOURCE_ROLE}..."
+
+              bao write \
+                "auth/${AUTH_MOUNT_PATH}/role/${RESOURCE_ROLE}" \
                 bound_service_account_names="$RESOURCE_SA" \
                 bound_service_account_namespaces="$TARGET_NAMESPACE" \
                 policies="$RESOURCE_POLICY" \
@@ -142,12 +336,17 @@ spec:
                 token_max_ttl="$RESOURCE_MAX_TTL"
 
               if [ -n "$STORE_PREFIX" ]; then
+                STORE_PREFIX="${STORE_PREFIX#/}"
+                STORE_PREFIX="${STORE_PREFIX%/}"
+
                 STORE_DATA_PATH="${STORE_MOUNT}/data/${STORE_PREFIX}/*"
                 STORE_METADATA_PATH="${STORE_MOUNT}/metadata/${STORE_PREFIX}/*"
               else
                 STORE_DATA_PATH="${STORE_MOUNT}/data/*"
                 STORE_METADATA_PATH="${STORE_MOUNT}/metadata/*"
               fi
+
+              echo "Generating store reader policy..."
 
               cat > /tmp/store-policy.hcl <<POLICY
               path "${STORE_DATA_PATH}" {
@@ -167,13 +366,93 @@ spec:
               }
               POLICY
 
-              bao policy write "$STORE_POLICY" /tmp/store-policy.hcl
-              bao write "auth/${AUTH_MOUNT_PATH}/role/${STORE_ROLE}" \
+              echo "Writing store reader policy ${STORE_POLICY}..."
+
+              bao policy write \
+                "$STORE_POLICY" \
+                /tmp/store-policy.hcl
+
+              echo "Writing store reader Kubernetes role ${STORE_ROLE}..."
+
+              bao write \
+                "auth/${AUTH_MOUNT_PATH}/role/${STORE_ROLE}" \
                 bound_service_account_names="$STORE_SA" \
                 bound_service_account_namespaces="$TARGET_NAMESPACE" \
                 policies="$STORE_POLICY" \
                 token_ttl="$STORE_TTL" \
                 token_max_ttl="$STORE_MAX_TTL"
 
-              echo "Configured resource role ${RESOURCE_ROLE} and store role ${STORE_ROLE}."
+              SERVICE_TOKEN=""
+
+              if [ "$SERVICE_TOKEN_ENABLED" = "true" ]; then
+                echo "Ensuring token role ${SERVICE_TOKEN_ROLE}..."
+
+                bao write \
+                  "auth/token/roles/${SERVICE_TOKEN_ROLE}" \
+                  allowed_policies="$RESOURCE_POLICY" \
+                  orphan=true \
+                  renewable=true \
+                  token_period="$SERVICE_TOKEN_PERIOD" \
+                  token_explicit_max_ttl="$SERVICE_TOKEN_EXPLICIT_MAX_TTL"
+
+                echo "Creating temporary service token for KV access..."
+
+                TEMP_SERVICE_TOKEN="$(
+                  bao token create -field=token -role="$SERVICE_TOKEN_ROLE" -display-name="${SERVICE_TOKEN_DISPLAY_NAME}-bootstrap")"
+
+                if [ -z "$TEMP_SERVICE_TOKEN" ]; then
+                  echo "Failed to create temporary service token."
+                  exit 1
+                fi
+
+                echo "Checking for existing service token..."
+
+                EXISTING_TOKEN="$(
+                  BAO_TOKEN="$TEMP_SERVICE_TOKEN" \
+                    bao kv get \
+                      -mount="$STORE_MOUNT" \
+                      -field="$VAULT_TOKEN_KEY" \
+                      "$BOOTSTRAP_SECRET_PATH" \
+                      2>/dev/null || true
+                )"
+
+                if [ -n "$EXISTING_TOKEN" ]; then
+                  if BAO_TOKEN="$EXISTING_TOKEN" \
+                    bao token lookup >/dev/null 2>&1; then
+                    echo "Existing service token is valid."
+                    SERVICE_TOKEN="$EXISTING_TOKEN"
+                    BAO_TOKEN="$TEMP_SERVICE_TOKEN" bao token revoke -self >/dev/null 2>&1 || true
+                  else
+                    echo "Existing service token is invalid or expired."
+                  fi
+                fi
+
+                if [ -z "$SERVICE_TOKEN" ]; then
+                  echo "Using newly created service token."
+                  SERVICE_TOKEN="$TEMP_SERVICE_TOKEN"
+                fi
+              fi
+
+              if [ -z "$SERVICE_TOKEN" ]; then
+                echo "No service token was created."
+                echo "Set openbao.resourceProvisioner.serviceToken.enabled=true."
+                exit 1
+              fi
+
+              echo "Writing OpenBao connection data to:"
+              echo "  ${STORE_MOUNT}/${BOOTSTRAP_SECRET_PATH}"
+
+              BAO_TOKEN="$SERVICE_TOKEN" \
+              bao kv put \
+                -mount="$STORE_MOUNT" \
+                "$BOOTSTRAP_SECRET_PATH" \
+                "${VAULT_ADDR_KEY}=${BAO_ADDR}" \
+                "${VAULT_TOKEN_KEY}=${SERVICE_TOKEN}"
+
+              echo
+              echo "Configured:"
+              echo "  KV mount:       ${STORE_MOUNT}"
+              echo "  Resource role:  ${RESOURCE_ROLE}"
+              echo "  Store role:     ${STORE_ROLE}"
+              echo "  Bootstrap path: ${STORE_MOUNT}/${BOOTSTRAP_SECRET_PATH}"
 {{- end }}

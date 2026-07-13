@@ -33,3 +33,19 @@
 {{- define "app-namespace.secretStoreName" -}}
 {{- default "openbao" .Values.secretStore.name | trunc 253 | trimSuffix "-" -}}
 {{- end -}}
+
+{{- define "app-namespace.resourceProvisionerTokenRole" -}}
+{{- if .Values.openbao.resourceProvisioner.serviceToken.roleName -}}
+{{- .Values.openbao.resourceProvisioner.serviceToken.roleName -}}
+{{- else -}}
+{{- printf "xfsc-%s-resource-token" (include "app-namespace.targetNamespace" .) | trunc 128 | trimSuffix "-" -}}
+{{- end -}}
+{{- end }}
+
+{{- define "app-namespace.resourceProvisionerTokenDisplayName" -}}
+{{- if .Values.openbao.resourceProvisioner.serviceToken.displayName -}}
+{{- .Values.openbao.resourceProvisioner.serviceToken.displayName -}}
+{{- else -}}
+{{- printf "xfsc-%s-resource-token" (include "app-namespace.targetNamespace" .) | trunc 128 | trimSuffix "-" -}}
+{{- end -}}
+{{- end }}

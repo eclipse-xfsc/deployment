@@ -124,8 +124,6 @@ spec:
 
                 echo "$STATUS"
 
-                # bao status liefert bei sealed üblicherweise einen von null
-                # verschiedenen Returncode. Daher wird die Ausgabe geprüft.
                 if echo "$STATUS" | grep -q "Initialized"; then
                   break
                 fi
@@ -332,13 +330,17 @@ spec:
 
               kubectl -n "$NAMESPACE" exec -i "$OPENBAO_POD" -- \
                 sh -c "cat > /tmp/${PROVISIONER_POLICY}.hcl" <<POLICY_EOF
-              # Read the currently configured mounts.
+              # ------------------------------------------------------------
+              # Secret-engine management
+              # ------------------------------------------------------------
+
               path "sys/mounts" {
-                capabilities = ["read", "list"]
+                capabilities = [
+                  "read",
+                  "list"
+                ]
               }
 
-              # The XFSC OpenBao installation is dedicated to XFSC.
-              # Therefore the provisioner may manage arbitrary secret mounts.
               path "sys/mounts/*" {
                 capabilities = [
                   "create",
@@ -350,13 +352,16 @@ spec:
                 ]
               }
 
-              # Downstream Helm charts may create policies using the
-              # configured managed prefix.
+              # ------------------------------------------------------------
+              # Managed ACL policies
               #
-              # Examples:
-              #   ${MANAGED_RESOURCE_PREFIX}redis-tenant-a-writer
-              #   ${MANAGED_RESOURCE_PREFIX}redis-tenant-a-reader
-              #   ${MANAGED_RESOURCE_PREFIX}infra-reader
+              # Downstream charts may only manage policies using the
+              # configured prefix, for example:
+              #
+              #   ${MANAGED_RESOURCE_PREFIX}infrastructure-resource
+              #   ${MANAGED_RESOURCE_PREFIX}infrastructure-store-reader
+              # ------------------------------------------------------------
+
               path "sys/policies/acl/${MANAGED_RESOURCE_PREFIX}*" {
                 capabilities = [
                   "create",
@@ -367,10 +372,15 @@ spec:
                 ]
               }
 
-              # Downstream Helm charts may create Kubernetes authentication
-              # roles using the configured managed prefix.
+              # ------------------------------------------------------------
+              # Managed Kubernetes authentication roles
+              # ------------------------------------------------------------
+
               path "auth/${KUBERNETES_AUTH_PATH}/role" {
-                capabilities = ["read", "list"]
+                capabilities = [
+                  "read",
+                  "list"
+                ]
               }
 
               path "auth/${KUBERNETES_AUTH_PATH}/role/${MANAGED_RESOURCE_PREFIX}*" {
@@ -383,15 +393,80 @@ spec:
                 ]
               }
 
-              # Permit introspection and renewal of the short-lived token.
+              # ------------------------------------------------------------
+              # Managed token roles
+              #
+              # Downstream charts can create token roles such as:
+              #
+              #   xfsc-infrastructure-resource-token
+              #
+              # The token role controls the permitted policies, TTL,
+              # renewability and orphan behavior of generated tokens.
+              # ------------------------------------------------------------
+
+              path "auth/token/roles" {
+                capabilities = [
+                  "read",
+                  "list"
+                ]
+              }
+
+              path "auth/token/roles/${MANAGED_RESOURCE_PREFIX}*" {
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
+              }
+
+              # ------------------------------------------------------------
+              # Token creation through managed token roles
+              #
+              # Example:
+              #
+              #   auth/token/create/xfsc-infrastructure-resource-token
+              # ------------------------------------------------------------
+
+              path "auth/token/create/${MANAGED_RESOURCE_PREFIX}*" {
+                capabilities = [
+                  "create",
+                  "update",
+                  "sudo"
+                ]
+              }
+
+              # Optional fallback for jobs which explicitly create orphan
+              # tokens without using a managed token role.
+              #
+              # Prefer auth/token/create/<managed-role> whenever possible.
+              path "auth/token/create-orphan" {
+                capabilities = [
+                  "create",
+                  "update",
+                  "sudo"
+                ]
+              }
+
+              # ------------------------------------------------------------
+              # Token inspection and renewal
+              # ------------------------------------------------------------
+
               path "auth/token/lookup-self" {
-                capabilities = ["read"]
+                capabilities = [
+                  "read"
+                ]
               }
 
               path "auth/token/renew-self" {
-                capabilities = ["update"]
+                capabilities = [
+                  "update"
+                ]
               }
               POLICY_EOF
+
+              echo "Installing provisioner policy ${PROVISIONER_POLICY}..."
 
               bao_exec_root "
                 bao policy write \
@@ -411,6 +486,15 @@ spec:
                   token_max_ttl='$PROVISIONER_TOKEN_MAX_TTL'
               "
 
+              echo "Validating provisioner configuration..."
+
+              bao_exec_root "
+                bao policy read '$PROVISIONER_POLICY' >/dev/null
+                bao read \
+                  'auth/$KUBERNETES_AUTH_PATH/role/$PROVISIONER_ROLE' \
+                  >/dev/null
+              "
+
               echo "Writing provisioner discovery ConfigMap..."
 
               kubectl -n "$NAMESPACE" create configmap \
@@ -418,7 +502,9 @@ spec:
                 --from-literal=OPENBAO_ADDR="$OPENBAO_EXTERNAL_ADDR" \
                 --from-literal=OPENBAO_AUTH_PATH="$KUBERNETES_AUTH_PATH" \
                 --from-literal=OPENBAO_PROVISIONER_ROLE="$PROVISIONER_ROLE" \
+                --from-literal=OPENBAO_PROVISIONER_POLICY="$PROVISIONER_POLICY" \
                 --from-literal=OPENBAO_PROVISIONER_SERVICE_ACCOUNT="$PROVISIONER_SERVICE_ACCOUNT" \
+                --from-literal=OPENBAO_PROVISIONER_SERVICE_ACCOUNT_NAMESPACE="$NAMESPACE" \
                 --from-literal=OPENBAO_MANAGED_RESOURCE_PREFIX="$MANAGED_RESOURCE_PREFIX" \
                 --dry-run=client \
                 -o yaml \
@@ -428,6 +514,7 @@ spec:
                     type.xsfc.io=openbao-provisioner \
                     app.kubernetes.io/name=openbao-provisioner \
                     app.kubernetes.io/instance="$RELEASE_NAME" \
+                    app.kubernetes.io/component=openbao-provisioner \
                     -o yaml \
                 | kubectl apply -f -
 
@@ -442,5 +529,13 @@ spec:
               echo "  OpenBao role:   ${PROVISIONER_ROLE}"
               echo "  OpenBao policy: ${PROVISIONER_POLICY}"
               echo
-              echo "Managed policy and role prefix:"
+              echo "Managed resource prefix:"
               echo "  ${MANAGED_RESOURCE_PREFIX}"
+              echo
+              echo "Provisioner capabilities:"
+              echo "  - manage secret engines"
+              echo "  - manage ${MANAGED_RESOURCE_PREFIX}* ACL policies"
+              echo "  - manage ${MANAGED_RESOURCE_PREFIX}* Kubernetes auth roles"
+              echo "  - manage ${MANAGED_RESOURCE_PREFIX}* token roles"
+              echo "  - create service tokens through managed token roles"
+              echo "  - create orphan tokens"
