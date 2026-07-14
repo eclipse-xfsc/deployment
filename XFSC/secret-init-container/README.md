@@ -1,4 +1,4 @@
-# XFSC OpenBao Init Container
+# XFSC Secret Init Container
 
 The XFSC OpenBao Init Container provisions secrets and optional Transit
 resources in OpenBao before an application is installed or started.
