@@ -1,0 +1,24 @@
+targetNamespace:
+  create: true
+  name: ocm-wstack
+  labels:
+    xsfc.io/zone: ocm-wstack
+
+openbao:
+  storeMountPath: ocm-wstack
+  storeSecretPrefix: ""
+  resourceProvisioner:
+    serviceAccount:
+      name: ocm-wstack-resource-provisioner
+  storeReader:
+    serviceAccount:
+      name: ocm-wstack-store-reader
+
+clusterSecretStore:
+  enabled: true
+  name: ocm-wstack-openbao
+  allowedNamespaces: []
+
+secretStore:
+  enabled: true
+  name: openbao

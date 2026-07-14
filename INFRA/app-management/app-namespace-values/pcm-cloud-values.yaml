@@ -1,0 +1,24 @@
+targetNamespace:
+  create: true
+  name: pcm-cloud
+  labels:
+    xsfc.io/zone: pcm-cloud
+
+openbao:
+  storeMountPath: pcm-cloud
+  storeSecretPrefix: ""
+  resourceProvisioner:
+    serviceAccount:
+      name: pcm-cloud-resource-provisioner
+  storeReader:
+    serviceAccount:
+      name: pcm-cloud-store-reader
+
+clusterSecretStore:
+  enabled: true
+  name: pcm-cloud-openbao
+  allowedNamespaces: []
+
+secretStore:
+  enabled: true
+  name: openbao

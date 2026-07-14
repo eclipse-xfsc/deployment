@@ -6,7 +6,9 @@ The deployment setup is orchestrated by ORCE and finally executed/operated by [a
 
 To integrate the cluster bootstrap better in the orchestration engine, an [installer](./XFSC/orce-clusteradmin/) provides an rest api for easier usage with kubernetes clusters. The ORCE can then decide if some features of the products are installed or not. 
 
-# Layer
+# Preperation Layer
+
+This layer has to be installed beforehand in the cluster without argo cd, to enable the basement for all other following componenents. All components must be installed in the order as declared. 
 
 ## Argo CD
 
@@ -45,9 +47,9 @@ After the security, the application management is installed, because it is relyi
 |TSA App Namespace| An namespace package for TSA. |✅|0|
 |DCS App Namespace| An namespace package for DCS. |✅|0|
 |ORCE App Namespace| An namespace package for ORCE. |✅|0|
-|[Kubernetes Operator](https://github.com/eclipse-xfsc/kubernetes-operator)| 
-The operator is an special xfsc operator and is installed first, to observe xfsc resources and injection requests for xfsc components. It has the task to decide, when an injection request has to be fullfilled or when a resource must be created (e.g. for databases, kyverno etc.)|✅|1|
+|[Kubernetes Operator](https://github.com/eclipse-xfsc/kubernetes-operator)| The operator is an special xfsc operator and is installed first, to observe xfsc resources and injection requests for xfsc components. It has the task to decide, when an injection request has to be fullfilled or when a resource must be created (e.g. for databases, kyverno etc.)|✅|1|
 
+# Infrastructure Component Layer
 
 ## Storage
 
@@ -77,4 +79,6 @@ The core layer consits basic tools which are required for operating the xfsc sta
 
 
 ## Tenant Management
+
+# Application Layer
 
