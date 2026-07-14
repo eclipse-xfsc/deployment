@@ -60,7 +60,7 @@ redisAcl:
     pullPolicy: IfNotPresent
 
   # Empty uses <release-name>-redis-master.
-  host: ""
+  host: "redis-master.infrastructure.svc.cluster.local"
   port: 6379
 
   # Restrict these for production instead of +@all and ~*.
