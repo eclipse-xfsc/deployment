@@ -74,7 +74,12 @@ redisAcl:
     deletePolicy: before-hook-creation,hook-succeeded
 
 redis:
-  architecture: standalone
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/redis
+    tag: 7.4.2-debian-12-r4
+
+  architecture: replication
 
   auth:
     enabled: true
@@ -87,4 +92,4 @@ redis:
       size: 8Gi
 
   replica:
-    replicaCount: 0
+    replicaCount: 3
