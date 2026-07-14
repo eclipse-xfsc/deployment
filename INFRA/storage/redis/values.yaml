@@ -3,7 +3,7 @@ openbaoInit:
 
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
-    tag: "0.1.0"
+    tag: "latest"
     pullPolicy: Always
 
   # Must already exist and be bound to the configured OpenBao role.
