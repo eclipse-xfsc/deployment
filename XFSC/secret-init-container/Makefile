@@ -47,11 +47,8 @@ buildx: builder
 		--platform "$(PLATFORMS)" \
 		--tag "$(IMAGE)" \
 		--file deployment/docker/Dockerfile \
+		--push \
 		.
-
-.PHONY: push
-push: builder
-	docker push --tag "$(IMAGE)"
 
 .PHONY: inspect
 inspect:

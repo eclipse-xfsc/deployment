@@ -1,3 +1,4 @@
 tag: k8s-bootstrap
 path: INFRA/core/*
 name: core
+namespace: infrastructure

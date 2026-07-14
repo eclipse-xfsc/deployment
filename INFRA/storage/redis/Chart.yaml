@@ -1,0 +1,11 @@
+apiVersion: v2
+name: redis
+description: Bitnami Redis with OpenBao credential provisioning and External Secrets Operator
+type: application
+version: 0.1.0
+appVersion: "8.0"
+
+dependencies:
+  - name: redis
+    version: "20.11.3"
+    repository: "https://charts.bitnami.com/bitnami"
