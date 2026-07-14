@@ -9,7 +9,7 @@ openbao:
   address: http://openbao.security.svc.cluster.local:8200
   authMountPath: kubernetes
   bootstrapSecret:
-    path: bootstrap/vault
+    path: vault
     vaultAddrKey: VAULT_ADDR
     vaultTokenKey: VAULT_TOKEN
 
