@@ -14,7 +14,7 @@ openbaoInit:
   role: xfsc-infrastructure-resource-provisioner
 
   kv:
-    mount: apps
+    mount: infrastructure
     # Empty means: redis/<Helm release name>
     path: ""
 
@@ -42,8 +42,8 @@ externalSecret:
   refreshInterval: 15m
 
   store:
-    name: apps
-    kind: ClusterSecretStore
+    name: openbao
+    kind: SecretStore
 
   target:
     # Must match redis.auth.existingSecret.
