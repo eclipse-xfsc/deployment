@@ -10,7 +10,7 @@ openbao:
     name: infrastructure-resource-provisioner
   secretStore:
     enabled: true
-    name: infrastructure
+    name: openbao
 
 openbaoInit:
   enabled: true
