@@ -1,5 +1,5 @@
 apiVersion: v2
-name: xfsc-cassandra-light
+name: xfsc-cassandra
 description: Lightweight internal Apache Cassandra cluster with OpenBao, ESO and XFSC ResourceProvider
 type: application
 version: 0.1.0
