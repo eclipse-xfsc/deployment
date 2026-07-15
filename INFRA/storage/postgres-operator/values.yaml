@@ -1,0 +1,75 @@
+cloudnative-pg:
+  crds:
+    create: true
+
+  replicaCount: 1
+
+  image:
+    repository: ghcr.io/cloudnative-pg/cloudnative-pg
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  imagePullSecrets: []
+
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+
+  rbac:
+    create: true
+    aggregateClusterRoles: false
+
+  config:
+    create: true
+    name: ""
+    data: {}
+    secret: false
+
+  monitoring:
+    podMonitorEnabled: false
+    grafanaDashboard:
+      create: false
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  priorityClassName: ""
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+  webhook:
+    port: 9443
+
+  additionalArgs: []
+
+  watchNamespaces: []
+
+wrapper:
+  networkPolicy:
+    enabled: false
+    allowIngressFromNamespaces: []
