@@ -1,5 +1,32 @@
-nameOverride: ""
-fullnameOverride: ""
+image:
+  registry: docker.io
+  repository: library/cassandra
+  tag: "5.0.5"
+  pullPolicy: IfNotPresent
+
+replicaCount: 3
+
+cluster:
+  name: xfsc-infrastructure
+  datacenter: dc1
+  rack: rack1
+  numTokens: 16
+  heap:
+    max: 2G
+    new: 400M
+
+persistence:
+  enabled: true
+  size: 20Gi
+  storageClass: ""
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 2Gi
+  limits:
+    cpu: "2"
+    memory: 4Gi
 
 openbao:
   address: http://openbao.security.svc.cluster.local:8200
@@ -32,32 +59,22 @@ externalSecret:
     creationPolicy: Owner
     deletionPolicy: Retain
 
-cluster:
+passwordBootstrap:
   enabled: true
-  serverVersion: "5.0"
-  serverImage: ""
-  datacenterName: dc1
-  size: 1
-  racks:
-    - name: rack1
-  storage:
-    size: 20Gi
-    storageClass: ""
-  heapSize: 1Gi
-  resources:
-    requests:
-      cpu: 500m
-      memory: 2Gi
-    limits:
-      cpu: "2"
-      memory: 4Gi
-  reaper:
-    enabled: false
+  image:
+    registry: docker.io
+    repository: library/cassandra
+    tag: "5.0.5"
+    pullPolicy: IfNotPresent
 
 resourceProvider:
   enabled: true
   name: ""
   scope: Cluster
-  description: Cassandra connection provided by this K8ssandra cluster.
+  description: Cassandra connection provided by this internal StatefulSet cluster.
   allow:
     namespaces: []
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2

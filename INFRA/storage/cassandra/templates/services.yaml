@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cass.headless" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: {{ include "cass.fullname" . }}
+  ports:
+    - name: internode
+      port: 7000
+    - name: tls-internode
+      port: 7001
+    - name: cql
+      port: 9042
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cass.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "cass.fullname" . }}
+  ports:
+    - name: cql
+      port: 9042
+      targetPort: cql

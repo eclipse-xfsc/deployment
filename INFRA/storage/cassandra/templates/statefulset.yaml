@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "cass.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceName: {{ include "cass.headless" . }}
+  replicas: {{ .Values.replicaCount }}
+  podManagementPolicy: OrderedReady
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "cass.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "cass.fullname" . }}
+    spec:
+      terminationGracePeriodSeconds: 180
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: configure
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: [/bin/bash, /scripts/configure.sh]
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: CASSANDRA_CLUSTER_NAME
+              value: {{ .Values.cluster.name | quote }}
+            - name: CASSANDRA_DC
+              value: {{ .Values.cluster.datacenter | quote }}
+            - name: CASSANDRA_RACK
+              value: {{ .Values.cluster.rack | quote }}
+            - name: CASSANDRA_NUM_TOKENS
+              value: {{ .Values.cluster.numTokens | quote }}
+            - name: MAX_HEAP_SIZE
+              value: {{ .Values.cluster.heap.max | quote }}
+            - name: HEAP_NEWSIZE
+              value: {{ .Values.cluster.heap.new | quote }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+            - name: config
+              mountPath: /work
+      containers:
+        - name: cassandra
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: CASSANDRA_CONF
+              value: /config
+            - name: CASSANDRA_SEEDS
+              value: {{ include "cass.seed" . | quote }}
+          ports:
+            - name: cql
+              containerPort: 9042
+            - name: internode
+              containerPort: 7000
+            - name: tls-internode
+              containerPort: 7001
+            - name: jmx
+              containerPort: 7199
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command: [/bin/bash, -ec, 'nodetool statusbinary | grep -q running']
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command: [/bin/bash, -ec, 'nodetool statusbinary | grep -q running']
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: [/bin/bash, -ec, 'nodetool statusbinary | grep -q running']
+            initialDelaySeconds: 120
+            periodSeconds: 30
+          lifecycle:
+            preStop:
+              exec:
+                command: [/bin/bash, -ec, 'nodetool drain || true']
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/cassandra
+            - name: config
+              mountPath: /config
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "cass.fullname" . }}-config
+            defaultMode: 0755
+        - name: config
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+{{- if not .Values.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+{{- end }}
+{{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+{{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass | quote }}
+{{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+{{- end }}

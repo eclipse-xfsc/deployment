@@ -1,8 +1,28 @@
+{{- if .Values.openbao.secretStore.enabled }}
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: {{ .Values.openbao.secretStore.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  provider:
+    vault:
+      server: {{ .Values.openbao.address | quote }}
+      path: {{ .Values.openbao.kvMount | quote }}
+      version: v2
+      auth:
+        kubernetes:
+          mountPath: {{ .Values.openbao.authPath | quote }}
+          role: {{ .Values.openbao.role | quote }}
+          serviceAccountRef:
+            name: {{ .Values.openbao.serviceAccount.name }}
+{{- end }}
+---
 {{- if .Values.externalSecret.enabled }}
 apiVersion: {{ .Values.externalSecret.apiVersion }}
 kind: ExternalSecret
 metadata:
-  name: {{ include "cass.superuserSecret" . }}
+  name: {{ include "cass.authSecret" . }}
   namespace: {{ .Release.Namespace }}
 spec:
   refreshInterval: {{ .Values.externalSecret.refreshInterval }}
@@ -10,7 +30,7 @@ spec:
     name: {{ .Values.openbao.secretStore.name }}
     kind: SecretStore
   target:
-    name: {{ include "cass.superuserSecret" . }}
+    name: {{ include "cass.authSecret" . }}
     creationPolicy: {{ .Values.externalSecret.target.creationPolicy }}
     deletionPolicy: {{ .Values.externalSecret.target.deletionPolicy }}
   data:

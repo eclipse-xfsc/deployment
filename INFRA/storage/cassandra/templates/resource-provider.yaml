@@ -15,7 +15,7 @@ spec:
 {{- end }}
   outputs:
     env:
-      CASSANDRA_HOST: {{ printf "%s-%s-service.%s.svc.cluster.local" (include "cass.fullname" .) .Values.cluster.datacenterName .Release.Namespace | quote }}
+      CASSANDRA_HOST: {{ printf "%s.%s.svc.cluster.local" (include "cass.fullname" .) .Release.Namespace | quote }}
       CASSANDRA_PORT: "9042"
-      CASSANDRA_DATACENTER: {{ .Values.cluster.datacenterName | quote }}
+      CASSANDRA_DATACENTER: {{ .Values.cluster.datacenter | quote }}
 {{- end }}
