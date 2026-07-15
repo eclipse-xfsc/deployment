@@ -1,3 +1,7 @@
+global:
+  security:
+    allowInsecureImages: true
+
 openbaoInit:
   enabled: true
   image:
@@ -44,7 +48,7 @@ resourceProvider:
 cassandra:
   image:
     registry: docker.io
-    repository: bitnami/cassandra
+    repository: cassandra
     tag: latest
   replicaCount: 1
   dbUser:
