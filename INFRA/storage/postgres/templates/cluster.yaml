@@ -1,0 +1,41 @@
+{{- if .Values.cluster.enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "xfsc-postgresql-cnpg.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  instances: {{ .Values.cluster.instances }}
+  imageName: {{ .Values.cluster.imageName | quote }}
+  enableSuperuserAccess: {{ .Values.cluster.enableSuperuserAccess }}
+  superuserSecret:
+    name: {{ include "xfsc-postgresql-cnpg.superuserSecret" . }}
+  bootstrap:
+    initdb:
+      dataChecksums: {{ .Values.cluster.bootstrap.initdb.dataChecksums }}
+      encoding: {{ .Values.cluster.bootstrap.initdb.encoding | quote }}
+      localeCType: {{ .Values.cluster.bootstrap.initdb.localeCType | quote }}
+      localeCollate: {{ .Values.cluster.bootstrap.initdb.localeCollate | quote }}
+  storage:
+    size: {{ .Values.cluster.storage.size | quote }}
+{{- if .Values.cluster.storage.storageClass }}
+    storageClass: {{ .Values.cluster.storage.storageClass | quote }}
+{{- end }}
+{{- if .Values.cluster.walStorage.enabled }}
+  walStorage:
+    size: {{ .Values.cluster.walStorage.size | quote }}
+{{- if .Values.cluster.walStorage.storageClass }}
+    storageClass: {{ .Values.cluster.walStorage.storageClass | quote }}
+{{- end }}
+{{- end }}
+  postgresql:
+    parameters:
+{{ toYaml .Values.cluster.postgresql.parameters | indent 6 }}
+  resources:
+{{ toYaml .Values.cluster.resources | indent 4 }}
+  affinity:
+    podAntiAffinityType: preferred
+    topologyKey: {{ .Values.cluster.affinity.topologyKey | quote }}
+  monitoring:
+    enablePodMonitor: {{ .Values.cluster.monitoring.enablePodMonitor }}
+{{- end }}

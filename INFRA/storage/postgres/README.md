@@ -1,77 +1,63 @@
-# XFSC PostgreSQL OpenBao Chart
+# XFSC PostgreSQL CloudNativePG Chart
 
-This chart installs PostgreSQL with only its administrative bootstrap account.
+This chart replaces the Bitnami PostgreSQL dependency with a native CloudNativePG `Cluster` resource.
 
-No application-specific users, databases, keyspaces, buckets or ACL accounts
-are created during installation. Those resources are expected to be created
-later by the XFSC Resource Provisioner when a concrete workload requests them.
+## Install the operator first
+
+```bash
+helm repo add cnpg https://cloudnative-pg.github.io/charts
+helm repo update
+helm upgrade --install cnpg cnpg/cloudnative-pg --namespace cnpg-system --create-namespace
+```
+
+## What this chart creates
+
+- namespaced `SecretStore/infrastructure`
+- OpenBao pre-install Job
+- `ExternalSecret` for the `postgres` superuser
+- CloudNativePG `Cluster`
+- XFSC `ResourceProvider` with connection data only
 
 ## OpenBao
 
-Default KV-v2 mount:
+Default mount: `infrastructure`
+
+Default logical path for release `postgresql`:
 
 ```text
-infrastructure
+postgresql/postgresql
 ```
 
-Default logical secret path:
+Stored data:
 
-```text
-infrastructure/postgresql/<release-name>
+```json
+{"username":"postgres","password":"<generated>"}
 ```
 
-Stored keys:
+No application role or application database is created.
 
-```text
-postgres-password
+## Install
+
+```bash
+helm upgrade --install postgresql . --namespace infrastructure
 ```
 
-## Behavior
+## Services
 
-1. The pre-install Job authenticates through the namespace Resource Provisioner
-   ServiceAccount.
-2. It creates the `infrastructure` KV-v2 mount only when it does not exist.
-3. It writes the administrative bootstrap credentials.
-4. ESO synchronizes them into the root Kubernetes Secret.
-5. The Bitnami chart starts the service with that root/admin account.
-6. No application user is created.
+CloudNativePG creates `postgresql-rw`, `postgresql-ro`, and `postgresql-r` services. The XFSC provider points to `postgresql-rw.infrastructure.svc.cluster.local:5432`.
 
-## Later provisioning
-
-The XFSC operator or Resource Provisioner can later:
-
-- generate workload-specific credentials,
-- connect using the administrative account,
-- create the requested user/database/keyspace/bucket,
-- store the workload credentials below a separate path,
-- create an `ExternalSecret` for the consuming workload.
-
-## Important
-
-The root Secret must not be exposed through a general workload
-`ResourceProvider`. Keep root credentials restricted to the infrastructure
-namespace and the provisioning component.
-
-## ResourceProvider connection
-
-The chart renders a namespaced XFSC `ResourceProvider` by default. It contains
-only static connection values under `spec.outputs.env`. It does not expose the
-administrative bootstrap credentials and does not create an
-`externalSecrets` mapping.
-
-Disable it with:
+## HA
 
 ```yaml
-resourceProvider:
-  enabled: false
+cluster:
+  instances: 3
 ```
 
-Restrict cluster-scope resolution to selected consumer namespaces with:
+## Image
 
 ```yaml
-resourceProvider:
-  allow:
-    namespaces:
-      - tenant-a
-      - tenant-b
+cluster:
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.10-202606221003-system-bookworm
 ```
+
+Pin by digest in production.

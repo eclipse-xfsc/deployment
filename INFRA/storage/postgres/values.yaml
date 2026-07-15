@@ -1,6 +1,16 @@
-global:
-  security:
-    allowInsecureImages: true
+nameOverride: ""
+fullnameOverride: ""
+
+openbao:
+  address: http://openbao.security.svc.cluster.local:8200
+  authPath: kubernetes
+  role: xfsc-infrastructure-resource-provisioner
+  kvMount: infrastructure
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+  secretStore:
+    enabled: true
+    name: infrastructure
 
 openbaoInit:
   enabled: true
@@ -8,52 +18,60 @@ openbaoInit:
     repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
     tag: "latest"
     pullPolicy: Always
-  serviceAccountName: infrastructure-resource-provisioner
-  address: http://openbao.security.svc.cluster.local:8200
-  authPath: kubernetes
-  role: xfsc-infrastructure-resource-provisioner
-  kv:
-    mount: infrastructure
-    path: ""
+  secretPath: ""
   values:
-    postgres-password: '$RANDOM_64'
-  transit:
-    enabled: false
-    engines: []
+    username: postgres
+    password: '$RANDOM_64'
 
 externalSecret:
   enabled: true
   apiVersion: external-secrets.io/v1
   refreshInterval: 15m
-  store:
-    name: openbao
-    kind: SecretStore
   target:
-    name: postgresql-root-auth
+    name: ""
     creationPolicy: Owner
     deletionPolicy: Retain
+
+cluster:
+  enabled: true
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.10-202606221003-system-bookworm
+  instances: 1
+  storage:
+    size: 8Gi
+    storageClass: ""
+  walStorage:
+    enabled: false
+    size: 2Gi
+    storageClass: ""
+  enableSuperuserAccess: true
+  bootstrap:
+    initdb:
+      dataChecksums: true
+      encoding: UTF8
+      localeCType: C
+      localeCollate: C
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: 256MB
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  monitoring:
+    enablePodMonitor: false
+  affinity:
+    topologyKey: kubernetes.io/hostname
 
 resourceProvider:
   enabled: true
   name: ""
   scope: Cluster
-  description: PostgreSQL connection provided by this Helm release.
+  description: PostgreSQL connection provided by this CloudNativePG cluster.
   allow:
     namespaces: []
-  sslMode: disable
-
-postgresql:
-  image:
-    registry: docker.io
-    repository: bitnami/postgresql
-    tag: latest
-  architecture: standalone
-  auth:
-    enablePostgresUser: true
-    existingSecret: postgresql-root-auth
-    secretKeys:
-      adminPasswordKey: postgres-password
-  primary:
-    persistence:
-      enabled: true
-      size: 8Gi
+  sslMode: require
+  serviceSuffix: rw
