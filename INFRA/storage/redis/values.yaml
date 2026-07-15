@@ -1,62 +1,88 @@
-global:
-  security:
-    allowInsecureImages: true
+nameOverride: ""
+fullnameOverride: ""
 
-openbaoInit:
-  enabled: true
-  image:
-    repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
-    tag: "latest"
-    pullPolicy: Always
-  serviceAccountName: infrastructure-resource-provisioner
+openbao:
   address: http://openbao.security.svc.cluster.local:8200
   authPath: kubernetes
   role: xfsc-infrastructure-resource-provisioner
-  kv:
-    mount: infrastructure
-    path: ""
+  kvMount: infrastructure
+
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+
+  secretStore:
+    enabled: true
+    name: openbao
+
+openbaoInit:
+  enabled: true
+
+  image:
+    repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
+    tag: latest
+    pullPolicy: Always
+
+  # Empty means redis/<release-name>
+  secretPath: ""
+
   values:
-    redis-password: '$RANDOM_64'
-  transit:
-    enabled: false
-    engines: []
+    password: '$RANDOM_64'
 
 externalSecret:
   enabled: true
   apiVersion: external-secrets.io/v1
   refreshInterval: 15m
-  store:
-    name: openbao
-    kind: SecretStore
+
   target:
-    name: redis-root-auth
+    # Empty means <release-name>-root-auth
+    name: ""
     creationPolicy: Owner
     deletionPolicy: Retain
 
-redisAcl:
-  enabled: false
+redis:
+  enabled: true
+
+  image:
+    repository: quay.io/opstree/redis
+    tag: v8.6.2
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+  podSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.77.0
 
 resourceProvider:
   enabled: true
   name: ""
   scope: Cluster
-  description: Redis connection provided by this Helm release.
+  description: Redis connection provided by this OpsTree-managed Redis instance.
+
   allow:
     namespaces: []
 
-redis:
-  image:
-    registry: docker.io
-    repository: redis
-    tag: latest
-  architecture: standalone
-  auth:
-    enabled: true
-    existingSecret: redis-root-auth
-    existingSecretPasswordKey: redis-password
-  master:
-    persistence:
-      enabled: true
-      size: 8Gi
-  replica:
-    replicaCount: 0
+  tls: "false"
+  cluster: "false"

@@ -1,15 +1,23 @@
-{{- define "xfsc-redis-openbao.secretPath" -}}
-{{- if .Values.openbaoInit.kv.path -}}
-{{- .Values.openbaoInit.kv.path -}}
+{{- define "redis.fullname" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- printf "redis/%s" .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end }}
 
-{{- define "xfsc-redis-openbao.redisHost" -}}
-{{- if .Values.redisAcl.host -}}
-{{- .Values.redisAcl.host -}}
+{{- define "redis.secretPath" -}}
+{{- if .Values.openbaoInit.secretPath -}}
+{{- .Values.openbaoInit.secretPath -}}
 {{- else -}}
-{{- printf "%s-redis-master" .Release.Name -}}
+{{- printf "redis/%s" (include "redis.fullname" .) -}}
+{{- end -}}
+{{- end }}
+
+{{- define "redis.authSecret" -}}
+{{- if .Values.externalSecret.target.name -}}
+{{- .Values.externalSecret.target.name -}}
+{{- else -}}
+{{- printf "%s-root-auth" (include "redis.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end }}

@@ -1,11 +1,10 @@
 apiVersion: v2
-name: xfsc-minio-openbao
-description: Bitnami MinIO with OpenBao credential provisioning, ESO and S3 user provisioning
+name: xfsc-minio
+description: Official MinIO Tenant with OpenBao, ESO and XFSC ResourceProvider
 type: application
 version: 0.1.0
-appVersion: "2025.7.23"
-
+appVersion: "RELEASE.2025-04-08T15-41-24Z"
 dependencies:
-  - name: minio
-    version: ">=17.0.0 <18.0.0"
-    repository: "https://charts.bitnami.com/bitnami"
+  - name: tenant
+    version: "5.0.17"
+    repository: "https://operator.min.io/"

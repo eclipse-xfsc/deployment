@@ -2,12 +2,8 @@
 apiVersion: resources.xfsc.io/v1alpha1
 kind: ResourceProvider
 metadata:
-  name: {{ default (printf "%s-redis" .Release.Name) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
+  name: {{ default (printf "%s-redis" (include "redis.fullname" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: resource-provider
 spec:
   type: redis
   scope: {{ .Values.resourceProvider.scope | quote }}
@@ -19,8 +15,8 @@ spec:
 {{- end }}
   outputs:
     env:
-      REDIS_HOST: {{ printf "%s.%s.svc.cluster.local" (include "xfsc-redis-openbao.redisHost" .) .Release.Namespace | quote }}
+      REDIS_HOST: {{ printf "%s.%s.svc.cluster.local" (include "redis.fullname" .) .Release.Namespace | quote }}
       REDIS_PORT: "6379"
-      REDIS_TLS: "false"
-      REDIS_CLUSTER: {{ ternary "true" "false" (eq .Values.redis.architecture "replication") | quote }}
+      REDIS_TLS: {{ .Values.resourceProvider.tls | quote }}
+      REDIS_CLUSTER: {{ .Values.resourceProvider.cluster | quote }}
 {{- end }}

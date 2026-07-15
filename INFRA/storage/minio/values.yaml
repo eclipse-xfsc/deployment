@@ -1,70 +1,71 @@
-global:
-  security:
-    allowInsecureImages: true
+openbao:
+  address: http://openbao.security.svc.cluster.local:8200
+  authPath: kubernetes
+  role: xfsc-infrastructure-resource-provisioner
+  kvMount: infrastructure
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+  secretStore:
+    enabled: true
+    name: openbao
 
 openbaoInit:
   enabled: true
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
-    tag: "latest"
+    tag: latest
     pullPolicy: Always
-  serviceAccountName: infrastructure-resource-provisioner
-  address: http://openbao.security.svc.cluster.local:8200
-  authPath: kubernetes
-  role: xfsc-infrastructure-resource-provisioner
-  kv:
-    mount: infrastructure
-    path: ""
+  secretPath: ""
   values:
     root-user: minio-root
     root-password: '$RANDOM_64'
-  transit:
-    enabled: false
-    engines: []
 
 externalSecret:
   enabled: true
   apiVersion: external-secrets.io/v1
   refreshInterval: 15m
-  store:
-    name: openbao
-    kind: SecretStore
   target:
-    name: minio-root-auth
+    name: ""
     creationPolicy: Owner
     deletionPolicy: Retain
 
-minioUser:
-  enabled: false
+tenant:
+  tenant:
+    name: minio
+    image:
+      repository: quay.io/minio/minio
+      tag: RELEASE.2025-04-08T15-41-24Z
+      pullPolicy: IfNotPresent
+    configuration:
+      name: minio-env
+    configSecret:
+      name: minio-env
+      accessKey: ""
+      secretKey: ""
+      existingSecret: true
+    pools:
+      - name: pool-0
+        servers: 4
+        volumesPerServer: 1
+        size: 20Gi
+        storageClassName: ""
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+          limits:
+            cpu: "2"
+            memory: 4Gi
+    requestAutoCert: true
+    users: []
+    prometheusOperator: false
 
 resourceProvider:
   enabled: true
   name: ""
   scope: Cluster
-  description: S3-compatible connection provided by this MinIO Helm release.
+  description: S3-compatible connection provided by this MinIO Tenant.
   allow:
     namespaces: []
-  scheme: http
-  port: 9000
   region: us-east-1
   pathStyle: "true"
-
-minio:
-  image:
-    registry: docker.io
-    repository: minio
-    tag: latest
-  mode: standalone
-  auth:
-    existingSecret: minio-root-auth
-    rootUserSecretKey: root-user
-    rootPasswordSecretKey: root-password
-    usePasswordFiles: true
-    useSecret: true
-  defaultBuckets: ""
-  persistence:
-    enabled: true
-    size: 8Gi
-  networkPolicy:
-    enabled: true
-    allowExternal: true

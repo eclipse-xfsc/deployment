@@ -1,77 +1,79 @@
-# XFSC Redis OpenBao Chart
+# XFSC Redis OpsTree Chart
 
-This chart installs Redis with only its administrative bootstrap account.
+This chart replaces the Bitnami Redis dependency with the OpsTree Redis
+Operator and compatible images from Quay.
 
-No application-specific users, databases, keyspaces, buckets or ACL accounts
-are created during installation. Those resources are expected to be created
-later by the XFSC Resource Provisioner when a concrete workload requests them.
+## Prerequisite
+
+Install `xfsc-redis-operator` first.
+
+## What this chart creates
+
+- namespaced `SecretStore/infrastructure`
+- OpenBao pre-install Job
+- `ExternalSecret` containing the Redis root password
+- OpsTree `Redis` custom resource
+- XFSC `ResourceProvider` with connection data only
 
 ## OpenBao
 
-Default KV-v2 mount:
+Default mount:
 
 ```text
 infrastructure
 ```
 
-Default logical secret path:
+Default path:
 
 ```text
-infrastructure/redis/<release-name>
+redis/<release-name>
 ```
 
-Stored keys:
+Stored data:
 
-```text
-redis-password
+```json
+{
+  "password": "<generated>"
+}
 ```
 
-## Behavior
+No application ACL user is created. Workload-specific users are created later
+by the XFSC provisioner.
 
-1. The pre-install Job authenticates through the namespace Resource Provisioner
-   ServiceAccount.
-2. It creates the `infrastructure` KV-v2 mount only when it does not exist.
-3. It writes the administrative bootstrap credentials.
-4. ESO synchronizes them into the root Kubernetes Secret.
-5. The Bitnami chart starts the service with that root/admin account.
-6. No application user is created.
+## Install
 
-## Later provisioning
+```bash
+helm upgrade --install redis . --namespace infrastructure
+```
 
-The XFSC operator or Resource Provisioner can later:
-
-- generate workload-specific credentials,
-- connect using the administrative account,
-- create the requested user/database/keyspace/bucket,
-- store the workload credentials below a separate path,
-- create an `ExternalSecret` for the consuming workload.
-
-## Important
-
-The root Secret must not be exposed through a general workload
-`ResourceProvider`. Keep root credentials restricted to the infrastructure
-namespace and the provisioning component.
-
-## ResourceProvider connection
-
-The chart renders a namespaced XFSC `ResourceProvider` by default. It contains
-only static connection values under `spec.outputs.env`. It does not expose the
-administrative bootstrap credentials and does not create an
-`externalSecrets` mapping.
-
-Disable it with:
+## Image
 
 ```yaml
-resourceProvider:
-  enabled: false
+redis:
+  image:
+    repository: quay.io/opstree/redis
+    tag: v8.6.2
 ```
 
-Restrict cluster-scope resolution to selected consumer namespaces with:
+The OpsTree image is compatible with the operator-generated bootstrap process.
+
+## Test
+
+```bash
+kubectl run redis-auth-test   --rm -it   --restart=Never   --namespace infrastructure   --image=redis:8.2-alpine   --env="REDIS_PASSWORD=$(kubectl get secret redis-root-auth -n infrastructure -o jsonpath='{.data.password}' | base64 -d)"   -- sh -ec '
+    REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli -h redis -p 6379 PING
+  '
+```
+
+Adjust secret and service names when using a different Helm release name.
+
+## Argo CD
+
+Install the operator before this chart and enable:
 
 ```yaml
-resourceProvider:
-  allow:
-    namespaces:
-      - tenant-a
-      - tenant-b
+syncPolicy:
+  syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
 ```

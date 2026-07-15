@@ -1,66 +1,63 @@
-global:
-  security:
-    allowInsecureImages: true
+nameOverride: ""
+fullnameOverride: ""
+
+openbao:
+  address: http://openbao.security.svc.cluster.local:8200
+  authPath: kubernetes
+  role: xfsc-infrastructure-resource-provisioner
+  kvMount: infrastructure
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+  secretStore:
+    enabled: true
+    name: openbao
 
 openbaoInit:
   enabled: true
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
-    tag: "latest"
+    tag: latest
     pullPolicy: Always
-  serviceAccountName: infrastructure-resource-provisioner
-  address: http://openbao.security.svc.cluster.local:8200
-  authPath: kubernetes
-  role: xfsc-infrastructure-resource-provisioner
-  kv:
-    mount: infrastructure
-    path: ""
+  secretPath: ""
   values:
-    cassandra-password: '$RANDOM_64'
-  transit:
-    enabled: false
-    engines: []
+    username: cassandra
+    password: '$RANDOM_64'
 
 externalSecret:
   enabled: true
   apiVersion: external-secrets.io/v1
   refreshInterval: 15m
-  store:
-    name: openbao
-    kind: SecretStore
   target:
-    name: cassandra-root-auth
+    name: ""
     creationPolicy: Owner
     deletionPolicy: Retain
 
-cassandraRole:
-  enabled: false
+cluster:
+  enabled: true
+  serverVersion: "5.0"
+  serverImage: ""
+  datacenterName: dc1
+  size: 1
+  racks:
+    - name: rack1
+  storage:
+    size: 20Gi
+    storageClass: ""
+  heapSize: 1Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+  reaper:
+    enabled: false
 
 resourceProvider:
   enabled: true
   name: ""
   scope: Cluster
-  description: Cassandra connection provided by this Helm release.
+  description: Cassandra connection provided by this K8ssandra cluster.
   allow:
     namespaces: []
-  datacenter: dc1
-
-cassandra:
-  image:
-    registry: docker.io
-    repository: cassandra
-    tag: latest
-  replicaCount: 1
-  dbUser:
-    user: cassandra
-    existingSecret:
-      name: cassandra-root-auth
-      keyMapping:
-        cassandra-password: cassandra-password
-  cluster:
-    name: cassandra
-    datacenter: dc1
-    rack: rack1
-  persistence:
-    enabled: true
-    size: 8Gi

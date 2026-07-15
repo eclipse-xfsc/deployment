@@ -2,12 +2,8 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-openbao-init" .Release.Name | trunc 63 | trimSuffix "-" }}
+  name: {{ printf "%s-openbao-init" (include "redis.fullname" .) | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: {{ .Release.Name }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: openbao-init
   annotations:
     helm.sh/hook: pre-install
     helm.sh/hook-weight: "-20"
@@ -15,40 +11,28 @@ metadata:
 spec:
   backoffLimit: 3
   template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: {{ .Release.Name }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: openbao-init
     spec:
       restartPolicy: OnFailure
-      serviceAccountName: {{ required "openbaoInit.serviceAccountName is required" .Values.openbaoInit.serviceAccountName }}
+      serviceAccountName: {{ .Values.openbao.serviceAccount.name }}
       containers:
         - name: openbao-init
           image: "{{ .Values.openbaoInit.image.repository }}:{{ .Values.openbaoInit.image.tag }}"
           imagePullPolicy: {{ .Values.openbaoInit.image.pullPolicy }}
           env:
             - name: OPENBAO_ADDR
-              value: {{ required "openbaoInit.address is required" .Values.openbaoInit.address | quote }}
+              value: {{ .Values.openbao.address | quote }}
             - name: OPENBAO_AUTH_PATH
-              value: {{ default "kubernetes" .Values.openbaoInit.authPath | quote }}
+              value: {{ .Values.openbao.authPath | quote }}
             - name: OPENBAO_ROLE
-              value: {{ required "openbaoInit.role is required" .Values.openbaoInit.role | quote }}
+              value: {{ .Values.openbao.role | quote }}
             - name: KV_MOUNT
-              value: {{ required "openbaoInit.kv.mount is required" .Values.openbaoInit.kv.mount | quote }}
+              value: {{ .Values.openbao.kvMount | quote }}
             - name: KV_SECRET_PATH
-              value: {{ include "xfsc-redis-openbao.secretPath" . | quote }}
+              value: {{ include "redis.secretPath" . | quote }}
             - name: SECRET_VALUES
               value: |
 {{- range $key, $value := .Values.openbaoInit.values }}
                 {{ $key }}={{ $value }}
-{{- end }}
-            - name: TRANSIT_ENGINES
-              value: |
-{{- if .Values.openbaoInit.transit.enabled }}
-{{- range $engine := .Values.openbaoInit.transit.engines }}
-                {{ $engine.mount }}:{{- range $index, $key := $engine.keys }}{{ if $index }},{{ end }}{{ $key.name }}:{{ default "aes256-gcm96" $key.type }}{{- end }}
-{{- end }}
 {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
@@ -61,18 +45,10 @@ spec:
             runAsGroup: 65532
             seccompProfile:
               type: RuntimeDefault
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              cpu: 100m
-              memory: 128Mi
           volumeMounts:
             - name: tmp
               mountPath: /tmp
       volumes:
         - name: tmp
-          emptyDir:
-            sizeLimit: 16Mi
+          emptyDir: {}
 {{- end }}

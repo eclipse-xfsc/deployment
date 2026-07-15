@@ -1,0 +1,16 @@
+operator:
+  operator:
+    replicaCount: 2
+    image:
+      repository: quay.io/minio/operator
+      tag: v5.0.17
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  console:
+    enabled: false

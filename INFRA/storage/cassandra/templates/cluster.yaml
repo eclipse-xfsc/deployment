@@ -1,0 +1,42 @@
+{{- if .Values.cluster.enabled }}
+apiVersion: k8ssandra.io/v1alpha1
+kind: K8ssandraCluster
+metadata:
+  name: {{ include "cass.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  cassandra:
+    serverVersion: {{ .Values.cluster.serverVersion | quote }}
+{{- if .Values.cluster.serverImage }}
+    serverImage: {{ .Values.cluster.serverImage | quote }}
+{{- end }}
+    superuserSecretRef:
+      name: {{ include "cass.superuserSecret" . }}
+    config:
+      jvmOptions:
+        heapSize: {{ .Values.cluster.heapSize | quote }}
+    storageConfig:
+      cassandraDataVolumeClaimSpec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.cluster.storage.size | quote }}
+{{- if .Values.cluster.storage.storageClass }}
+        storageClassName: {{ .Values.cluster.storage.storageClass | quote }}
+{{- end }}
+    resources:
+{{ toYaml .Values.cluster.resources | indent 6 }}
+    datacenters:
+      - metadata:
+          name: {{ .Values.cluster.datacenterName }}
+        datacenterName: {{ .Values.cluster.datacenterName }}
+        size: {{ .Values.cluster.size }}
+        racks:
+{{ toYaml .Values.cluster.racks | indent 10 }}
+{{- if .Values.cluster.reaper.enabled }}
+  reaper:
+    autoScheduling:
+      enabled: true
+{{- end }}
+{{- end }}

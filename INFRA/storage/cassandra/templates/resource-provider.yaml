@@ -2,12 +2,8 @@
 apiVersion: resources.xfsc.io/v1alpha1
 kind: ResourceProvider
 metadata:
-  name: {{ default (printf "%s-cassandra" .Release.Name) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
+  name: {{ default (printf "%s-cassandra" (include "cass.fullname" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: resource-provider
 spec:
   type: cassandra
   scope: {{ .Values.resourceProvider.scope | quote }}
@@ -19,7 +15,7 @@ spec:
 {{- end }}
   outputs:
     env:
-      CASSANDRA_HOST: {{ printf "%s.%s.svc.cluster.local" (printf "%s-cassandra" .Release.Name) .Release.Namespace | quote }}
+      CASSANDRA_HOST: {{ printf "%s-%s-service.%s.svc.cluster.local" (include "cass.fullname" .) .Values.cluster.datacenterName .Release.Namespace | quote }}
       CASSANDRA_PORT: "9042"
-      CASSANDRA_DATACENTER: {{ .Values.resourceProvider.datacenter | quote }}
+      CASSANDRA_DATACENTER: {{ .Values.cluster.datacenterName | quote }}
 {{- end }}

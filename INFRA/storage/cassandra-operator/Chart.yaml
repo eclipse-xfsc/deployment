@@ -1,0 +1,10 @@
+apiVersion: v2
+name: xfsc-k8ssandra-operator
+description: XFSC wrapper for the official K8ssandra Operator
+type: application
+version: 0.1.0
+appVersion: "1.32.0"
+dependencies:
+  - name: k8ssandra-operator
+    version: "1.32.0"
+    repository: "https://helm.k8ssandra.io/stable"

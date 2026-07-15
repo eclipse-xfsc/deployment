@@ -1,0 +1,44 @@
+{{- if .Values.redis.enabled }}
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: Redis
+metadata:
+  name: {{ include "redis.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  kubernetesConfig:
+    image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+    imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+    redisSecret:
+      name: {{ include "redis.authSecret" . }}
+      key: password
+    service:
+      serviceType: {{ .Values.redis.service.type }}
+    resources:
+{{ toYaml .Values.redis.resources | indent 6 }}
+
+  podSecurityContext:
+{{ toYaml .Values.redis.podSecurityContext | indent 4 }}
+
+{{- if .Values.redis.persistence.enabled }}
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+{{- if .Values.redis.persistence.storageClass }}
+        storageClassName: {{ .Values.redis.persistence.storageClass | quote }}
+{{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.persistence.size | quote }}
+{{- end }}
+
+  redisExporter:
+    enabled: {{ .Values.redis.redisExporter.enabled }}
+{{- if .Values.redis.redisExporter.enabled }}
+    image: {{ .Values.redis.redisExporter.image | quote }}
+{{- end }}
+{{- end }}

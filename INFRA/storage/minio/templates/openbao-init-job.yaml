@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-openbao-init" .Release.Name | trunc 63 | trimSuffix "-" }}
+  name: {{ printf "%s-openbao-init" (include "minio.name" .) | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace }}
   annotations:
     helm.sh/hook: pre-install
@@ -13,44 +13,35 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
-      serviceAccountName: {{ required "openbaoInit.serviceAccountName is required" .Values.openbaoInit.serviceAccountName }}
+      serviceAccountName: {{ .Values.openbao.serviceAccount.name }}
       containers:
         - name: openbao-init
           image: "{{ .Values.openbaoInit.image.repository }}:{{ .Values.openbaoInit.image.tag }}"
           imagePullPolicy: {{ .Values.openbaoInit.image.pullPolicy }}
           env:
             - name: OPENBAO_ADDR
-              value: {{ .Values.openbaoInit.address | quote }}
+              value: {{ .Values.openbao.address | quote }}
             - name: OPENBAO_AUTH_PATH
-              value: {{ .Values.openbaoInit.authPath | quote }}
+              value: {{ .Values.openbao.authPath | quote }}
             - name: OPENBAO_ROLE
-              value: {{ .Values.openbaoInit.role | quote }}
+              value: {{ .Values.openbao.role | quote }}
             - name: KV_MOUNT
-              value: {{ .Values.openbaoInit.kv.mount | quote }}
+              value: {{ .Values.openbao.kvMount | quote }}
             - name: KV_SECRET_PATH
-              value: {{ include "xfsc-minio.secretPath" . | quote }}
+              value: {{ include "minio.secretPath" . | quote }}
             - name: SECRET_VALUES
               value: |
 {{- range $key, $value := .Values.openbaoInit.values }}
                 {{ $key }}={{ $value }}
 {{- end }}
-            - name: TRANSIT_ENGINES
-              value: |
-{{- if .Values.openbaoInit.transit.enabled }}
-{{- range $engine := .Values.openbaoInit.transit.engines }}
-                {{ $engine.mount }}:{{- range $i, $key := $engine.keys }}{{ if $i }},{{ end }}{{ $key.name }}:{{ default "aes256-gcm96" $key.type }}{{- end }}
-{{- end }}
-{{- end }}
           securityContext:
             allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
+            capabilities: { drop: ["ALL"] }
             readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 65532
             runAsGroup: 65532
-            seccompProfile:
-              type: RuntimeDefault
+            seccompProfile: { type: RuntimeDefault }
           volumeMounts:
             - name: tmp
               mountPath: /tmp
