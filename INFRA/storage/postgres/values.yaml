@@ -39,8 +39,11 @@ resourceProvider:
   sslMode: disable
 
 postgresql:
-  image:  
-    tag: "17"
+  image:
+    registry: docker.io
+    repository: library/postgres
+    tag: "17-bookworm"
+    pullPolicy: IfNotPresent
   architecture: standalone
   auth:
     enablePostgresUser: true
