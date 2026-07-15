@@ -1,6 +1,6 @@
-# XFSC Redis OpenBao Chart
+# XFSC Cassandra OpenBao Chart
 
-This chart installs Redis with only its administrative bootstrap account.
+This chart installs Cassandra with only its administrative bootstrap account.
 
 No application-specific users, databases, keyspaces, buckets or ACL accounts
 are created during installation. Those resources are expected to be created
@@ -17,13 +17,13 @@ infrastructure
 Default logical secret path:
 
 ```text
-infrastructure/redis/<release-name>
+infrastructure/cassandra/<release-name>
 ```
 
 Stored keys:
 
 ```text
-redis-password
+cassandra-password
 ```
 
 ## Behavior

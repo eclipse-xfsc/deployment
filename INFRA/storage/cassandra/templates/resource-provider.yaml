@@ -1,0 +1,25 @@
+{{- if .Values.resourceProvider.enabled }}
+apiVersion: resources.xfsc.io/v1alpha1
+kind: ResourceProvider
+metadata:
+  name: {{ default (printf "%s-cassandra" .Release.Name) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: resource-provider
+spec:
+  type: cassandra
+  scope: {{ .Values.resourceProvider.scope | quote }}
+  description: {{ .Values.resourceProvider.description | quote }}
+{{- with .Values.resourceProvider.allow.namespaces }}
+  allow:
+    namespaces:
+{{ toYaml . | indent 6 }}
+{{- end }}
+  outputs:
+    env:
+      CASSANDRA_HOST: {{ printf "%s.%s.svc.cluster.local" (printf "%s-cassandra" .Release.Name) .Release.Namespace | quote }}
+      CASSANDRA_PORT: "9042"
+      CASSANDRA_DATACENTER: {{ .Values.resourceProvider.datacenter | quote }}
+{{- end }}

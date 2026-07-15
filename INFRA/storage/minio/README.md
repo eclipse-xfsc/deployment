@@ -1,6 +1,6 @@
-# XFSC Redis OpenBao Chart
+# XFSC MinIO OpenBao Chart
 
-This chart installs Redis with only its administrative bootstrap account.
+This chart installs MinIO with only its administrative bootstrap account.
 
 No application-specific users, databases, keyspaces, buckets or ACL accounts
 are created during installation. Those resources are expected to be created
@@ -17,13 +17,14 @@ infrastructure
 Default logical secret path:
 
 ```text
-infrastructure/redis/<release-name>
+infrastructure/minio/<release-name>
 ```
 
 Stored keys:
 
 ```text
-redis-password
+root-user
+root-password
 ```
 
 ## Behavior

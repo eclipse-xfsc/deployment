@@ -1,5 +1,5 @@
 apiVersion: v2
-name: redis
+name: xfsc-redis-openbao
 description: Bitnami Redis with OpenBao credential provisioning and External Secrets Operator
 type: application
 version: 0.1.0

@@ -1,0 +1,11 @@
+apiVersion: v2
+name: xfsc-cassandra-openbao
+description: Bitnami Cassandra with OpenBao credential provisioning, ESO and application role provisioning
+type: application
+version: 0.1.0
+appVersion: "5.0"
+
+dependencies:
+  - name: cassandra
+    version: ">=12.3.0 <14.0.0"
+    repository: "https://charts.bitnami.com/bitnami"

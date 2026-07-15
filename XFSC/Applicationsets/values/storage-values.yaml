@@ -1,4 +1,4 @@
 tag: k8s-bootstrap
-path: INFRA/storage/redis
+path: INFRA/storage/*
 name: storage
 namespace: infrastructure

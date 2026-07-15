@@ -1,0 +1,25 @@
+{{- if .Values.resourceProvider.enabled }}
+apiVersion: resources.xfsc.io/v1alpha1
+kind: ResourceProvider
+metadata:
+  name: {{ default (printf "%s-s3" .Release.Name) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: resource-provider
+spec:
+  type: s3
+  scope: {{ .Values.resourceProvider.scope | quote }}
+  description: {{ .Values.resourceProvider.description | quote }}
+{{- with .Values.resourceProvider.allow.namespaces }}
+  allow:
+    namespaces:
+{{ toYaml . | indent 6 }}
+{{- end }}
+  outputs:
+    env:
+      S3_ENDPOINT: {{ printf "%s://%s-minio.%s.svc.cluster.local:%v" .Values.resourceProvider.scheme .Release.Name .Release.Namespace .Values.resourceProvider.port | quote }}
+      S3_REGION: {{ .Values.resourceProvider.region | quote }}
+      S3_PATH_STYLE: {{ .Values.resourceProvider.pathStyle | quote }}
+{{- end }}

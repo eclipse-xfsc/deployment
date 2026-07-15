@@ -1,95 +1,54 @@
 openbaoInit:
   enabled: true
-
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
     tag: "latest"
     pullPolicy: Always
-
-  # Must already exist and be bound to the configured OpenBao role.
   serviceAccountName: infrastructure-resource-provisioner
-
   address: http://openbao.security.svc.cluster.local:8200
   authPath: kubernetes
   role: xfsc-infrastructure-resource-provisioner
-
   kv:
     mount: infrastructure
-    # Empty means: redis/<Helm release name>
     path: ""
-
-  # These values are written into one KV-v2 secret.
-  # redis-password authenticates the Redis default/admin user.
-  # username/password are used by the ACL provisioning Job.
   values:
     redis-password: '$RANDOM_64'
-    username: application
-    password: '$RANDOM_64'
-
   transit:
     enabled: false
     engines: []
-    # Example:
-    # engines:
-    #   - mount: redis-transit
-    #     keys:
-    #       - name: redis-key
-    #         type: aes256-gcm96
 
 externalSecret:
   enabled: true
   apiVersion: external-secrets.io/v1
   refreshInterval: 15m
-
   store:
-    name: openbao
-    kind: SecretStore
-
+    name: infrastructure
+    kind: ClusterSecretStore
   target:
-    # Must match redis.auth.existingSecret.
-    name: redis-auth
+    name: redis-root-auth
     creationPolicy: Owner
     deletionPolicy: Retain
 
 redisAcl:
+  enabled: false
+
+resourceProvider:
   enabled: true
-
-  image:
-    repository: redis
-    tag: "8.0-alpine"
-    pullPolicy: IfNotPresent
-
-  # Empty uses <release-name>-redis-master.
-  host: "redis-master.infrastructure.svc.cluster.local"
-  port: 6379
-
-  # Restrict these for production instead of +@all and ~*.
-  keyPattern: "~*"
-  commands:
-    - "+@all"
-
-  hook:
-    events: post-install,post-upgrade
-    weight: "20"
-    deletePolicy: before-hook-creation,hook-succeeded
+  name: ""
+  scope: Cluster
+  description: Redis connection provided by this Helm release.
+  allow:
+    namespaces: []
 
 redis:
-  image:
-    registry: docker.io
-    repository: bitnami/redis
-    tag: latest
-
-  architecture: replication
-
+  architecture: standalone
   auth:
     enabled: true
-    existingSecret: redis-auth
+    existingSecret: redis-root-auth
     existingSecretPasswordKey: redis-password
-
   master:
     persistence:
       enabled: true
       size: 8Gi
-
   replica:
-    replicaCount: 3
+    replicaCount: 0
