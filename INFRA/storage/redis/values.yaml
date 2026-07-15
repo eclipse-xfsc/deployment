@@ -1,3 +1,7 @@
+global:
+  security:
+    allowInsecureImages: true
+
 openbaoInit:
   enabled: true
   image:
@@ -43,7 +47,7 @@ resourceProvider:
 redis:
   image:
     registry: docker.io
-    repository: bitnami/redis
+    repository: redis
     tag: latest
   architecture: standalone
   auth:
