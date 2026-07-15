@@ -43,7 +43,10 @@ resourceProvider:
 
 cassandra:
   image:
-    tag: latest
+    registry: docker.io
+    repository: bitnamilegacy/cassandra
+    tag: 5.0.5-debian-12-r7
+    pullPolicy: IfNotPresent
   replicaCount: 1
   dbUser:
     user: cassandra
