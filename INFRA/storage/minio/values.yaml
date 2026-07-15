@@ -46,6 +46,8 @@ resourceProvider:
   pathStyle: "true"
 
 minio:
+  image:
+    tag: latest
   mode: standalone
   auth:
     existingSecret: minio-root-auth

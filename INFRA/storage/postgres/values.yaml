@@ -39,6 +39,8 @@ resourceProvider:
   sslMode: disable
 
 postgresql:
+  image:  
+    tag: "17"
   architecture: standalone
   auth:
     enablePostgresUser: true

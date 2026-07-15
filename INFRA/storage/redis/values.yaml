@@ -41,6 +41,10 @@ resourceProvider:
     namespaces: []
 
 redis:
+  image:
+    registry: docker.io
+    repository: bitnami/redis
+    tag: latest
   architecture: standalone
   auth:
     enabled: true
