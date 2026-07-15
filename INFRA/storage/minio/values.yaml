@@ -23,8 +23,8 @@ externalSecret:
   apiVersion: external-secrets.io/v1
   refreshInterval: 15m
   store:
-    name: infrastructure
-    kind: ClusterSecretStore
+    name: openbao
+    kind: SecretStore
   target:
     name: minio-root-auth
     creationPolicy: Owner
