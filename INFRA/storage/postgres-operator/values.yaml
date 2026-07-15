@@ -21,11 +21,8 @@ cloudnative-pg:
     aggregateClusterRoles: false
 
   config:
-    create: true
-    name: ""
-    data: {}
-    secret: false
-
+    create: false
+    
   monitoring:
     podMonitorEnabled: false
     grafanaDashboard:
