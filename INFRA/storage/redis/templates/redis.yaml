@@ -37,8 +37,10 @@ spec:
 {{- end }}
 
   redisExporter:
-    enabled: {{ .Values.redis.redisExporter.enabled }}
-{{- if .Values.redis.redisExporter.enabled }}
-    image: {{ .Values.redis.redisExporter.image | quote }}
-{{- end }}
+   enabled: {{ .Values.redis.redisExporter.enabled }}
+   image: {{ required
+    "redis.redisExporter.image is required by the OpsTree Redis CRD"
+    .Values.redis.redisExporter.image
+    | quote
+  }}
 {{- end }}

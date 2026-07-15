@@ -1,4 +1,6 @@
 k8ssandra-operator:
+  nameOverride: k8ssandra
+  fullnameOverride: k8ssandra
   global:
     clusterScoped: true
 

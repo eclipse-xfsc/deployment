@@ -30,35 +30,35 @@ externalSecret:
     deletionPolicy: Retain
 
 tenant:
+  # Wichtig: Deprecated/default secrets des Dependency-Charts leeren.
+  secrets: []
+
   tenant:
     name: minio
+
     image:
       repository: quay.io/minio/minio
       tag: RELEASE.2025-04-08T15-41-24Z
       pullPolicy: IfNotPresent
+
     configuration:
       name: minio-env
+
     configSecret:
       name: minio-env
+      existingSecret: true
       accessKey: ""
       secretKey: ""
-      existingSecret: true
+
     pools:
       - name: pool-0
         servers: 4
         volumesPerServer: 1
         size: 20Gi
         storageClassName: ""
-        resources:
-          requests:
-            cpu: 250m
-            memory: 1Gi
-          limits:
-            cpu: "2"
-            memory: 4Gi
+
     requestAutoCert: true
     users: []
-    prometheusOperator: false
 
 resourceProvider:
   enabled: true
