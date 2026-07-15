@@ -47,6 +47,8 @@ resourceProvider:
 
 minio:
   image:
+    registry: docker.io
+    repository: bitnami/minio
     tag: latest
   mode: standalone
   auth:

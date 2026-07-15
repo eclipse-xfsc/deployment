@@ -41,9 +41,8 @@ resourceProvider:
 postgresql:
   image:
     registry: docker.io
-    repository: library/postgres
-    tag: "17-bookworm"
-    pullPolicy: IfNotPresent
+    repository: bitnami/postgresql
+    tag: latest
   architecture: standalone
   auth:
     enablePostgresUser: true
