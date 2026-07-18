@@ -1,0 +1,91 @@
+#cloud-config
+package_update: true
+
+packages:
+  - curl
+  - ca-certificates
+
+write_files:
+  - path: /usr/local/sbin/install-k3s-worker.sh
+    owner: root:root
+    permissions: "0750"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      export K3S_TOKEN="${cluster_token}"
+
+%{ if k3s_version != "" ~}
+      export INSTALL_K3S_VERSION="${k3s_version}"
+%{ endif ~}
+
+      NODE_IP="${node_ip}"
+      FIRST_SERVER_IP="${first_server_ip}"
+
+      echo "Waiting for private IP $${NODE_IP}..."
+
+      until ip -4 -o addr show \
+        | awk '{print $4}' \
+        | cut -d/ -f1 \
+        | grep -Fxq "$${NODE_IP}"; do
+        sleep 2
+      done
+
+      PRIVATE_INTERFACE="$(
+        ip -4 -o addr show |
+          awk -v ip="$${NODE_IP}" '
+            {
+              split($4, address, "/")
+              if (address[1] == ip) {
+                print $2
+                exit
+              }
+            }
+          '
+      )"
+
+      if [ -z "$${PRIVATE_INTERFACE}" ]; then
+        echo "Unable to determine private network interface for $${NODE_IP}." >&2
+        exit 1
+      fi
+
+      echo "Using private interface: $${PRIVATE_INTERFACE}"
+      echo "Waiting for K3s server at $${FIRST_SERVER_IP}:6443..."
+
+      until timeout 2 bash -c "</dev/tcp/$${FIRST_SERVER_IP}/6443" 2>/dev/null; do
+        sleep 5
+      done
+
+      K3S_ARGS=(
+        agent
+        --server "https://$${FIRST_SERVER_IP}:6443"
+        --node-name "${node_name}"
+        --node-ip "$${NODE_IP}"
+        --flannel-iface "$${PRIVATE_INTERFACE}"
+      )
+
+      echo "Installing K3s worker node ${node_name}..."
+
+      curl \
+        --fail \
+        --silent \
+        --show-error \
+        --location \
+        --retry 5 \
+        --retry-delay 3 \
+        https://get.k3s.io |
+        sh -s - "$${K3S_ARGS[@]}"
+
+      systemctl enable k3s-agent
+      systemctl restart k3s-agent
+
+      echo "Waiting for K3s agent service..."
+
+      until systemctl is-active --quiet k3s-agent; do
+        sleep 3
+      done
+
+      echo "K3s worker installation completed."
+
+runcmd:
+  - [bash, /usr/local/sbin/install-k3s-worker.sh]

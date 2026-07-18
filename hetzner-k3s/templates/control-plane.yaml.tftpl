@@ -1,0 +1,112 @@
+#cloud-config
+package_update: true
+
+packages:
+  - curl
+  - jq
+  - ca-certificates
+
+write_files:
+  - path: /usr/local/sbin/install-k3s-control-plane.sh
+    owner: root:root
+    permissions: "0750"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      export K3S_TOKEN="${cluster_token}"
+
+%{ if k3s_version != "" ~}
+      export INSTALL_K3S_VERSION="${k3s_version}"
+%{ endif ~}
+
+      NODE_IP="${node_ip}"
+      FIRST_SERVER_IP="${first_server_ip}"
+
+      echo "Waiting for private IP ${node_ip}..."
+
+      until ip -4 -o addr show | awk '{print $4}' | cut -d/ -f1 | grep -Fxq "${node_ip}"; do
+        sleep 2
+      done
+
+      PRIVATE_INTERFACE="$(
+        ip -4 -o addr show |
+          awk -v ip="${node_ip}" '
+            {
+              split($4, address, "/")
+              if (address[1] == ip) {
+                print $2
+                exit
+              }
+            }
+          '
+      )"
+
+      if [ -z "$${PRIVATE_INTERFACE}" ]; then
+        echo "Unable to determine private network interface for ${node_ip}." >&2
+        exit 1
+      fi
+
+      echo "Using private interface: $${PRIVATE_INTERFACE}"
+
+      K3S_ARGS=(
+        server
+        --node-name "${node_name}"
+        --node-ip "${node_ip}"
+        --advertise-address "${node_ip}"
+        --flannel-iface "$${PRIVATE_INTERFACE}"
+        --write-kubeconfig-mode "0600"
+      )
+
+%{ if cluster_init ~}
+      K3S_ARGS+=(
+        --cluster-init
+      )
+%{ else ~}
+      echo "Waiting for the first K3s server at ${first_server_ip}:6443..."
+
+      until timeout 2 bash -c "</dev/tcp/${first_server_ip}/6443" 2>/dev/null; do
+        sleep 5
+      done
+
+      K3S_ARGS+=(
+        --server "https://${first_server_ip}:6443"
+      )
+%{ endif ~}
+
+%{ if api_load_balancer != "" ~}
+      K3S_ARGS+=(
+        --tls-san "${api_load_balancer}"
+      )
+%{ endif ~}
+
+%{ if disable_flags != "" ~}
+      read -r -a DISABLE_ARGS <<< "${disable_flags}"
+      K3S_ARGS+=("$${DISABLE_ARGS[@]}")
+%{ endif ~}
+
+      echo "Installing K3s control-plane node ${node_name}..."
+
+      curl \
+        --fail \
+        --silent \
+        --show-error \
+        --location \
+        --retry 5 \
+        --retry-delay 3 \
+        https://get.k3s.io |
+        sh -s - "$${K3S_ARGS[@]}"
+
+      systemctl enable k3s
+      systemctl restart k3s
+
+      echo "Waiting for the local Kubernetes API..."
+
+      until timeout 2 bash -c "</dev/tcp/127.0.0.1/6443" 2>/dev/null; do
+        sleep 5
+      done
+
+      echo "K3s control-plane installation completed."
+
+runcmd:
+  - [bash, /usr/local/sbin/install-k3s-control-plane.sh]

@@ -1,0 +1,12 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+terraform.tfvars
+.terraform.lock.hcl
+crash.log
+tfplan
+.tools
+kubeconfig.yaml
+keys
