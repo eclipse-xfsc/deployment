@@ -1,23 +1,25 @@
 cluster_name = "xsfc"
-location     = "nbg1"
+location     = "hel1"
 
 # Restrict both lists to your own public IP/CIDR in production.
-ssh_allowed_cidrs            = ["0.0.0.0"]
-kubernetes_api_allowed_cidrs = ["0.0.0.0"]
+ssh_allowed_cidrs            = ["0.0.0.0/0"]
+kubernetes_api_allowed_cidrs = ["0.0.0.0/0"]
 
 control_plane_count       = 1
 control_plane_server_type = "cx23"
 
 worker_count       = 3
-worker_server_type = "cx53"
+worker_server_type = "cpx42"
 
 k3s_version = "v1.34.1+k3s1"
 
 disable_servicelb = true
 disable_traefik   = true
 
-enable_node_public_ipv4 = true
-enable_node_public_ipv6 = true
+enable_controlplane_public_ipv4 = true
+enable_controlplane_public_ipv6 = true
+enable_worker_public_ipv4 = true
+enable_worker_public_ipv6 = true
 enable_backups          = false
 
 # The API load balancer is enabled automatically when control_plane_count > 1.

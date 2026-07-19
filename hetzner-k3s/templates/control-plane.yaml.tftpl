@@ -20,18 +20,23 @@ write_files:
       export INSTALL_K3S_VERSION="${k3s_version}"
 %{ endif ~}
 
+      NODE_NAME="${node_name}"
       NODE_IP="${node_ip}"
       FIRST_SERVER_IP="${first_server_ip}"
+      API_TLS_SAN="${api_tls_san}"
 
-      echo "Waiting for private IP ${node_ip}..."
+      echo "Waiting for private IP $${NODE_IP}..."
 
-      until ip -4 -o addr show | awk '{print $4}' | cut -d/ -f1 | grep -Fxq "${node_ip}"; do
+      until ip -4 -o addr show |
+        awk '{print $4}' |
+        cut -d/ -f1 |
+        grep -Fxq "$${NODE_IP}"; do
         sleep 2
       done
 
       PRIVATE_INTERFACE="$(
         ip -4 -o addr show |
-          awk -v ip="${node_ip}" '
+          awk -v ip="$${NODE_IP}" '
             {
               split($4, address, "/")
               if (address[1] == ip) {
@@ -42,8 +47,8 @@ write_files:
           '
       )"
 
-      if [ -z "$${PRIVATE_INTERFACE}" ]; then
-        echo "Unable to determine private network interface for ${node_ip}." >&2
+      if [[ -z "$${PRIVATE_INTERFACE}" ]]; then
+        echo "Unable to determine private network interface for $${NODE_IP}." >&2
         exit 1
       fi
 
@@ -51,9 +56,9 @@ write_files:
 
       K3S_ARGS=(
         server
-        --node-name "${node_name}"
-        --node-ip "${node_ip}"
-        --advertise-address "${node_ip}"
+        --node-name "$${NODE_NAME}"
+        --node-ip "$${NODE_IP}"
+        --advertise-address "$${NODE_IP}"
         --flannel-iface "$${PRIVATE_INTERFACE}"
         --write-kubeconfig-mode "0600"
       )
@@ -63,29 +68,36 @@ write_files:
         --cluster-init
       )
 %{ else ~}
-      echo "Waiting for the first K3s server at ${first_server_ip}:6443..."
+      echo "Waiting for first K3s server at $${FIRST_SERVER_IP}:6443..."
 
-      until timeout 2 bash -c "</dev/tcp/${first_server_ip}/6443" 2>/dev/null; do
+      until timeout 2 bash -c "</dev/tcp/$${FIRST_SERVER_IP}/6443" 2>/dev/null; do
         sleep 5
       done
 
       K3S_ARGS+=(
-        --server "https://${first_server_ip}:6443"
+        --server "https://$${FIRST_SERVER_IP}:6443"
       )
 %{ endif ~}
 
-%{ if api_load_balancer != "" ~}
-      K3S_ARGS+=(
-        --tls-san "${api_load_balancer}"
-      )
-%{ endif ~}
+      if [[ -n "$${API_TLS_SAN}" ]]; then
+        echo "Adding Kubernetes API TLS SAN: $${API_TLS_SAN}"
+
+        K3S_ARGS+=(
+          --tls-san "$${API_TLS_SAN}"
+        )
+      else
+        echo "WARNING: No Kubernetes API TLS SAN configured." >&2
+      fi
 
 %{ if disable_flags != "" ~}
       read -r -a DISABLE_ARGS <<< "${disable_flags}"
-      K3S_ARGS+=("$${DISABLE_ARGS[@]}")
+      K3S_ARGS+=(
+        "$${DISABLE_ARGS[@]}"
+      )
 %{ endif ~}
 
-      echo "Installing K3s control-plane node ${node_name}..."
+      echo "Installing K3s control-plane node $${NODE_NAME}..."
+      printf 'K3s argument: %q\n' "$${K3S_ARGS[@]}"
 
       curl \
         --fail \
@@ -100,7 +112,7 @@ write_files:
       systemctl enable k3s
       systemctl restart k3s
 
-      echo "Waiting for the local Kubernetes API..."
+      echo "Waiting for local Kubernetes API..."
 
       until timeout 2 bash -c "</dev/tcp/127.0.0.1/6443" 2>/dev/null; do
         sleep 5

@@ -5,10 +5,16 @@ variable "hcloud_token" {
   default     = null
 }
 
-variable "enable_node_public_ipv6" {
-  description = "Assign public IPv6 addresses to nodes."
+variable "enable_controlplane_public_ipv4" {
+  description = "Assign public IPv4 addresses to control-plane nodes."
   type        = bool
   default     = true
+}
+
+variable "enable_controlplane_public_ipv6" {
+  description = "Assign public IPv6 addresses to control-plane nodes."
+  type        = bool
+  default     = false
 }
 
 variable "cluster_name" {
@@ -154,10 +160,16 @@ variable "disable_servicelb" {
   default     = true
 }
 
-variable "enable_node_public_ipv4" {
-  description = "Assign public IPv4 addresses to nodes. Disable only when private access and outbound internet connectivity are provided separately."
+variable "enable_worker_public_ipv4" {
+  description = "Assign public IPv4 addresses to worker nodes. Disable only when outbound internet access is provided through NAT, a proxy, or another gateway."
   type        = bool
-  default     = true
+  default     = false
+}
+
+variable "enable_worker_public_ipv6" {
+  description = "Assign public IPv6 addresses to worker nodes."
+  type        = bool
+  default     = false
 }
 
 variable "enable_backups" {
@@ -170,6 +182,23 @@ variable "labels" {
   description = "Additional labels applied to all resources that support labels."
   type        = map(string)
   default     = {}
+}
+
+
+variable "api_tls_san" {
+  description = "Optional IP address or DNS name added to the Kubernetes API certificate. For an HA cluster, the API load balancer IP is used automatically when this is empty."
+  type        = string
+  default     = ""
+
+  validation {
+    condition = (
+      var.api_tls_san == "" ||
+      (!startswith(var.api_tls_san, "http://") &&
+       !startswith(var.api_tls_san, "https://") &&
+       !can(regex(":([0-9]+)$", var.api_tls_san)))
+    )
+    error_message = "api_tls_san must be an IP address or DNS name without scheme or port."
+  }
 }
 
 variable "api_load_balancer_type" {

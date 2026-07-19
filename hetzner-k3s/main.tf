@@ -33,12 +33,18 @@ locals {
     var.disable_servicelb ? "--disable=servicelb" : ""
   ]))
 
-  # Public API endpoint used as a TLS SAN.
-  # For a single control-plane node, no load-balancer SAN is passed.
+  # Public API endpoint used as a TLS SAN. An explicit value takes
+  # precedence; otherwise the API load balancer address is used for HA.
   api_load_balancer_address = (
     local.api_load_balancer_enabled
     ? hcloud_load_balancer.api[0].ipv4
     : ""
+  )
+
+  api_tls_san = (
+    var.api_tls_san != ""
+    ? var.api_tls_san
+    : local.api_load_balancer_address
   )
 }
 
@@ -309,8 +315,8 @@ resource "hcloud_server" "control_plane" {
   })
 
   public_net {
-    ipv4_enabled = var.enable_node_public_ipv4
-    ipv6_enabled = var.enable_node_public_ipv6
+    ipv4_enabled = var.enable_controlplane_public_ipv4
+    ipv6_enabled = var.enable_controlplane_public_ipv6
   }
 
   network {
@@ -322,7 +328,7 @@ resource "hcloud_server" "control_plane" {
     "${path.module}/templates/control-plane.yaml.tftpl",
     {
       node_name = format(
-        "%s-control-%02d",
+        "%s-control-plane-%02d",
         var.cluster_name,
         count.index + 1
       )
@@ -330,13 +336,11 @@ resource "hcloud_server" "control_plane" {
       node_ip         = local.control_plane_ips[count.index]
       first_server_ip = local.control_plane_ips[0]
 
-      # Empty for a single-node control plane.
-      api_load_balancer = local.api_load_balancer_address
-
       cluster_token = local.k3s_token
-      cluster_init  = count.index == 0
       k3s_version   = var.k3s_version
+      cluster_init  = count.index == 0
       disable_flags = local.k3s_disable_flags
+      api_tls_san   = local.api_tls_san
     }
   )
 
@@ -386,8 +390,8 @@ resource "hcloud_server" "worker" {
   })
 
   public_net {
-    ipv4_enabled = var.enable_node_public_ipv4
-    ipv6_enabled = var.enable_node_public_ipv6
+    ipv4_enabled = var.enable_worker_public_ipv4
+    ipv6_enabled = var.enable_worker_public_ipv6
   }
 
   network {

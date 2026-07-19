@@ -1,4 +1,5 @@
 #cloud-config
+
 package_update: true
 
 packages:
@@ -13,6 +14,8 @@ write_files:
       #!/usr/bin/env bash
       set -euo pipefail
 
+      exec > >(tee -a /var/log/install-k3s-worker.log) 2>&1
+
       export K3S_TOKEN="${cluster_token}"
 
 %{ if k3s_version != "" ~}
@@ -21,13 +24,23 @@ write_files:
 
       NODE_IP="${node_ip}"
       FIRST_SERVER_IP="${first_server_ip}"
+      NODE_NAME="${node_name}"
 
       echo "Waiting for private IP $${NODE_IP}..."
 
-      until ip -4 -o addr show \
-        | awk '{print $4}' \
-        | cut -d/ -f1 \
-        | grep -Fxq "$${NODE_IP}"; do
+      for attempt in $(seq 1 300); do
+        if ip -4 -o addr show |
+          awk '{split($4, address, "/"); print address[1]}' |
+          grep -Fxq "$${NODE_IP}"; then
+          break
+        fi
+
+        if [ "$${attempt}" -eq 300 ]; then
+          echo "Timed out waiting for private IP $${NODE_IP}." >&2
+          ip -br addr >&2
+          exit 1
+        fi
+
         sleep 2
       done
 
@@ -46,46 +59,75 @@ write_files:
 
       if [ -z "$${PRIVATE_INTERFACE}" ]; then
         echo "Unable to determine private network interface for $${NODE_IP}." >&2
+        ip -br addr >&2
         exit 1
       fi
 
       echo "Using private interface: $${PRIVATE_INTERFACE}"
       echo "Waiting for K3s server at $${FIRST_SERVER_IP}:6443..."
 
-      until timeout 2 bash -c "</dev/tcp/$${FIRST_SERVER_IP}/6443" 2>/dev/null; do
-        sleep 5
+      for attempt in $(seq 1 450); do
+        if timeout 2 bash -c \
+          "</dev/tcp/$${FIRST_SERVER_IP}/6443" 2>/dev/null; then
+          break
+        fi
+
+        if [ "$${attempt}" -eq 450 ]; then
+          echo "Timed out waiting for K3s server." >&2
+          ip route >&2
+          exit 1
+        fi
+
+        sleep 2
       done
 
       K3S_ARGS=(
         agent
         --server "https://$${FIRST_SERVER_IP}:6443"
-        --node-name "${node_name}"
+        --node-name "$${NODE_NAME}"
         --node-ip "$${NODE_IP}"
         --flannel-iface "$${PRIVATE_INTERFACE}"
       )
 
-      echo "Installing K3s worker node ${node_name}..."
+      if systemctl list-unit-files --no-legend |
+        grep -q '^k3s-agent.service'; then
+        echo "K3s agent is already installed."
+        systemctl enable k3s-agent
+        systemctl restart k3s-agent
+      else
+        echo "Installing K3s worker node $${NODE_NAME}..."
 
-      curl \
-        --fail \
-        --silent \
-        --show-error \
-        --location \
-        --retry 5 \
-        --retry-delay 3 \
-        https://get.k3s.io |
-        sh -s - "$${K3S_ARGS[@]}"
-
-      systemctl enable k3s-agent
-      systemctl restart k3s-agent
+        curl \
+          --fail \
+          --silent \
+          --show-error \
+          --location \
+          --retry 10 \
+          --retry-all-errors \
+          --retry-delay 3 \
+          --connect-timeout 10 \
+          --max-time 300 \
+          https://get.k3s.io |
+          sh -s - "$${K3S_ARGS[@]}"
+      fi
 
       echo "Waiting for K3s agent service..."
 
-      until systemctl is-active --quiet k3s-agent; do
-        sleep 3
+      for attempt in $(seq 1 60); do
+        if systemctl is-active --quiet k3s-agent; then
+          echo "K3s worker installation completed."
+          exit 0
+        fi
+
+        sleep 2
       done
 
-      echo "K3s worker installation completed."
+      echo "K3s agent did not become active." >&2
+      systemctl status k3s-agent --no-pager >&2 || true
+      journalctl -u k3s-agent -n 200 --no-pager >&2 || true
+      exit 1
 
 runcmd:
   - [bash, /usr/local/sbin/install-k3s-worker.sh]
+
+final_message: "Worker bootstrap completed after $UPTIME seconds."
