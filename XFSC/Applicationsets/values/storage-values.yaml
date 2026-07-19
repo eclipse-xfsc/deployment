@@ -2,3 +2,4 @@ tag: k8s-bootstrap
 path: INFRA/storage/*
 name: storage
 namespace: infrastructure
+storageClass: local-path

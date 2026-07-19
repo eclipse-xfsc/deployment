@@ -28,8 +28,9 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-{{- if .Values.redis.persistence.storageClass }}
-        storageClassName: {{ .Values.redis.persistence.storageClass | quote }}
+{{- $storageClass := .Values.redis.persistence.storageClass | default .Values.global.storageClass }}
+{{- if $storageClass }}
+        storageClassName: {{ $storageClass | quote }}
 {{- end }}
         resources:
           requests:

@@ -10,7 +10,11 @@ spec:
         repoURL: https://github.com/eclipse-xfsc/deployment.git
         revision: {{ .Values.tag }}
         directories:
-          - path: {{ .Values.path }}
+        - path: {{ .Values.path }}
+{{- range .Values.excludes }}
+        - path: {{ . | quote }}
+          exclude: true
+{{- end }}
   template:
     metadata:
       name: '{{ "{{ .path.basename | trim }}" }}'
@@ -23,6 +27,9 @@ spec:
         helm:
           valueFiles:
             - values.yaml
+          parameters:
+            - name: global.storageClass
+              value: {{ .Values.storageClass | quote }}
       destination:
         server: https://kubernetes.default.svc
         namespace:  {{ .Values.namespace }}

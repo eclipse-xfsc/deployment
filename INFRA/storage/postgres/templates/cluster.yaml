@@ -18,14 +18,16 @@ spec:
       localeCollate: {{ .Values.cluster.bootstrap.initdb.localeCollate | quote }}
   storage:
     size: {{ .Values.cluster.storage.size | quote }}
-{{- if .Values.cluster.storage.storageClass }}
-    storageClass: {{ .Values.cluster.storage.storageClass | quote }}
+{{- $storageClass := .Values.cluster.storage.storageClass | default .Values.global.storageClass }}
+{{- if $storageClass }}
+    storageClass: {{ $storageClass | quote }}
 {{- end }}
 {{- if .Values.cluster.walStorage.enabled }}
   walStorage:
     size: {{ .Values.cluster.walStorage.size | quote }}
-{{- if .Values.cluster.walStorage.storageClass }}
-    storageClass: {{ .Values.cluster.walStorage.storageClass | quote }}
+{{- $storageClass := .Values.cluster.walStorage.storageClass | default .Values.global.storageClass }}
+{{- if $storageClass }}
+    storageClass: {{ $storageClass | quote }}
 {{- end }}
 {{- end }}
   postgresql:
