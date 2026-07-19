@@ -7,6 +7,19 @@ packages:
   - ca-certificates
 
 write_files:
+  - path: /etc/netplan/60-private-network.yaml
+    owner: root:root
+    permissions: "0600"
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp7s0:
+            dhcp4: true
+            dhcp6: false
+            optional: true
+
   - path: /usr/local/sbin/install-k3s-control-plane.sh
     owner: root:root
     permissions: "0750"
@@ -27,12 +40,29 @@ write_files:
 
       echo "Waiting for private IP $${NODE_IP}..."
 
-      until ip -4 -o addr show |
-        awk '{print $4}' |
-        cut -d/ -f1 |
-        grep -Fxq "$${NODE_IP}"; do
+      private_ip_ready=false
+
+      for attempt in $(seq 1 60); do
+        if ip -4 -o addr show |
+          awk '{print $4}' |
+          cut -d/ -f1 |
+          grep -Fxq "$${NODE_IP}"
+        then
+          private_ip_ready=true
+          break
+        fi
+
+        echo "Waiting for private IP $${NODE_IP}... ($${attempt}/60)"
+        ip -br addr
         sleep 2
       done
+
+      if [[ "$${private_ip_ready}" != "true" ]]; then
+        echo "Private IP $${NODE_IP} was not assigned." >&2
+        ip -br addr >&2
+        networkctl list >&2 || true
+        exit 1
+      fi
 
       PRIVATE_INTERFACE="$(
         ip -4 -o addr show |
@@ -48,7 +78,7 @@ write_files:
       )"
 
       if [[ -z "$${PRIVATE_INTERFACE}" ]]; then
-        echo "Unable to determine private network interface for $${NODE_IP}." >&2
+        echo "Unable to determine private interface for $${NODE_IP}." >&2
         exit 1
       fi
 
@@ -64,15 +94,26 @@ write_files:
       )
 
 %{ if cluster_init ~}
-      K3S_ARGS+=(
-        --cluster-init
-      )
+      K3S_ARGS+=(--cluster-init)
 %{ else ~}
-      echo "Waiting for first K3s server at $${FIRST_SERVER_IP}:6443..."
+      first_server_ready=false
 
-      until timeout 2 bash -c "</dev/tcp/$${FIRST_SERVER_IP}/6443" 2>/dev/null; do
+      for attempt in $(seq 1 60); do
+        if timeout 3 bash -c \
+          "</dev/tcp/$${FIRST_SERVER_IP}/6443" 2>/dev/null
+        then
+          first_server_ready=true
+          break
+        fi
+
+        echo "Waiting for first K3s server at $${FIRST_SERVER_IP}:6443... ($${attempt}/60)"
         sleep 5
       done
+
+      if [[ "$${first_server_ready}" != "true" ]]; then
+        echo "First K3s server did not become reachable." >&2
+        exit 1
+      fi
 
       K3S_ARGS+=(
         --server "https://$${FIRST_SERVER_IP}:6443"
@@ -80,8 +121,6 @@ write_files:
 %{ endif ~}
 
       if [[ -n "$${API_TLS_SAN}" ]]; then
-        echo "Adding Kubernetes API TLS SAN: $${API_TLS_SAN}"
-
         K3S_ARGS+=(
           --tls-san "$${API_TLS_SAN}"
         )
@@ -91,9 +130,7 @@ write_files:
 
 %{ if disable_flags != "" ~}
       read -r -a DISABLE_ARGS <<< "${disable_flags}"
-      K3S_ARGS+=(
-        "$${DISABLE_ARGS[@]}"
-      )
+      K3S_ARGS+=("$${DISABLE_ARGS[@]}")
 %{ endif ~}
 
       echo "Installing K3s control-plane node $${NODE_NAME}..."
@@ -109,16 +146,28 @@ write_files:
         https://get.k3s.io |
         sh -s - "$${K3S_ARGS[@]}"
 
-      systemctl enable k3s
-      systemctl restart k3s
+      local_api_ready=false
 
-      echo "Waiting for local Kubernetes API..."
+      for attempt in $(seq 1 60); do
+        if timeout 3 bash -c '</dev/tcp/127.0.0.1/6443' 2>/dev/null; then
+          local_api_ready=true
+          break
+        fi
 
-      until timeout 2 bash -c "</dev/tcp/127.0.0.1/6443" 2>/dev/null; do
+        echo "Waiting for local Kubernetes API... ($${attempt}/60)"
         sleep 5
       done
+
+      if [[ "$${local_api_ready}" != "true" ]]; then
+        echo "Local Kubernetes API did not become ready." >&2
+        systemctl status k3s --no-pager >&2 || true
+        journalctl -u k3s -n 100 --no-pager >&2 || true
+        exit 1
+      fi
 
       echo "K3s control-plane installation completed."
 
 runcmd:
+  - [netplan, generate]
+  - [netplan, apply]
   - [bash, /usr/local/sbin/install-k3s-control-plane.sh]
