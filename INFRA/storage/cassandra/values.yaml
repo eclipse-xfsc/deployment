@@ -12,8 +12,8 @@ cluster:
   rack: rack1
   numTokens: 16
   heap:
-    max: 2G
-    new: 400M
+    max: 8G
+    new: 2G
 
 persistence:
   enabled: true
@@ -22,8 +22,8 @@ persistence:
 
 resources:
   requests:
-    cpu: 500m
-    memory: 2Gi
+    cpu: "2"
+    memory: 4Gi
   limits:
     cpu: "4"
     memory: 8Gi
