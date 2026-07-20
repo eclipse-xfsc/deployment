@@ -81,14 +81,9 @@ spec:
           resources:
 {{ toYaml .Values.resources | indent 12 }}
           securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: [ALL]
             runAsNonRoot: true
             runAsUser: 999
             runAsGroup: 999
-            seccompProfile:
-              type: RuntimeDefault
           startupProbe:
             exec:
               command: [/bin/bash, -ec, 'nodetool statusbinary | grep -q running']
