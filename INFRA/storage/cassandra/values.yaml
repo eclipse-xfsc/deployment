@@ -12,8 +12,8 @@ cluster:
   rack: rack1
   numTokens: 16
   heap:
-    max: 8G
-    new: 2G
+    max: 6G
+    new: 1200M
 
 persistence:
   enabled: true
@@ -22,11 +22,9 @@ persistence:
 
 resources:
   requests:
-    cpu: "2"
-    memory: 4Gi
-  limits:
-    cpu: "4"
     memory: 8Gi
+  limits:
+    memory: 12Gi
 
 openbao:
   address: http://openbao.security.svc.cluster.local:8200
