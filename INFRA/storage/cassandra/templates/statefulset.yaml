@@ -28,6 +28,9 @@ spec:
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: [/bin/bash, /scripts/configure.sh]
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
           env:
             - name: POD_IP
               valueFrom:
