@@ -27,10 +27,27 @@ spec:
         - name: configure
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: [/bin/bash, /scripts/configure.sh]
+          command:
+            - /bin/bash
+            - -ec
+          args:
+            - |
+              cp /scripts/configure.sh /tmp/configure.sh
+              sed -i \
+                -e 's/cp -a /cp -R --no-preserve=mode,ownership,timestamps /g' \
+                -e 's/cp -pR /cp -R --no-preserve=mode,ownership,timestamps /g' \
+                -e 's/cp -Rp /cp -R --no-preserve=mode,ownership,timestamps /g' \
+                /tmp/configure.sh
+
+              echo "Patched copy commands:"
+              grep -n 'cp ' /tmp/configure.sh || true
+
+              exec /bin/bash /tmp/configure.sh
           securityContext:
+            runAsNonRoot: false
             runAsUser: 0
             runAsGroup: 0
+            allowPrivilegeEscalation: false
           env:
             - name: POD_IP
               valueFrom:
@@ -51,8 +68,11 @@ spec:
           volumeMounts:
             - name: scripts
               mountPath: /scripts
+              readOnly: true
             - name: config
               mountPath: /work
+            - name: tmp
+              mountPath: /tmp
       containers:
         - name: cassandra
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
