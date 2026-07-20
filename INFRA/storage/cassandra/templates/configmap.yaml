@@ -7,7 +7,9 @@ data:
   configure.sh: |
     #!/usr/bin/env bash
     set -Eeuo pipefail
-    cp -a /etc/cassandra/. /work/
+
+    cp -R --no-preserve=mode,ownership,timestamps /etc/cassandra/. /work/
+
     sed -ri 's|^cluster_name:.*|cluster_name: "'"${CASSANDRA_CLUSTER_NAME}"'"|' /work/cassandra.yaml
     sed -ri 's|^num_tokens:.*|num_tokens: '"${CASSANDRA_NUM_TOKENS}"'|' /work/cassandra.yaml
     sed -ri 's|^listen_address:.*|listen_address: '"${POD_IP}"'|' /work/cassandra.yaml
@@ -17,13 +19,20 @@ data:
     sed -ri 's|^authenticator:.*|authenticator: PasswordAuthenticator|' /work/cassandra.yaml
     sed -ri 's|^authorizer:.*|authorizer: CassandraAuthorizer|' /work/cassandra.yaml
     sed -ri 's|^role_manager:.*|role_manager: CassandraRoleManager|' /work/cassandra.yaml
+
     cat > /work/cassandra-rackdc.properties <<PROPS
     dc=${CASSANDRA_DC}
     rack=${CASSANDRA_RACK}
     prefer_local=true
     PROPS
+
     mkdir -p /work/cassandra-env.sh.d
+
     cat > /work/cassandra-env.sh.d/xfsc.sh <<ENV
     MAX_HEAP_SIZE="${MAX_HEAP_SIZE}"
     HEAP_NEWSIZE="${HEAP_NEWSIZE}"
     ENV
+
+    chown -R 999:999 /work
+    find /work -type d -exec chmod 0770 {} +
+    find /work -type f -exec chmod 0660 {} +

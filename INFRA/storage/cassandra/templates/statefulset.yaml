@@ -26,32 +26,35 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /bin/bash
-            - -ec
-          args:
-            - |
-              cp /scripts/configure.sh /tmp/configure.sh
-
-              sed -i \
-                -e 's/cp -a /cp -R --no-preserve=mode,ownership,timestamps /g' \
-                -e 's/cp -pR /cp -R --no-preserve=mode,ownership,timestamps /g' \
-                -e 's/cp -Rp /cp -R --no-preserve=mode,ownership,timestamps /g' \
-                /tmp/configure.sh
-
-              /bin/bash /tmp/configure.sh
-
-              chown -R 999:999 /work
-              find /work -type d -exec chmod 0750 {} +
-              find /work -type f -exec chmod 0640 {} +
-
-              ls -la /work
-              stat /work/cassandra.yaml
+            - /scripts/configure.sh
           securityContext:
             runAsNonRoot: false
             runAsUser: 0
             runAsGroup: 0
             allowPrivilegeEscalation: false
           env:
-            # unverändert
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+
+            - name: CASSANDRA_CLUSTER_NAME
+              value: {{ .Values.cluster.name | quote }}
+
+            - name: CASSANDRA_DC
+              value: {{ .Values.cluster.datacenter | quote }}
+
+            - name: CASSANDRA_RACK
+              value: {{ .Values.cluster.rack | quote }}
+
+            - name: CASSANDRA_NUM_TOKENS
+              value: {{ .Values.cluster.numTokens | quote }}
+
+            - name: MAX_HEAP_SIZE
+              value: {{ .Values.cluster.heap.max | quote }}
+
+            - name: HEAP_NEWSIZE
+              value: {{ .Values.cluster.heap.new | quote }}
           volumeMounts:
             - name: scripts
               mountPath: /scripts
