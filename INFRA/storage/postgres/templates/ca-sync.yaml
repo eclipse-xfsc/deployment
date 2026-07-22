@@ -1,40 +1,46 @@
-{{- if .Values.openbaoInit.enabled }}
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: {{ printf "%s-openbao-init" (include "xfsc-postgresql-cnpg.fullname" .) | trunc 63 | trimSuffix "-" }}
+  name: {{ printf "%s-openbao-sync" (include "xfsc-postgresql-cnpg.fullname" .) }}
   namespace: {{ .Release.Namespace }}
-  annotations:
-    helm.sh/hook: pre-install
-    helm.sh/hook-weight: "-20"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
-  backoffLimit: 3
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openbao-sync
   template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: openbao-sync
     spec:
-      restartPolicy: OnFailure
       serviceAccountName: {{ .Values.openbao.serviceAccount.name }}
       containers:
-        - name: openbao-init
+        - name: sync
           image: "{{ .Values.openbaoInit.image.repository }}:{{ .Values.openbaoInit.image.tag }}"
-          imagePullPolicy: {{ .Values.openbaoInit.image.pullPolicy | quote }}
+          imagePullPolicy: {{ .Values.openbaoInit.image.pullPolicy }}
           env:
             - name: OPENBAO_ADDR
               value: {{ .Values.openbao.address | quote }}
+
             - name: OPENBAO_AUTH_PATH
               value: {{ .Values.openbao.authPath | quote }}
+
             - name: OPENBAO_ROLE
               value: {{ .Values.openbao.role | quote }}
+
             - name: KV_MOUNT
               value: {{ .Values.openbao.kvMount | quote }}
+
             - name: KV_SECRET_PATH
               value: {{ include "xfsc-postgresql-cnpg.secretPath" . | quote }}
+              
             - name: SECRET_VALUES
-              value: |-
-{{- range $key, $_ := .Values.openbaoInit.values }}
+              value: |
+{{- range $key, $value := .Values.openbaoSync.values }}
                 {{ $key }}={{ $key | upper | replace "." "_" | replace "-" "_" }}
 {{- end }}
-{{- range $key, $value := .Values.openbaoInit.values }}
+
+{{- range $key, $value := .Values.openbaoSync.values }}
             - name: {{ $key | upper | replace "." "_" | replace "-" "_" }}
 {{- if kindIs "map" $value }}
               valueFrom:
@@ -44,22 +50,4 @@ spec:
 {{- else }}
               value: {{ $value | quote }}
 {{- end }}
-{{- end }}
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 65532
-            runAsGroup: 65532
-            seccompProfile:
-              type: RuntimeDefault
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-      volumes:
-        - name: tmp
-          emptyDir: {}
 {{- end }}

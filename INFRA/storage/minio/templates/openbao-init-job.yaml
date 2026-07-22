@@ -32,7 +32,16 @@ spec:
             - name: SECRET_VALUES
               value: |
 {{- range $key, $value := .Values.openbaoInit.values }}
-                {{ $key }}={{ $value }}
+{{- if kindIs "map" $value }}
+- name: {{ $key | upper | replace "." "_" }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $value.secretKeyRef.name }}
+      key: {{ $value.secretKeyRef.key }}
+{{- else }}
+- name: {{ $key | upper | replace "." "_" }}
+  value: {{ $value | quote }}
+{{- end }}
 {{- end }}
           securityContext:
             allowPrivilegeEscalation: false

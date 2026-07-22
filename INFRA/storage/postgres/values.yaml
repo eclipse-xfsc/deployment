@@ -1,5 +1,7 @@
 nameOverride: ""
 fullnameOverride: ""
+global: 
+  storageClass: 
 
 openbao:
   address: http://openbao.security.svc.cluster.local:8200
@@ -11,7 +13,8 @@ openbao:
   secretStore:
     enabled: true
     name: openbao
-
+  clusterSecretStore:
+    name: infrastructure
 openbaoInit:
   enabled: true
   image:
@@ -20,8 +23,20 @@ openbaoInit:
     pullPolicy: Always
   secretPath: ""
   values:
-    username: postgres
-    password: '$RANDOM_64'
+    user: postgres
+    password: $RANDOM
+
+openbaoSync:
+  values:
+    ca.crt:
+      secretKeyRef:
+        name: postgres-ca
+        key: ca.crt
+    tls.crt:
+      secretKeyRef:
+        name: postgres-server
+        key: tls.crt
+
 
 externalSecret:
   enabled: true

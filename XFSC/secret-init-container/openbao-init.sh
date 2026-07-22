@@ -52,6 +52,12 @@ validate_positive_number() {
   [[ "$value" =~ ^[0-9]+$ ]] && ((value > 0))
 }
 
+validate_env_name() {
+  local name="$1"
+
+  [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]
+}
+
 generate_random() {
   local length="${1:-48}"
   local random_value
@@ -226,25 +232,32 @@ build_secret_json() {
   local line
   local key
   local raw_value
+  local source_value
   local resolved_value
 
   while IFS= read -r line || [[ -n "$line" ]]; do
-    # Ignore empty lines.
+    # Leere Zeilen ignorieren.
     [[ -z "$line" ]] && continue
 
-    # Ignore comments.
+    # Kommentare ignorieren.
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
 
     if [[ "$line" != *=* ]]; then
-      fail "Invalid SECRET_VALUES entry; expected KEY=VALUE: ${line}"
+      fail "Invalid SECRET_VALUES entry; expected KEY=VALUE_OR_ENV_NAME: ${line}"
     fi
 
     key="${line%%=*}"
     raw_value="${line#*=}"
 
-    # Trim whitespace around the key only. Whitespace in values is preserved.
+    # Nur Leerzeichen um Key und Referenz entfernen.
+    # Leerzeichen innerhalb des aufgelösten Secret-Werts bleiben erhalten.
     key="$(
       printf '%s' "$key" \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+    )"
+
+    raw_value="$(
+      printf '%s' "$raw_value" \
         | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
     )"
 
@@ -252,7 +265,33 @@ build_secret_json() {
       fail "Invalid secret key: ${key}"
     fi
 
-    resolved_value="$(resolve_value "$raw_value")"
+    if [[ -z "$raw_value" ]]; then
+      fail "Secret value or environment reference is empty for key: ${key}"
+    fi
+
+    # Falls die rechte Seite ein gültiger Name einer existierenden
+    # Umgebungsvariable ist, wird deren Wert verwendet.
+    #
+    # Beispiel:
+    #
+    #   ca.crt=CA_CRT
+    #
+    # liest den Wert aus der Environment-Variable CA_CRT.
+    #
+    # Existiert keine solche Variable, wird die rechte Seite weiterhin
+    # als Literal behandelt. Dadurch bleibt die bisherige Syntax kompatibel.
+    if validate_env_name "$raw_value" && [[ -v "$raw_value" ]]; then
+      source_value="${!raw_value}"
+
+      log "Resolving secret key ${key} from environment variable ${raw_value}."
+    else
+      source_value="$raw_value"
+
+      log "Resolving secret key ${key} from literal value."
+    fi
+
+    # Unterstützt weiterhin $RANDOM, $UUID, $TIMESTAMP usw.
+    resolved_value="$(resolve_value "$source_value")"
 
     result="$(
       jq \
@@ -274,21 +313,19 @@ write_kv_secret() {
     fail "SECRET_VALUES does not contain any values."
   fi
 
-  log "Writing secret to ${KV_MOUNT}/${KV_SECRET_PATH}..."
+  log "Patching secret at ${KV_MOUNT}/${KV_SECRET_PATH}..."
 
-  jq -n \
-    --argjson data "$secret_json" \
-    '{data: $data}' \
-    >"$temporary_file"
+  printf '%s' "$secret_json" >"$temporary_file"
 
-  bao write \
-    "${KV_MOUNT}/data/${KV_SECRET_PATH}" \
+  bao kv patch \
+    -mount="$KV_MOUNT" \
+    "$KV_SECRET_PATH" \
     "@${temporary_file}" \
     >/dev/null
 
   rm -f "$temporary_file"
 
-  log "Secret successfully written."
+  log "Secret successfully patched."
 }
 
 process_transit_engines() {

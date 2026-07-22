@@ -1,3 +1,5 @@
+global: 
+  storageClass: 
 image:
   registry: docker.io
   repository: library/cassandra

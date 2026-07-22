@@ -1,6 +1,7 @@
 nameOverride: ""
 fullnameOverride: ""
-
+global: 
+  storageClass: 
 openbao:
   address: http://openbao.security.svc.cluster.local:8200
   authPath: kubernetes

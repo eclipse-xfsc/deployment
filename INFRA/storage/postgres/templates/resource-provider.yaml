@@ -3,19 +3,40 @@ apiVersion: resources.xfsc.io/v1alpha1
 kind: ResourceProvider
 metadata:
   name: {{ default (printf "%s-postgres" (include "xfsc-postgresql-cnpg.fullname" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
-  namespace: {{ .Release.Namespace }}
 spec:
   type: postgres
   scope: {{ .Values.resourceProvider.scope | quote }}
   description: {{ .Values.resourceProvider.description | quote }}
+
 {{- with .Values.resourceProvider.allow.namespaces }}
   allow:
     namespaces:
 {{ toYaml . | indent 6 }}
 {{- end }}
+
+  adminSecretRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ include "xfsc-postgresql-cnpg.superuserSecret" . }}
+
   outputs:
     env:
-      POSTGRES_HOST: {{ printf "%s-%s.%s.svc.cluster.local" (include "xfsc-postgresql-cnpg.fullname" .) .Values.resourceProvider.serviceSuffix .Release.Namespace | quote }}
+      POSTGRES_HOST: {{ printf "%s-rw.%s.svc.cluster.local" (include "xfsc-postgresql-cnpg.fullname" .) .Release.Namespace | quote }}
       POSTGRES_PORT: "5432"
       POSTGRES_SSLMODE: {{ .Values.resourceProvider.sslMode | quote }}
+      POSTGRES_SSLROOTCERT: "/etc/postgresql/tls/ca.crt"
+      POSTGRES_SSLCERT: "/etc/postgresql/tls/tls.crt"
+
+    externalSecrets:
+      - nameTemplate: postgres-tls
+        targetSecretNameTemplate: postgres-tls
+        refreshInterval: "1h"
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: {{ .Values.openbao.clusterSecretStore.name }}
+        remoteKeyTemplate: {{ include "xfsc-postgresql-cnpg.secretPath" . | quote }}
+        data:
+          - envName: POSTGRES_CA_CRT
+            property: ca.crt
+          - envName: POSTGRES_TLS_CRT
+            property: tls.crt
 {{- end }}
