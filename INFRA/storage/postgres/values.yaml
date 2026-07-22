@@ -23,7 +23,7 @@ openbaoInit:
     pullPolicy: Always
   secretPath: ""
   values:
-    user: postgres
+    username: postgres
     password: $RANDOM
 
 openbaoSync:

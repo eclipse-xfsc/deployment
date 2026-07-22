@@ -313,19 +313,35 @@ write_kv_secret() {
     fail "SECRET_VALUES does not contain any values."
   fi
 
-  log "Patching secret at ${KV_MOUNT}/${KV_SECRET_PATH}..."
+  # Nur das eigentliche Secret-Objekt schreiben.
+  # Kein zusätzlicher {"data": ...}-Wrapper für bao kv put/patch.
+  printf '%s' "$secret_json" | jq '.' >"$temporary_file"
 
-  printf '%s' "$secret_json" >"$temporary_file"
-
-  bao kv patch \
+  if bao kv get \
     -mount="$KV_MOUNT" \
     "$KV_SECRET_PATH" \
-    "@${temporary_file}" \
-    >/dev/null
+    >/dev/null 2>&1; then
+
+    log "Secret ${KV_MOUNT}/${KV_SECRET_PATH} exists. Patching..."
+
+    bao kv patch \
+      -mount="$KV_MOUNT" \
+      "$KV_SECRET_PATH" \
+      "@${temporary_file}" \
+      >/dev/null
+  else
+    log "Secret ${KV_MOUNT}/${KV_SECRET_PATH} does not exist. Creating..."
+
+    bao kv put \
+      -mount="$KV_MOUNT" \
+      "$KV_SECRET_PATH" \
+      "@${temporary_file}" \
+      >/dev/null
+  fi
 
   rm -f "$temporary_file"
 
-  log "Secret successfully patched."
+  log "Secret successfully written."
 }
 
 process_transit_engines() {
