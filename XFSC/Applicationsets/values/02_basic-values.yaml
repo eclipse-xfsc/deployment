@@ -1,0 +1,5 @@
+tag: k8s-bootstrap
+path: INFRA/app-basic/*
+name: basic
+namespace: infrastructure
+storageClass: local-path

@@ -1,7 +1,9 @@
 cert-manager:
   enabled: true
-  namespace: cert-manager
+  namespace: network
   installCRDs: true
+  startupapicheck:
+    enabled: true
 
 serviceMonitor:
   enabled: true

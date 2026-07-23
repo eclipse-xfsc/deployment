@@ -1,0 +1,12 @@
+tag: k8s-bootstrap
+name: app-namespace
+namespace: security
+matrix:
+  enabled: true
+  charts:
+    path: INFRA/app-management/app-namespace
+    excludes: []
+
+  values:
+    path: INFRA/app-management/app-namespace-values/*
+    excludes: []

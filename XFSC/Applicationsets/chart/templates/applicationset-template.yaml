@@ -6,33 +6,69 @@ metadata:
 spec:
   goTemplate: true
   generators:
+{{- if .Values.matrix.enabled }}
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/eclipse-xfsc/deployment.git
+              revision: {{ .Values.tag }}
+              directories:
+                - path: {{ .Values.matrix.charts.path | quote }}
+{{- range .Values.matrix.charts.excludes }}
+                - path: {{ . | quote }}
+                  exclude: true
+{{- end }}
+
+          - git:
+              repoURL: https://github.com/eclipse-xfsc/deployment.git
+              revision: {{ .Values.tag }}
+              directories:
+                - path: {{ .Values.matrix.values.path | quote }}
+{{- range .Values.matrix.values.excludes }}
+                - path: {{ . | quote }}
+                  exclude: true
+{{- end }}
+{{- else }}
     - git:
         repoURL: https://github.com/eclipse-xfsc/deployment.git
         revision: {{ .Values.tag }}
         directories:
-        - path: {{ .Values.path }}
+          - path: {{ .Values.path | quote }}
 {{- range .Values.excludes }}
-        - path: {{ . | quote }}
-          exclude: true
+          - path: {{ . | quote }}
+            exclude: true
 {{- end }}
+{{- end }}
+
   template:
     metadata:
-      name: '{{ "{{ .path.basename | trim }}" }}'
+{{- if .Values.matrix.enabled }}
+      name: '{{ "{{ .path.basename }}" }}-{{ "{{ .path.basename_1 }}" }}'
+{{- else }}
+      name: '{{ "{{ .path.basename }}" }}'
+{{- end }}
     spec:
       project: default
       source:
         repoURL: https://github.com/eclipse-xfsc/deployment.git
-        targetRevision:  {{ .Values.tag }}
-        path: '{{ "{{ .path.path | trim }}" }}'
+        targetRevision: {{ .Values.tag }}
+{{- if .Values.matrix.enabled }}
+        path: '{{ "{{ .path.path }}" }}'
+        helm:
+          valueFiles:
+            - '../../../{{ "{{ .path_1.path }}" }}/values.yaml'
+{{- else }}
+        path: '{{ "{{ .path.path }}" }}'
         helm:
           valueFiles:
             - values.yaml
+{{- end }}
           parameters:
             - name: global.storageClass
               value: {{ .Values.storageClass | quote }}
       destination:
         server: https://kubernetes.default.svc
-        namespace:  {{ .Values.namespace }}
+        namespace: {{ .Values.namespace }}
       syncPolicy:
         automated:
           prune: true
