@@ -1,0 +1,9 @@
+apiVersion: xfsc.dev/v1alpha1
+kind: ResourceProvision
+metadata:
+  name: did-resolver
+spec:
+  type: service
+  outputs:
+    env:
+      DID_RESOLVER: "http://{{ include \"universalresolver.serviceName\" . }}.{{ .Release.Namespace }}.svc.cluster.local"

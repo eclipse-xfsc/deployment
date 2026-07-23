@@ -67,6 +67,7 @@ cluster:
       localeCollate: C
   postgresql:
     parameters:
+      ssl: "off"
       max_connections: "200"
       shared_buffers: 256MB
   resources:

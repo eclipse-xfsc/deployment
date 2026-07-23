@@ -25,7 +25,7 @@ spec:
       POSTGRES_SSLMODE: {{ .Values.resourceProvider.sslMode | quote }}
       POSTGRES_SSLROOTCERT: "/etc/postgresql/tls/ca.crt"
       POSTGRES_SSLCERT: "/etc/postgresql/tls/tls.crt"
-
+{{- if ne .Values.cluster.postgresql.parameters.ssl "off" }}
     externalSecrets:
       - nameTemplate: postgres-tls
         targetSecretNameTemplate: postgres-tls
@@ -39,4 +39,5 @@ spec:
             property: ca.crt
           - envName: POSTGRES_TLS_CRT
             property: tls.crt
+{{- end }}
 {{- end }}

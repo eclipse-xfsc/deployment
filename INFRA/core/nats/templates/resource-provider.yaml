@@ -1,0 +1,24 @@
+apiVersion: resources.xfsc.io/v1alpha1
+kind: ResourceProvider
+metadata:
+  name: {{ default (printf "%s-nats" (include "xfsc-nats.fullname" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
+spec:
+  type: nats
+  scope: {{ .Values.resourceProvider.scope | quote }}
+  description: {{ .Values.resourceProvider.description | quote }}
+
+{{- with .Values.resourceProvider.allow.namespaces }}
+  allow:
+    namespaces:
+{{ toYaml . | indent 6 }}
+{{- end }}
+
+  adminSecretRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ include "xfsc-nats.authSecret" . }}
+
+  outputs:
+    env:
+      NATS_URL: {{ printf "nats://%s.%s.svc.cluster.local:4222" (include "xfsc-nats.fullname" .) .Release.Namespace | quote }}
+      NATS_HOST: {{ printf "%s.%s.svc.cluster.local" (include "xfsc-nats.fullname" .) .Release.Namespace | quote }}
+      NATS_PORT: "4222"

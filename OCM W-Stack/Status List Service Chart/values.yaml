@@ -21,7 +21,7 @@ status-list-service:
       memory: 128Mi
 
   ingress:
-    enabled: true
+    enabled: false
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       nginx.ingress.kubernetes.io/configuration-snippet: |
