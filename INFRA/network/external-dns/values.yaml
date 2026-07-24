@@ -9,7 +9,6 @@ external-dns:
 
   sources:
     - gateway-httproute
-    - gateway
     - service
 
   domainFilters:
