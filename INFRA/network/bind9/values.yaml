@@ -39,7 +39,7 @@ openbaoInit:
     repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
     tag: latest
     pullPolicy: Always
-  secretPath: "infrastructure/network/tsig"
+  secretPath: "network/tsig"
   values:
     tsig-secret: '$RANDOM_64'
 
