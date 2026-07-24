@@ -1,4 +1,4 @@
-kubectl create namespace observabilty
+kubectl create namespace observability
 helm repo add otel https://open-telemetry.github.io/opentelemetry-helm-charts
 helm repo add prom https://prometheus-community.github.io/helm-charts
 helm repo add grafana https://grafana.github.io/helm-charts
@@ -16,5 +16,4 @@ helm repo add kyverno https://kyverno.github.io/kyverno/
 helm dependency build INFRA/security/kyverno
 helm install -n security kyverno INFRA/security/kyverno
 ./argocd-bootstrap.sh
-helm dependency build INFRA/app-management/kubernetes-operator
-helm install -n default kubernetes-operator INFRA/app-management/kubernetes-operator
+./applicationset-init.sh
