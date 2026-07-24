@@ -22,8 +22,8 @@ external-dns:
     - --rfc2136-host=bind9.infrastructure.svc.cluster.local
     - --rfc2136-port=53
     - --rfc2136-zone=example.com
+    - --rfc2136-tsig-keyname=externaldns.
     - --rfc2136-tsig-secret-alg=hmac-sha256
-    - --rfc2136-tsig-secret-name=externaldns.
     - --rfc2136-tsig-axfr
 
   env:
