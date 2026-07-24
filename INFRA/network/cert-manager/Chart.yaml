@@ -1,12 +1,10 @@
 apiVersion: v2
-name: cert-manager
-description: A Helm chart with cert-manager as subchart
+name: xfsc-cert-manager
+description: XFSC cert-manager installation
 type: application
-version: 0.1.0
-appVersion: "0.1.0"
+version: 0.2.0
+appVersion: "v1.21.0"
 dependencies:
   - name: cert-manager
-    version: v1.15.3
-    repository: https://charts.jetstack.io
-    alias: cert-manager
-    condition: cert-manager.enabled
+    version: v1.21.0
+    repository: oci://quay.io/jetstack/charts

@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-openbao-init" (include "cass.fullname" .) | trunc 63 | trimSuffix "-" }}
+  name: {{ printf "%s-openbao-init" (include "bind.name" .) | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace }}
   annotations:
     helm.sh/hook: pre-install
@@ -28,7 +28,7 @@ spec:
             - name: KV_MOUNT
               value: {{ .Values.openbao.kvMount | quote }}
             - name: KV_SECRET_PATH
-              value: {{ include "cass.secretPath" . | quote }}
+              value: {{ include "bind.secretPath" . | quote }}
             - name: SECRET_VALUES
               value: |-
 {{- range $key, $_ := .Values.openbaoInit.values }}
@@ -47,12 +47,12 @@ spec:
 {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
-            capabilities:
-              drop: [ALL]
+            capabilities: { drop: ["ALL"] }
             readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 65532
             runAsGroup: 65532
+            seccompProfile: { type: RuntimeDefault }
           volumeMounts:
             - name: tmp
               mountPath: /tmp

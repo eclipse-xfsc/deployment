@@ -30,17 +30,19 @@ spec:
             - name: KV_SECRET_PATH
               value: {{ include "minio.secretPath" . | quote }}
             - name: SECRET_VALUES
-              value: |
+              value: |-
+{{- range $key, $_ := .Values.openbaoInit.values }}
+                {{ $key }}={{ $key | upper | replace "." "_" | replace "-" "_" }}
+{{- end }}
 {{- range $key, $value := .Values.openbaoInit.values }}
+            - name: {{ $key | upper | replace "." "_" | replace "-" "_" }}
 {{- if kindIs "map" $value }}
-- name: {{ $key | upper | replace "." "_" }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ $value.secretKeyRef.name }}
-      key: {{ $value.secretKeyRef.key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $value.secretKeyRef.name | quote }}
+                  key: {{ $value.secretKeyRef.key | quote }}
 {{- else }}
-- name: {{ $key | upper | replace "." "_" }}
-  value: {{ $value | quote }}
+              value: {{ $value | quote }}
 {{- end }}
 {{- end }}
           securityContext:

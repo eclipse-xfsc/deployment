@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bind9
+spec:
+  serviceName: bind9
+  replicas: 1
+  selector:
+    matchLabels: {app: bind9}
+  template:
+    metadata:
+      labels: {app: bind9}
+    spec:
+      initContainers:
+      - name: render
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          cp /cm/* /cfg/
+          TSIG=$(cat /secret/{{ .Values.tsig.key }})
+          sed -i "s#__TSIG__#$TSIG#g" /cfg/named.conf
+        volumeMounts:
+        - {name: cm, mountPath: /cm}
+        - {name: cfg, mountPath: /cfg}
+        - {name: secret, mountPath: /secret}
+      containers:
+      - name: bind9
+        image: "{{ .Values.bind9.image.repository }}:{{ .Values.bind9.image.tag }}"
+        volumeMounts:
+        - {name: cfg, mountPath: /etc/bind}
+      volumes:
+      - name: cm
+        configMap: {name: bind9-config}
+      - name: cfg
+        emptyDir: {}
+      - name: secret
+        secret:
+          secretName: {{ .Values.tsig.existingSecret }}

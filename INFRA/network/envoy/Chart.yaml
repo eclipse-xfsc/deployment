@@ -1,0 +1,12 @@
+apiVersion: v2
+name: xfsc-envoy-gateway
+description: Minimal Envoy Gateway wrapper
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: gateway-helm
+    alias: envoy-gateway
+    version: "*"
+    repository: oci://docker.io/envoyproxy

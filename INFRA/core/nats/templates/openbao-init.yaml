@@ -39,7 +39,6 @@ spec:
 {{- range $key, $_ := .Values.openbaoInit.values }}
                 {{ $key }}={{ $key | upper | replace "." "_" | replace "-" "_" }}
 {{- end }}
-
 {{- range $key, $value := .Values.openbaoInit.values }}
             - name: {{ $key | upper | replace "." "_" | replace "-" "_" }}
 {{- if kindIs "map" $value }}

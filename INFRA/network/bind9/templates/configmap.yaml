@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bind9-config
+data:
+  named.conf: |
+    options {
+      directory "/zones";
+      recursion no;
+      allow-query { any; };
+    };
+
+    key {{ .Values.tsig.keyName }} {
+      algorithm {{ .Values.tsig.algorithm }};
+      secret "__TSIG__";
+    };
+
+{{- range .Values.dns.zones }}
+    zone "{{ .domain }}" {
+      type master;
+      file "/zones/{{ .domain }}.zone";
+      update-policy {
+        grant {{ $.Values.tsig.keyName }} zonesub ANY;
+      };
+    };
+{{- end }}
+
+{{- range .Values.dns.zones }}
+  {{ .domain }}.zone: |
+    $TTL 300
+    @ IN SOA {{ index .ns 0 }} {{ $.Values.dns.hostmaster }}.{{ .domain }}. (
+      2026072401
+      3600
+      600
+      1209600
+      300
+    )
+{{- range .ns }}
+    @ IN NS {{ . }}
+{{- end }}
+{{- range .records }}
+    {{ .name }} IN {{ .type }} {{ .value }}
+{{- end }}
+
+{{- end }}

@@ -1,0 +1,21 @@
+issuer:
+  name: letsencrypt
+
+acme:
+  email: admin@example.com
+  server: https://acme-v02.api.letsencrypt.org/directory
+
+rfc2136:
+  nameserver: dns.internal.svc.cluster.local:53
+  zone: example.com
+
+  tsig:
+    keyName: dns-tsig
+    algorithm: HMACSHA256
+
+  secret:
+    name: dns-tsig
+    refreshInterval: 1h
+    store:
+      name: openbao
+      kind: SecretStore
