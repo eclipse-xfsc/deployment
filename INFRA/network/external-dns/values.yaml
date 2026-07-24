@@ -31,4 +31,4 @@ external-dns:
       valueFrom:
         secretKeyRef:
           name: dns-tsig
-          key: externaldns
+          key: tsig-secret
