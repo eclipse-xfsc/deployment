@@ -6,8 +6,8 @@ helm install -n security orce-namespace INFRA/app-management/app-namespace -f IN
 helm install -n security pcm-cloud-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/pcm-cloud-values.yaml
 helm install -n security tenant-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/tenant-values.yaml
 
-
-helm install -n infrastructure kubernetes-operator XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/02_basic-values.yaml
+helm dependency build INFRA/kubernetes-operator
+helm install -n infrastructure kubernetes-operator INFRA/kubernetes-operator
 
 STORAGE_CLASS=$(kubectl get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}')
 
