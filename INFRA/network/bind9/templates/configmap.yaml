@@ -5,12 +5,15 @@ metadata:
 data:
   named.conf: |
     options {
-      directory "/zones";
+      directory "/etc/bind";
+      listen-on port 53 { any; };
+      listen-on-v6 port 53 { any; };
       recursion no;
       allow-query { any; };
+      allow-transfer { none; };
     };
 
-    key {{ .Values.tsig.keyName }} {
+    key "{{ .Values.tsig.keyName }}" {
       algorithm {{ .Values.tsig.algorithm }};
       secret "__TSIG__";
     };
@@ -18,9 +21,9 @@ data:
 {{- range .Values.dns.zones }}
     zone "{{ .domain }}" {
       type master;
-      file "/zones/{{ .domain }}.zone";
+      file "{{ .domain }}.zone";
       update-policy {
-        grant {{ $.Values.tsig.keyName }} zonesub ANY;
+        grant "{{ $.Values.tsig.keyName }}" zonesub ANY;
       };
     };
 {{- end }}
