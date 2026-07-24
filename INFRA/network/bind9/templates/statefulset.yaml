@@ -20,18 +20,26 @@ spec:
             - sh
             - -ec
             - |
-              cp -r /cm/* /cfg/
+              cp -LR /cm/. /cfg/
 
-              TSIG=$(cat /secret/{{ .Values.tsig.key }})
-              TSIG_ESCAPED=$(printf '%s\n' "$TSIG" | sed 's/[\/&]/\\&/g')
+              test -f /cfg/named.conf
+
+              TSIG="$(cat /secret/{{ .Values.tsig.key }})"
+              TSIG_ESCAPED="$(printf '%s' "$TSIG" | sed 's/[\/&]/\\&/g')"
+
               sed -i "s#__TSIG__#$TSIG_ESCAPED#g" /cfg/named.conf
+
+              echo "Rendered files:"
+              ls -la /cfg
           volumeMounts:
             - name: cm
               mountPath: /cm
+              readOnly: true
             - name: cfg
               mountPath: /cfg
             - name: secret
               mountPath: /secret
+              readOnly: true
 
       containers:
         - name: bind9
