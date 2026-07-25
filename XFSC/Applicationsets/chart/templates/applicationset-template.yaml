@@ -80,7 +80,7 @@ spec:
 {{- if .Values.domain }}
             - name: global.domain
               value: {{ .Values.domain | quote }}
-            - name: domainFilters[0]
+            - name: external-dns.domainFilters[0]
               value: {{ .Values.domain | quote }}
 {{- end }}
 {{- if .Values.profile }}

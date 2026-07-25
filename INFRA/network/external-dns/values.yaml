@@ -1,10 +1,11 @@
-sources:
-  - gateway-httproute
+external-dns:
+  sources:
+    - gateway-httproute
 
-policy: sync
+  policy: sync
 
-registry: txt
+  registry: txt
 
-txtOwnerId: xfsc
+  txtOwnerId: xfsc
 
-domainFilters: []
+  domainFilters: []

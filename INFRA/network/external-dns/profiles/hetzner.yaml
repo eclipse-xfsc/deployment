@@ -1,8 +1,9 @@
-provider: hetzner
+external-dns:
+  provider: hetzner
 
-env:
-  - name: HETZNER_API_TOKEN
-    valueFrom:
-      secretKeyRef:
-        name: external-dns
-        key: token
+  env:
+    - name: HETZNER_API_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: external-dns
+          key: token
