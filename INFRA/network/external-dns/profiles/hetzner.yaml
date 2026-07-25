@@ -1,9 +1,27 @@
 external-dns:
-  provider: hetzner
+  provider:
+    name: webhook
 
-  env:
-    - name: HETZNER_API_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: external-dns
-          key: token
+  sources:
+    - service
+    - ingress
+
+  domainFilters:
+    - example.com
+
+  extraArgs:
+    webhook-provider-url: http://localhost:8888
+
+  extraContainers:
+    - name: hetzner-webhook
+      image: docker.io/hetznercloud/external-dns-hetzner-webhook:v0.3.0
+      imagePullPolicy: IfNotPresent
+      ports:
+        - name: webhook
+          containerPort: 8888
+      env:
+        - name: HETZNER_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: external-dns
+              key: token

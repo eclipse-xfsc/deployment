@@ -2,3 +2,4 @@
 **/Chart.lock
 **/*.key
 **/*.pub
+terraform.*
