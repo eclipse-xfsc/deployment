@@ -59,6 +59,7 @@ spec:
 {{- if (.Values.matrix.enabled | default false) }}
         path: '{{ "{{ .path.path }}" }}'
         helm:
+          ignoreMissingValueFiles: true
           valueFiles:
             - '../../../{{ "{{ .path_1.path }}" }}/values.yaml'
 {{- if .Values.profile }}
@@ -67,6 +68,7 @@ spec:
 {{- else }}
         path: '{{ "{{ .path.path }}" }}'
         helm:
+          ignoreMissingValueFiles: true
           valueFiles:
             - values.yaml
 {{- if .Values.profile }}
@@ -87,7 +89,12 @@ spec:
             - name: global.profile
               value: {{ .Values.profile | quote }}
 {{- end }}
-
+{{- if .Values.email }}
+            - name: global.email
+              value: {{ .Values.email | quote }}
+            - name: acme.email
+              value: {{ .Values.email | quote }}
+{{- end }}
 
       destination:
         server: https://kubernetes.default.svc

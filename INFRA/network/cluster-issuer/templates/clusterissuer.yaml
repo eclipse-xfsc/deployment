@@ -11,14 +11,9 @@ spec:
       name: {{ printf "%s-account-key" .Values.issuer.name }}
 
     solvers:
-      - selector:
-          dnsZones:
-            - {{ .Values.rfc2136.zone | quote }}
-        dns01:
-          rfc2136:
-            nameserver: {{ .Values.rfc2136.nameserver | quote }}
-            tsigKeyName: {{ .Values.rfc2136.tsig.keyName | quote }}
-            tsigAlgorithm: {{ .Values.rfc2136.tsig.algorithm | quote }}
-            tsigSecretSecretRef:
-              name: {{ .Values.rfc2136.secret.name }}
-              key: tsig-secret
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - name: {{ .Values.gateway.name }}
+                namespace: {{ .Values.gateway.namespace }}
+                kind: Gateway

@@ -1,6 +1,7 @@
 PROFILE=""
 DOMAIN=""
-TOKEN=""
+EMAIL=""
+DNSTOKEN=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -12,25 +13,30 @@ while [[ $# -gt 0 ]]; do
       DOMAIN="$2"
       shift 2
       ;;
-    --token)
-      TOKEN="$2"
+    --email)
+      EMAIL="$2"
+      shift 2
+      ;;
+    --dnstoken)
+      DNSTOKEN="$2"
       shift 2
       ;;
     *)
       echo "Unknown parameter: $1"
+      echo "Usage: $0 --profile <profile> --domain <domain> --email <email> --token <token>"
       exit 1
       ;;
   esac
 done
 
-if [[ -z "$PROFILE" || -z "$DOMAIN" || -z "$TOKEN" ]]; then
-  echo "Usage: $0 --profile <profile> --domain <domain> --token <token>"
+if [[ -z "$PROFILE" || -z "$DOMAIN" || -z "$EMAIL" || -z "$DNSTOKEN" ]]; then
+  echo "Usage: $0 --profile <profile> --domain <domain> --email <email> --dnstoken <token>"
   exit 1
 fi
 
 echo "PROFILE=$PROFILE"
 echo "DOMAIN=$DOMAIN"
-echo "TOKEN=$TOKEN"
+echo "TOKEN=$DNSTOKEN"
 
 kubectl create namespace observability
 helm repo add otel https://open-telemetry.github.io/opentelemetry-helm-charts
@@ -50,4 +56,4 @@ helm repo add kyverno https://kyverno.github.io/kyverno/
 helm dependency build INFRA/security/kyverno
 helm install -n security kyverno INFRA/security/kyverno
 ./argocd-bootstrap.sh
-./applicationset-init.sh $PROFILE $DOMAIN $TOKEN
+./applicationset-init.sh $PROFILE $DOMAIN $TOKEN $EMAIL

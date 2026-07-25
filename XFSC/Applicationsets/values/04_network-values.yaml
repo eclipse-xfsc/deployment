@@ -4,6 +4,6 @@ name: network
 namespace: infrastructure
 manageNamespace: true
 excludes: 
- - bind9
+ - "INFRA/network/bind9"
 matrix: 
   enabled: false
