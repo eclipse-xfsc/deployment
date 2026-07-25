@@ -5,6 +5,8 @@ bind9:
     tag: "9.20"
   service:
     type: LoadBalancer
+    annotations:
+      load-balancer.hetzner.cloud/network-zone: xfsc-network
   persistence:
     size: 10Gi
 
