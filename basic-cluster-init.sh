@@ -17,13 +17,20 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      shift
+      echo "Unknown parameter: $1"
+      exit 1
       ;;
   esac
 done
 
+if [[ -z "$PROFILE" || -z "$DOMAIN" || -z "$TOKEN" ]]; then
+  echo "Usage: $0 --profile <profile> --domain <domain> --token <token>"
+  exit 1
+fi
+
 echo "PROFILE=$PROFILE"
 echo "DOMAIN=$DOMAIN"
+echo "TOKEN=$TOKEN"
 
 kubectl create namespace observability
 helm repo add otel https://open-telemetry.github.io/opentelemetry-helm-charts

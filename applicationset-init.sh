@@ -1,7 +1,7 @@
 
 $PROFILE=$1
 $DOMAIN=$2
-$DOMAIN=$3
+$TOKEN=$3
 
 helm install -n security infrastructure-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/infra-values.yaml
 helm install -n security catalogue-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/catalogue-values.yaml
