@@ -1,18 +1,21 @@
 external-dns:
-  provider: webhook
-
-  extraArgs:
-    - --webhook-provider-url=http://external-dns-ionos:8888
-
-  extraContainers:
-    - name: ionos-webhook
-      image: ghcr.io/ionos-cloud/external-dns-webhook-ionos:latest
-      ports:
-        - containerPort: 8888
-          name: http
+  provider:
+    name: webhook
+    webhook:
+      image:
+        repository: ghcr.io/ionos-cloud/external-dns-webhook-ionos
+        tag: latest
       env:
         - name: IONOS_API_KEY
           valueFrom:
             secretKeyRef:
               name: external-dns
               key: token
+
+  domainFilters:
+    - example.com
+
+  sources:
+      - service
+      - ingress
+      - gateway-httproute
