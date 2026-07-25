@@ -79,6 +79,22 @@ terraform-plan: terraform-install
 
 terraform-apply: terraform-install
 	$(TF) apply
+	./scripts/get-kubeconfig.sh
+	export KUBECONFIG="$(CURDIR)/kubeconfig.yaml"; \
+	kubectl -n kube-system create secret generic hcloud \
+		--from-literal=token="$${HCLOUD_TOKEN}" \
+		--dry-run=client -o yaml | kubectl apply -f -; \
+	helm repo add hcloud https://charts.hetzner.cloud --force-update; \
+	helm repo update; \
+	helm upgrade --install hcloud-cloud-controller-manager \
+		hcloud/hcloud-cloud-controller-manager \
+		--namespace kube-system \
+		--set env.HCLOUD_TOKEN.valueFrom.secretKeyRef.name=hcloud \
+		--set env.HCLOUD_TOKEN.valueFrom.secretKeyRef.key=token; \
+	kubectl rollout status deployment/hcloud-cloud-controller-manager \
+		-n kube-system \
+		--timeout=180s; \
+	kubectl get pods -n kube-system -l app.kubernetes.io/name=hcloud-cloud-controller-manager
 
 terraform-destroy: terraform-install
 	$(TF) destroy
