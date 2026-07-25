@@ -6,7 +6,7 @@ bind9:
   service:
     type: LoadBalancer
     annotations:
-      load-balancer.hetzner.cloud/network-zone: xfsc-network
+      load-balancer.hetzner.cloud/network-zone: eu-central
   persistence:
     size: 10Gi
 
