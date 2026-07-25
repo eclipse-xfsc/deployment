@@ -308,40 +308,133 @@ build_secret_json() {
 write_kv_secret() {
   local secret_json="$1"
   local temporary_file="/tmp/openbao-secret.json"
+  local current_response
+  local current_data
+  local current_version
+  local missing_json
+  local skipped_keys
+  local added_keys
+  local attempt
+  local max_attempts=5
 
   if [[ "$(jq 'length' <<<"$secret_json")" -eq 0 ]]; then
     fail "SECRET_VALUES does not contain any values."
   fi
 
-  # Nur das eigentliche Secret-Objekt schreiben.
-  # Kein zusätzlicher {"data": ...}-Wrapper für bao kv put/patch.
-  printf '%s' "$secret_json" | jq '.' >"$temporary_file"
+  for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+    if current_response="$(
+      bao kv get \
+        -format=json \
+        -mount="$KV_MOUNT" \
+        "$KV_SECRET_PATH" \
+        2>/dev/null
+    )"; then
+      current_data="$(
+        jq -c '.data.data // {}' <<<"$current_response"
+      )"
 
-  if bao kv get \
-    -mount="$KV_MOUNT" \
-    "$KV_SECRET_PATH" \
-    >/dev/null 2>&1; then
+      current_version="$(
+        jq -er '.data.metadata.version' <<<"$current_response"
+      )" || fail \
+        "Could not determine the current version of ${KV_MOUNT}/${KV_SECRET_PATH}."
 
-    log "Secret ${KV_MOUNT}/${KV_SECRET_PATH} exists. Patching..."
+      # Nur Keys übernehmen, die im existierenden Secret noch nicht
+      # vorhanden sind. Der vorhandene Wert spielt dabei keine Rolle:
+      # Auch null oder ein leerer String gelten als existierender Key.
+      missing_json="$(
+        jq -cn \
+          --argjson requested "$secret_json" \
+          --argjson existing "$current_data" \
+          '
+            $requested
+            | to_entries
+            | map(
+                select(
+                  .key as $key
+                  | ($existing | has($key) | not)
+                )
+              )
+            | from_entries
+          '
+      )"
 
-    bao kv patch \
-      -mount="$KV_MOUNT" \
-      "$KV_SECRET_PATH" \
-      "@${temporary_file}" \
-      >/dev/null
-  else
-    log "Secret ${KV_MOUNT}/${KV_SECRET_PATH} does not exist. Creating..."
+      skipped_keys="$(
+        jq -rnc \
+          --argjson requested "$secret_json" \
+          --argjson existing "$current_data" \
+          '
+            [
+              $requested
+              | keys[]
+              | select(. as $key | $existing | has($key))
+            ]
+            | join(", ")
+          '
+      )"
 
-    bao kv put \
-      -mount="$KV_MOUNT" \
-      "$KV_SECRET_PATH" \
-      "@${temporary_file}" \
-      >/dev/null
-  fi
+      if [[ -n "$skipped_keys" ]]; then
+        log "Skipping existing secret keys: ${skipped_keys}"
+      fi
+
+      if [[ "$(jq 'length' <<<"$missing_json")" -eq 0 ]]; then
+        log "Secret ${KV_MOUNT}/${KV_SECRET_PATH} already contains all requested keys."
+        log "Nothing was changed."
+        return 0
+      fi
+
+      added_keys="$(
+        jq -r 'keys | join(", ")' <<<"$missing_json"
+      )"
+
+      printf '%s' "$missing_json" | jq '.' >"$temporary_file"
+
+      log "Adding missing keys to ${KV_MOUNT}/${KV_SECRET_PATH}: ${added_keys}"
+
+      # CAS stellt sicher, dass seit dem vorherigen Lesen keine neue
+      # Secret-Version geschrieben wurde. Bei einer konkurrierenden
+      # Änderung wird erneut gelesen und gefiltert.
+      if bao kv patch \
+        -cas="$current_version" \
+        -mount="$KV_MOUNT" \
+        "$KV_SECRET_PATH" \
+        "@${temporary_file}" \
+        >/dev/null 2>&1; then
+
+        rm -f "$temporary_file"
+
+        log "Missing secret keys successfully added."
+        return 0
+      fi
+
+      log "Secret changed concurrently. Retrying (${attempt}/${max_attempts})..."
+    else
+      # Das Secret existiert noch nicht. -cas=0 erlaubt die Erstellung
+      # ausschließlich dann, wenn weiterhin keine Version existiert.
+      printf '%s' "$secret_json" | jq '.' >"$temporary_file"
+
+      log "Secret ${KV_MOUNT}/${KV_SECRET_PATH} does not exist. Creating..."
+
+      if bao kv put \
+        -cas=0 \
+        -mount="$KV_MOUNT" \
+        "$KV_SECRET_PATH" \
+        "@${temporary_file}" \
+        >/dev/null 2>&1; then
+
+        rm -f "$temporary_file"
+
+        log "Secret successfully created."
+        return 0
+      fi
+
+      log "Secret was created concurrently. Retrying (${attempt}/${max_attempts})..."
+    fi
+  done
 
   rm -f "$temporary_file"
 
-  log "Secret successfully written."
+  fail \
+    "Could not update ${KV_MOUNT}/${KV_SECRET_PATH} without risking an overwrite after ${max_attempts} attempts."
 }
 
 process_transit_engines() {
