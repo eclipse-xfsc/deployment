@@ -3,5 +3,7 @@ path: INFRA/network/*
 name: network
 namespace: infrastructure
 manageNamespace: true
+excludes: 
+ - bind9
 matrix: 
   enabled: false

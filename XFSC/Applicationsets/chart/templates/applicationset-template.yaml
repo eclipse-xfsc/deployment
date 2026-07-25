@@ -5,6 +5,7 @@ metadata:
   namespace: argocd
 spec:
   goTemplate: true
+
   generators:
 {{- if (.Values.matrix.enabled | default false) }}
     - matrix:
@@ -47,28 +48,49 @@ spec:
 {{- else }}
       name: '{{ "{{ .path.basename }}" }}'
 {{- end }}
+
     spec:
       project: default
+
       source:
         repoURL: https://github.com/eclipse-xfsc/deployment.git
         targetRevision: {{ .Values.tag }}
+
 {{- if (.Values.matrix.enabled | default false) }}
         path: '{{ "{{ .path.path }}" }}'
         helm:
           valueFiles:
             - '../../../{{ "{{ .path_1.path }}" }}/values.yaml'
+{{- if .Values.profile }}
+            - '../../../{{ "{{ .path_1.path }}" }}/profiles/{{ .Values.profile }}.yaml'
+{{- end }}
 {{- else }}
         path: '{{ "{{ .path.path }}" }}'
         helm:
           valueFiles:
             - values.yaml
+{{- if .Values.profile }}
+            - 'profiles/{{ .Values.profile }}.yaml'
 {{- end }}
+{{- end }}
+
           parameters:
             - name: global.storageClass
               value: {{ .Values.storageClass | quote }}
+{{- if .Values.domain }}
+            - name: global.domain
+              value: {{ .Values.domain | quote }}
+{{- end }}
+{{- if .Values.profile }}
+            - name: global.profile
+              value: {{ .Values.profile | quote }}
+{{- end }}
+
+
       destination:
         server: https://kubernetes.default.svc
         namespace: {{ .Values.namespace }}
+
       syncPolicy:
         automated:
           prune: true

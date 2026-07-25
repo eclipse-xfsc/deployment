@@ -1,3 +1,30 @@
+PROFILE=""
+DOMAIN=""
+TOKEN=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --profile)
+      PROFILE="$2"
+      shift 2
+      ;;
+    --domain)
+      DOMAIN="$2"
+      shift 2
+      ;;
+    --token)
+      TOKEN="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+echo "PROFILE=$PROFILE"
+echo "DOMAIN=$DOMAIN"
+
 kubectl create namespace observability
 helm repo add otel https://open-telemetry.github.io/opentelemetry-helm-charts
 helm repo add prom https://prometheus-community.github.io/helm-charts
@@ -16,4 +43,4 @@ helm repo add kyverno https://kyverno.github.io/kyverno/
 helm dependency build INFRA/security/kyverno
 helm install -n security kyverno INFRA/security/kyverno
 ./argocd-bootstrap.sh
-./applicationset-init.sh
+./applicationset-init.sh $PROFILE $DOMAIN $TOKEN

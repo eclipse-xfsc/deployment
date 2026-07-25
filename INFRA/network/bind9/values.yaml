@@ -51,7 +51,3 @@ dns:
     - domain: example.com
       ns:
         - ns1.example.com.
-      records:
-        - name: ns1
-          type: A
-          value: 0.0.0.0
