@@ -56,4 +56,4 @@ helm repo add kyverno https://kyverno.github.io/kyverno/
 helm dependency build INFRA/security/kyverno
 helm install -n security kyverno INFRA/security/kyverno
 ./argocd-bootstrap.sh
-./applicationset-init.sh $PROFILE $DOMAIN $TOKEN $EMAIL
+./applicationset-init.sh $PROFILE $DOMAIN $DNSTOKEN $EMAIL
