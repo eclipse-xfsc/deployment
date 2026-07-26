@@ -1,0 +1,59 @@
+{{- with .Values.project }}
+{{- if .name }}
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ .name | quote }}
+  namespace: {{ .namespace | default "argocd" | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  description: {{ .description | default "Managed by Helm" | quote }}
+
+  sourceRepos:
+{{- if .sourceRepos }}
+{{ toYaml .sourceRepos | nindent 4 }}
+{{- else }}
+    - https://github.com/eclipse-xfsc/deployment.git
+{{- end }}
+
+  destinations:
+{{- if .destinations }}
+{{ toYaml .destinations | nindent 4 }}
+{{- else }}
+    - server: https://kubernetes.default.svc
+      namespace: {{ $.Values.namespace | quote }}
+{{- end }}
+
+  clusterResourceWhitelist:
+{{- if .clusterResourceWhitelist }}
+{{ toYaml .clusterResourceWhitelist | nindent 4 }}
+{{- else }}
+    - group: "*"
+      kind: "*"
+{{- end }}
+
+  namespaceResourceWhitelist:
+{{- if .namespaceResourceWhitelist }}
+{{ toYaml .namespaceResourceWhitelist | nindent 4 }}
+{{- else }}
+    - group: "*"
+      kind: "*"
+{{- end }}
+
+{{- with .clusterResourceBlacklist }}
+  clusterResourceBlacklist:
+{{ toYaml . | nindent 4 }}
+{{- end }}
+
+{{- with .namespaceResourceBlacklist }}
+  namespaceResourceBlacklist:
+{{ toYaml . | nindent 4 }}
+{{- end }}
+
+{{- with .roles }}
+  roles:
+{{ toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -7,3 +7,7 @@ excludes:
  - "INFRA/network/bind9"
 matrix: 
   enabled: false
+
+project:
+  name: infrastructure
+  description: Argo-CD-Projekt für Infrastruktur-Komponenten

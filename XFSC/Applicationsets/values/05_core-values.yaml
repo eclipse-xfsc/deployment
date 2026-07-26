@@ -4,3 +4,7 @@ name: core
 namespace: infrastructure
 matrix: 
   enabled: false
+
+project:
+  name: infrastructure
+  description: Argo-CD-Projekt für Infrastruktur-Komponenten

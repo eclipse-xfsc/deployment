@@ -1,3 +1,14 @@
+{{- /*
+Das ApplicationSet verwendet standardmäßig das Argo-CD-Projekt "default".
+Nur wenn project.name gesetzt ist, wird dieses Projekt verwendet.
+*/ -}}
+{{- $projectName := "default" -}}
+{{- with .Values.project }}
+  {{- if .name }}
+    {{- $projectName = .name -}}
+  {{- end }}
+{{- end }}
+
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -50,7 +61,7 @@ spec:
 {{- end }}
 
     spec:
-      project: default
+      project: {{ $projectName | quote }}
 
       source:
         repoURL: https://github.com/eclipse-xfsc/deployment.git

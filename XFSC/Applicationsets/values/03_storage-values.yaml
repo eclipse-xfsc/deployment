@@ -5,3 +5,7 @@ namespace: infrastructure
 storageClass: local-path
 matrix: 
   enabled: false
+
+project:
+  name: infrastructure
+  description: Argo-CD-Projekt für Infrastruktur-Komponenten

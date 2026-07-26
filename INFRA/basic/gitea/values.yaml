@@ -1,0 +1,90 @@
+global:
+  storageClass: ""
+
+gitea:
+  fullnameOverride: git
+  replicaCount: 1
+
+  ingress:
+    enabled: false
+
+  service:
+    http:
+      type: ClusterIP
+      port: 3000
+    ssh:
+      type: ClusterIP
+      port: 22
+
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+
+  # Disable bundled external databases. Gitea uses SQLite on its persistent volume.
+  postgresql:
+    enabled: false
+  postgresql-ha:
+    enabled: false
+  redis-cluster:
+    enabled: false
+  valkey-cluster:
+    enabled: false
+
+  gitea:
+    admin:
+      existingSecret: gitea-admin
+      email: admin@internal.local
+
+    config:
+      database:
+        DB_TYPE: sqlite3
+        PATH: /data/gitea/gitea.db
+
+      server:
+        DOMAIN: git.infrastructure.svc.cluster.local
+        ROOT_URL: http://git.infrastructure.svc.cluster.local:3000/
+        SSH_DOMAIN: git-ssh.infrastructure.svc.cluster.local
+        SSH_PORT: 22
+
+      service:
+        DISABLE_REGISTRATION: true
+        REQUIRE_SIGNIN_VIEW: false
+
+      repository:
+        DEFAULT_BRANCH: main
+
+      security:
+        INSTALL_LOCK: true
+
+bootstrap:
+  enabled: true
+
+  image:
+    repository: python
+    tag: "3.13-alpine"
+    pullPolicy: IfNotPresent
+
+  giteaUrl: http://git-http:3000
+
+  controller:
+    username: tenant-controller
+    email: tenant-controller@internal.local
+
+  organization:
+    name: platform
+    description: XFSC platform repositories
+
+  repository:
+    name: deployment
+    description: Generated tenant and product deployment state
+    private: false
+
+  token:
+    name: tenant-controller-bootstrap
+    scopes:
+      - write:repository
+      - write:organization
+
+  outputSecret:
+    name: git-controller
