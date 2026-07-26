@@ -1,0 +1,10 @@
+apiVersion: v2
+name: ingress
+description: XFSC F5 NGINX Ingress Wrapper
+type: application
+version: 0.1.0
+
+dependencies:
+  - name: nginx-ingress
+    version: "2.6.1"
+    repository: https://helm.nginx.com/stable

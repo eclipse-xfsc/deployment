@@ -16,6 +16,4 @@ external-dns:
     - example.com
 
   sources:
-      - service
       - ingress
-      - gateway-httproute

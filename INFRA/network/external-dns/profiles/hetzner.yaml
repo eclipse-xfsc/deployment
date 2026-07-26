@@ -6,7 +6,7 @@ external-dns:
         repository: docker.io/hetzner/external-dns-hetzner-webhook
         tag: v0.2.0
       env:
-        - name: HETZNER_API_TOKEN
+        - name: HETZNER_TOKEN
           valueFrom:
             secretKeyRef:
               name: external-dns
@@ -16,6 +16,4 @@ external-dns:
     - example.com
 
   sources:
-    - service
     - ingress
-    - gateway-httproute
