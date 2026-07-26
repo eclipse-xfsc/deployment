@@ -1,8 +1,0 @@
-gatewayClass:
-  name: envoy
-
-gateway:
-  name: public
-
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: "*.example.com"
