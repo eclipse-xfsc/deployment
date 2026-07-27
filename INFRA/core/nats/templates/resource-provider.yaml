@@ -22,3 +22,4 @@ spec:
       NATS_URL: {{ printf "nats://%s.%s.svc.cluster.local:4222" (include "xfsc-nats.fullname" .) .Release.Namespace | quote }}
       NATS_HOST: {{ printf "%s.%s.svc.cluster.local" (include "xfsc-nats.fullname" .) .Release.Namespace | quote }}
       NATS_PORT: "4222"
+      NATS_REQUEST_TIMEOUT: 10s

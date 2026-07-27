@@ -20,7 +20,7 @@ credential-retrieval-service:
     runAsGid: 1000
 
   ingress:
-    enabled: true
+    enabled: false
     annotations:
       nginx.org/client-max-body-size: 2K
       nginx.ingress.kubernetes.io/rewrite-target: /v1/tenants/tenant_space/offering/$2

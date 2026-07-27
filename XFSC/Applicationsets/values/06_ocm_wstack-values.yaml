@@ -1,0 +1,10 @@
+tag: k8s-bootstrap
+path: "INFRA/OCM W-Stack/*"
+name: ocm-wstack
+namespace: ocm-wstack
+matrix: 
+  enabled: false
+
+project:
+  name: ocm-wstack
+  description: Argo-CD-Projekt für ocm wstack

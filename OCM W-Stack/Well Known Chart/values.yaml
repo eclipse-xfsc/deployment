@@ -2,7 +2,7 @@ well-known-service:
   image: 
     pullPolicy: Always
   ingress:
-   enabled: true
+   enabled: false
    annotations:
      kubernetes.io/ingress.class: nginx
      cert-manager.io/cluster-issuer: letsencrypt-prod
