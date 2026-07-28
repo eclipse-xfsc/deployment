@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: v2
 appVersion: v1.0.0
 description: Universal Resolver
 name: universal-resolver

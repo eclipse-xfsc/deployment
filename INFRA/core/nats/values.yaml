@@ -2,6 +2,22 @@ nats:
   auth:
     enabled: true
 
+resourceProvider:
+  name: nats
+  allow:
+    namespaces: []
+
+externalSecret:
+  enabled: true
+  apiVersion: external-secrets.io/v1
+  refreshInterval: 15m
+
+  target:
+    # Empty means <release-name>-root-auth
+    name: ""
+    creationPolicy: Owner
+    deletionPolicy: Retain
+
 openbao:
   address: http://openbao.security.svc.cluster.local:8200
   authPath: kubernetes

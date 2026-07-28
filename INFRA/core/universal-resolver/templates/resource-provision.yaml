@@ -6,4 +6,4 @@ spec:
   type: service
   outputs:
     env:
-      DID_RESOLVER: "http://{{ include \"universalresolver.serviceName\" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+     DID_RESOLVER: {{ printf "http://%s.%s.svc.cluster.local" (include "universalresolver.serviceName" .) .Release.Namespace | quote }}

@@ -1,3 +1,8 @@
 universal-resolver:
   service:
     port: 8080
+
+resourceProvider:
+  name: did-resolver
+  allow:
+    namespaces: []
