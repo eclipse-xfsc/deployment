@@ -1,4 +1,3 @@
-{{- if ne .Values.cluster.postgresql.parameters.ssl "disable" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -50,6 +49,5 @@ spec:
                   key: {{ $value.secretKeyRef.key | quote }}
 {{- else }}
               value: {{ $value | quote }}
-{{- end }}
 {{- end }}
 {{- end }}
