@@ -1,4 +1,4 @@
-{{- if ne .Values.cluster.postgresql.parameters.ssl "off" }}
+{{- if ne .Values.cluster.postgresql.parameters.ssl "disable" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
