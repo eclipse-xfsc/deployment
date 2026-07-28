@@ -1,5 +1,13 @@
 {{- with .Values.project }}
+
 {{- if .name }}
+
+{{- $projectNamespace := .namespace | default "argocd" }}
+
+{{- $existingProject := lookup "argoproj.io/v1alpha1" "AppProject" $projectNamespace .name }}
+
+{{- if not $existingProject }}
+
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
