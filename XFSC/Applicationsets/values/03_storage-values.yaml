@@ -3,9 +3,18 @@ path: INFRA/storage/*
 name: storage
 namespace: infrastructure
 storageClass: local-path
+excludes: 
+ - "INFRA/storage/minio"
+ - "INFRA/storage/minio-operator"
 matrix: 
   enabled: false
 
 project:
   name: infrastructure
   description: Argo-CD-Projekt für Infrastruktur-Komponenten
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: infrastructure
+    - server: https://kubernetes.default.svc
+      namespace: kube-system

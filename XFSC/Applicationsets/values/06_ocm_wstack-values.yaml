@@ -1,5 +1,5 @@
 tag: k8s-bootstrap
-path: "INFRA/OCM W-Stack/*"
+path: "OCM W-Stack/*"
 name: ocm-wstack
 namespace: ocm-wstack
 matrix: 

@@ -11,3 +11,9 @@ matrix:
 project:
   name: infrastructure
   description: Argo-CD-Projekt für Infrastruktur-Komponenten
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: infrastructure
+    - server: https://kubernetes.default.svc
+      namespace: kube-system
