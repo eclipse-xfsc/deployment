@@ -1,12 +1,13 @@
-crds:
-  enabled: true
+cert-manager:
+  crds:
+    enabled: true
 
-prometheus:
-  enabled: true
+  prometheus:
+    enabled: true
 
-config:
-  enableGatewayAPI: true
+  config:
+    enableGatewayAPI: true
 
-ingressShim:
-  defaultIssuerKind: ClusterIssuer
-  defaultIssuerName: letsencrypt
+  ingressShim:
+    defaultIssuerKind: ClusterIssuer
+    defaultIssuerName: letsencrypt
