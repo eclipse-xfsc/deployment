@@ -3,6 +3,8 @@ universal-resolver:
     port: 8080
 
 resourceProvider:
-  name: did-resolver
+  name: universal-resolver
   allow:
     namespaces: []
+
+fullnameOverride: universal-resolver
