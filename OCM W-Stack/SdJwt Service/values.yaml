@@ -2,6 +2,5 @@ sd-jwt-service:
   image:
     name: sd-jwt-service
     tag: "latest"
-  config:
-    signUrl: http://signer.NAMESPACE.svc.cluster.local:8080/v1/sign
-    resolverUrl: http://universal-resolver-service:8080/1.0/identifiers/
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
