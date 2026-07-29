@@ -1,0 +1,25 @@
+{{- if .Values.certificate.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "xfsc-tenant-gateway.fullname" . }}
+  labels:
+    {{- include "xfsc-tenant-gateway.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "xfsc-tenant-gateway.tlsSecretName" . }}
+  dnsNames:
+    - {{ required "hostname is required" .Values.hostname | quote }}
+  issuerRef:
+    name: {{ required "certificate.issuerRef.name is required" .Values.certificate.issuerRef.name | quote }}
+    kind: {{ .Values.certificate.issuerRef.kind | default "ClusterIssuer" | quote }}
+    group: {{ .Values.certificate.issuerRef.group | default "cert-manager.io" | quote }}
+  {{- with .Values.certificate.duration }}
+  duration: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.certificate.renewBefore }}
+  renewBefore: {{ . | quote }}
+  {{- end }}
+  privateKey:
+    algorithm: {{ .Values.certificate.privateKey.algorithm | default "RSA" | quote }}
+    size: {{ .Values.certificate.privateKey.size | default 2048 }}
+{{- end }}

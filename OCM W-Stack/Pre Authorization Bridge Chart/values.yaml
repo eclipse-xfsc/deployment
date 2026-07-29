@@ -5,6 +5,9 @@ pre-authorization-bridge:
   ingress:
    enabled: false
 
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
+
   config:
     logLevel: debug
     servingPort: 8080

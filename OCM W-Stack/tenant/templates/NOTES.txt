@@ -1,0 +1,7 @@
+Tenant gateway: {{ include "xfsc-tenant-gateway.fullname" . }}
+Hostname: {{ .Values.hostname }}
+TLS Secret: {{ include "xfsc-tenant-gateway.tlsSecretName" . }}
+
+Check status:
+  kubectl get gateway,httproute,certificate -n {{ .Release.Namespace }}
+  kubectl describe gateway {{ include "xfsc-tenant-gateway.fullname" . }} -n {{ .Release.Namespace }}

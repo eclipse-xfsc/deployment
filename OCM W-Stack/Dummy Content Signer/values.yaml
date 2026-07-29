@@ -3,6 +3,8 @@ dummycontentsigner:
     tag: main
     pullPolicy: Always
 
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
 
   config:
     origin: "https://cloud-wallet.DOMAIN"

@@ -8,7 +8,9 @@ credential-retrieval-service:
     tag: "latest"
     pullPolicy: Always
 
-  podAnnotations: {}
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
+    
   service:
     port: 8080
     type: ClusterIP

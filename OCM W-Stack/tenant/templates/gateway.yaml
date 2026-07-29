@@ -1,0 +1,26 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ include "xfsc-tenant-gateway.fullname" . }}
+  labels:
+    {{- include "xfsc-tenant-gateway.labels" . | nindent 4 }}
+  {{- with .Values.gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ required "gatewayClassName is required" .Values.gatewayClassName | quote }}
+  listeners:
+    - name: {{ .Values.gateway.listenerName | default "https" | quote }}
+      hostname: {{ required "hostname is required" .Values.hostname | quote }}
+      protocol: HTTPS
+      port: {{ .Values.gateway.port | default 443 }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: {{ include "xfsc-tenant-gateway.tlsSecretName" . }}
+      allowedRoutes:
+        namespaces:
+          from: {{ .Values.gateway.allowedRoutes.namespaces.from | default "Same" }}

@@ -10,7 +10,8 @@ status-list-service:
     pullPolicy: Always
     pullSecrets: key
 
-  podAnnotations: {}
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
 
   resources:
     requests:

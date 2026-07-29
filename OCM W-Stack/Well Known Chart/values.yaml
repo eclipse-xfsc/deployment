@@ -1,22 +1,9 @@
 well-known-service:
   image: 
     pullPolicy: Always
-  ingress:
-   enabled: false
-   annotations:
-     kubernetes.io/ingress.class: nginx
-     cert-manager.io/cluster-issuer: letsencrypt-prod
-     nginx.ingress.kubernetes.io/rewrite-target: /v1/tenants/tenant_space/.well-known/openid-credential-issuer
-   hosts:
-     - host: cloud-wallet.DOMAIN
-       paths:
-         - path: /.well-known/openid-credential-issuer
-           pathtype: ImplementationSpecific
-           port: 8080
-   tls:
-     - secretName: xfsc-wildcard
-       hosts:
-         - cloud-wallet.DOMAIN
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
+  
   config:
     loglevel: DEBUG
     isdev: false

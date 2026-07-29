@@ -1,0 +1,62 @@
+nameOverride: ""
+fullnameOverride: ""
+
+# GatewayClass installed by Envoy Gateway.
+gatewayClassName: envoy
+
+hostname: tenant-a.example.com
+
+gateway:
+  annotations: {}
+  listenerName: https
+  port: 443
+  allowedRoutes:
+    namespaces:
+      from: Same
+
+certificate:
+  enabled: true
+  secretName: ""
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+    group: cert-manager.io
+  duration: ""
+  renewBefore: ""
+  privateKey:
+    algorithm: RSA
+    size: 4096
+
+# ExternalDNS normally discovers spec.hostnames from HTTPRoute when
+# started with the gateway-httproute source. Optional annotations can
+# still be added here.
+httpRoute:
+  annotations: {}
+
+# All backend Services are expected in the release namespace.
+routes:
+  - name: service
+    path: /service
+    pathType: PathPrefix
+    rewrite: /v1/services
+    backend:
+      name: service-api
+      port: 8080
+    headers:
+      set:
+        X-Tenant-ID: tenant-a
+      add: {}
+      remove: []
+
+  - name: auth
+    path: /auth
+    pathType: PathPrefix
+    rewrite: /v1/auth
+    backend:
+      name: auth-api
+      port: 8080
+    headers:
+      set:
+        X-Tenant-ID: tenant-a
+      add: {}
+      remove: []

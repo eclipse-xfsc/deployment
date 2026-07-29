@@ -1,0 +1,72 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "xfsc-tenant-gateway.fullname" . }}
+  labels:
+    {{- include "xfsc-tenant-gateway.labels" . | nindent 4 }}
+  {{- with .Values.httpRoute.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ include "xfsc-tenant-gateway.fullname" . }}
+      sectionName: {{ .Values.gateway.listenerName | default "https" | quote }}
+  hostnames:
+    - {{ required "hostname is required" .Values.hostname | quote }}
+  rules:
+    {{- range $route := .Values.routes }}
+    - matches:
+        - path:
+            type: {{ $route.pathType | default "PathPrefix" }}
+            value: {{ required (printf "path is required for route %s" $route.name) $route.path | quote }}
+      {{- $hasRewrite := ne ($route.rewrite | default "") "" }}
+      {{- $headerSet := dig "headers" "set" dict $route }}
+      {{- $headerAdd := dig "headers" "add" dict $route }}
+      {{- $headerRemove := dig "headers" "remove" list $route }}
+      {{- $hasSet := gt (len $headerSet) 0 }}
+      {{- $hasAdd := gt (len $headerAdd) 0 }}
+      {{- $hasRemove := gt (len $headerRemove) 0 }}
+      {{- if or $hasRewrite $hasSet $hasAdd $hasRemove }}
+      filters:
+        {{- if $hasRewrite }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ $route.rewrite | quote }}
+        {{- end }}
+        {{- if or $hasSet $hasAdd $hasRemove }}
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            {{- if $hasSet }}
+            set:
+              {{- range $name, $value := $headerSet }}
+              - name: {{ $name | quote }}
+                value: {{ $value | quote }}
+              {{- end }}
+            {{- end }}
+            {{- if $hasAdd }}
+            add:
+              {{- range $name, $value := $headerAdd }}
+              - name: {{ $name | quote }}
+                value: {{ $value | quote }}
+              {{- end }}
+            {{- end }}
+            {{- if $hasRemove }}
+            remove:
+              {{- range $name := $headerRemove }}
+              - {{ $name | quote }}
+              {{- end }}
+            {{- end }}
+        {{- end }}
+      {{- end }}
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: {{ required (printf "backend.name is required for route %s" $route.name) $route.backend.name | quote }}
+          port: {{ required (printf "backend.port is required for route %s" $route.name) $route.backend.port }}
+          weight: {{ $route.backend.weight | default 1 }}
+    {{- end }}

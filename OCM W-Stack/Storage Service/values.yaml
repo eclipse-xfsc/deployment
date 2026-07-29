@@ -8,7 +8,8 @@ storage-service:
     name: storage-service
     tag: main
 
-  podAnnotations: {}
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
 
   resources:
     # requests:

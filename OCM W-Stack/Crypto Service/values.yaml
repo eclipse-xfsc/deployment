@@ -6,3 +6,5 @@ signer:
   signer: 
     vault:
       secret: vault
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
