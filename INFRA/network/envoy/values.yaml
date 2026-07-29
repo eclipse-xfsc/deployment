@@ -1,0 +1,19 @@
+envoy-gateway:
+  enabled: true
+
+  deployment:
+    replicas: 1
+
+  config:
+    envoyGateway:
+      logging:
+        level:
+          default: info
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
