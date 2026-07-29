@@ -4,13 +4,13 @@ metadata:
   name: {{ printf "%s-openbao-sync" (include "xfsc-postgresql-cnpg.fullname" .) }}
   namespace: {{ .Release.Namespace }}
 spec:
-  backoffLimit: 3
+  backoffLimit: 10
   template:
     metadata:
       labels:
         app.kubernetes.io/name: openbao-sync
     spec:
-      restartPolicy: Never
+      restartPolicy: OnFailure
       serviceAccountName: {{ .Values.openbao.serviceAccount.name }}
       containers:
         - name: sync
