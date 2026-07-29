@@ -1,5 +1,5 @@
-apiVersion: xfsc.dev/v1alpha1
-kind: ResourceProvision
+apiVersion: resources.xfsc.io/v1alpha1
+kind: ResourceProvider
 metadata:
   name: did-resolver
 spec:
