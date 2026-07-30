@@ -1,51 +1,63 @@
 apiVersion: batch/v1
-kind: Job
+kind: CronJob
 metadata:
   name: {{ printf "%s-openbao-sync" (include "xfsc-postgresql-cnpg.fullname" .) }}
   namespace: {{ .Release.Namespace }}
 spec:
-  backoffLimit: 10
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: openbao-sync
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+
+  jobTemplate:
     spec:
-      restartPolicy: OnFailure
-      serviceAccountName: {{ .Values.openbao.serviceAccount.name }}
-      containers:
-        - name: sync
-          image: "{{ .Values.openbaoInit.image.repository }}:{{ .Values.openbaoInit.image.tag }}"
-          imagePullPolicy: {{ .Values.openbaoInit.image.pullPolicy }}
-          env:
-            - name: OPENBAO_ADDR
-              value: {{ .Values.openbao.address | quote }}
+      activeDeadlineSeconds: 60
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 60
 
-            - name: OPENBAO_AUTH_PATH
-              value: {{ .Values.openbao.authPath | quote }}
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: openbao-sync
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ .Values.openbao.serviceAccount.name }}
 
-            - name: OPENBAO_ROLE
-              value: {{ .Values.openbao.role | quote }}
+          containers:
+            - name: sync
+              image: "{{ .Values.openbaoInit.image.repository }}:{{ .Values.openbaoInit.image.tag }}"
+              imagePullPolicy: {{ .Values.openbaoInit.image.pullPolicy }}
 
-            - name: KV_MOUNT
-              value: {{ .Values.openbao.kvMount | quote }}
+              env:
+                - name: OPENBAO_ADDR
+                  value: {{ .Values.openbao.address | quote }}
 
-            - name: KV_SECRET_PATH
-              value: {{ include "xfsc-postgresql-cnpg.secretPath" . | quote }}
+                - name: OPENBAO_AUTH_PATH
+                  value: {{ .Values.openbao.authPath | quote }}
 
-            - name: SECRET_VALUES
-              value: |
+                - name: OPENBAO_ROLE
+                  value: {{ .Values.openbao.role | quote }}
+
+                - name: KV_MOUNT
+                  value: {{ .Values.openbao.kvMount | quote }}
+
+                - name: KV_SECRET_PATH
+                  value: {{ include "xfsc-postgresql-cnpg.secretPath" . | quote }}
+
+                - name: SECRET_VALUES
+                  value: |
 {{- range $key, $value := .Values.openbaoSync.values }}
-                {{ $key }}={{ $key | upper | replace "." "_" | replace "-" "_" }}
+                    {{ $key }}={{ $key | upper | replace "." "_" | replace "-" "_" }}
 {{- end }}
 
 {{- range $key, $value := .Values.openbaoSync.values }}
-            - name: {{ $key | upper | replace "." "_" | replace "-" "_" }}
+                - name: {{ $key | upper | replace "." "_" | replace "-" "_" }}
 {{- if kindIs "map" $value }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $value.secretKeyRef.name | quote }}
-                  key: {{ $value.secretKeyRef.key | quote }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $value.secretKeyRef.name | quote }}
+                      key: {{ $value.secretKeyRef.key | quote }}
 {{- else }}
-              value: {{ $value | quote }}
+                  value: {{ $value | quote }}
 {{- end }}
 {{- end }}
