@@ -6,15 +6,15 @@ APPSET_NAME="${1:?Usage: $0 <applicationset-name> [namespace]}"
 NAMESPACE="${2:-argocd}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-600}"
 INTERVAL_SECONDS="${INTERVAL_SECONDS:-10}"
-
-# "normal" oder "hard"
 REFRESH_TYPE="${REFRESH_TYPE:-normal}"
 
 START_TIME="$(date +%s)"
+REFRESHED_APPLICATIONS_FILE="$(mktemp)"
 
-# Verhindert, dass dieselbe degradierte Application bei jedem Durchlauf
-# erneut refreshed wird.
-declare -A REFRESHED_APPLICATIONS=()
+cleanup() {
+  rm -f "$REFRESHED_APPLICATIONS_FILE"
+}
+trap cleanup EXIT
 
 while true; do
   applications="$(
@@ -60,7 +60,7 @@ while true; do
     while IFS= read -r application_name; do
       [[ -z "$application_name" ]] && continue
 
-      if [[ -n "${REFRESHED_APPLICATIONS[$application_name]:-}" ]]; then
+      if grep -Fxq "$application_name" "$REFRESHED_APPLICATIONS_FILE"; then
         echo "Refresh für '${application_name}' wurde bereits ausgelöst."
         continue
       fi
@@ -73,7 +73,7 @@ while true; do
         "argocd.argoproj.io/refresh=${REFRESH_TYPE}" \
         --overwrite
       then
-        REFRESHED_APPLICATIONS["$application_name"]=1
+        printf '%s\n' "$application_name" >> "$REFRESHED_APPLICATIONS_FILE"
         echo "Refresh für '${application_name}' wurde ausgelöst."
       else
         echo "Refresh für '${application_name}' konnte nicht ausgelöst werden." >&2

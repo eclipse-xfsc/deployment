@@ -3,7 +3,7 @@ kind: ResourceProvider
 metadata:
   name: did-resolver
 spec:
-  type: service
+  type: did-resolver
   scope: {{ .Values.resourceProvider.scope | quote }}
   description: {{ .Values.resourceProvider.description | quote }}
 
