@@ -30,5 +30,5 @@ helm install -n infrastructure network XFSC/Applicationsets/chart -f XFSC/Applic
 ./check-applicationset.sh network argocd
 helm install -n infrastructure core XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/05_core-values.yaml --set storageClass="$STORAGE_CLASS"
 ./check-applicationset.sh core argocd
-helm install -n infrastructure ocm-wstack XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/06_ocm_wstack-values.yaml --set storageClass="$STORAGE_CLASS"
+helm install -n ocm-wstack ocm-wstack XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/06_ocm_wstack-values.yaml --set storageClass="$STORAGE_CLASS"
 ./check-applicationset.sh ocm-wstack argocd
