@@ -7,7 +7,14 @@ NAMESPACE="${2:-argocd}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-600}"
 INTERVAL_SECONDS="${INTERVAL_SECONDS:-10}"
 
+# "normal" oder "hard"
+REFRESH_TYPE="${REFRESH_TYPE:-normal}"
+
 START_TIME="$(date +%s)"
+
+# Verhindert, dass dieselbe degradierte Application bei jedem Durchlauf
+# erneut refreshed wird.
+declare -A REFRESHED_APPLICATIONS=()
 
 while true; do
   applications="$(
@@ -38,12 +45,47 @@ while true; do
   if [[ "$count" -eq 0 ]]; then
     echo "Noch keine Applications für ApplicationSet '${APPSET_NAME}' gefunden."
   else
+    degraded_applications="$(
+      jq -r '
+        .[]
+        | select(
+            (.status.health.status // "Unknown") == "Degraded"
+            and (.status.sync.status // "Unknown") == "Synced"
+            and (.status.operationState.phase // "Unknown") == "Succeeded"
+          )
+        | .metadata.name
+      ' <<< "$appset_applications"
+    )"
+
+    while IFS= read -r application_name; do
+      [[ -z "$application_name" ]] && continue
+
+      if [[ -n "${REFRESHED_APPLICATIONS[$application_name]:-}" ]]; then
+        echo "Refresh für '${application_name}' wurde bereits ausgelöst."
+        continue
+      fi
+
+      echo "Application '${application_name}' ist Degraded, aber Synced und die Operation war erfolgreich."
+      echo "Löse ${REFRESH_TYPE}-Refresh aus ..."
+
+      if kubectl annotate application.argoproj.io "$application_name" \
+        --namespace "$NAMESPACE" \
+        "argocd.argoproj.io/refresh=${REFRESH_TYPE}" \
+        --overwrite
+      then
+        REFRESHED_APPLICATIONS["$application_name"]=1
+        echo "Refresh für '${application_name}' wurde ausgelöst."
+      else
+        echo "Refresh für '${application_name}' konnte nicht ausgelöst werden." >&2
+      fi
+    done <<< "$degraded_applications"
+
     not_ready="$(
       jq -r '
         .[]
         | select(
-            .status.sync.status != "Synced"
-            or .status.health.status != "Healthy"
+            (.status.sync.status // "Unknown") != "Synced"
+            or (.status.health.status // "Unknown") != "Healthy"
           )
         | [
             .metadata.name,

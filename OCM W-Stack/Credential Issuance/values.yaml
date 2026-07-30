@@ -10,6 +10,5 @@ issuance-service:
     inject.xfsc.io/enabled: "true"
 
   config:
-    audience: https://cloud-wallet.DOMAIN
     logLevel: info
     servingPort: 8080
