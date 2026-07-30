@@ -4,6 +4,14 @@ metadata:
   name: did-resolver
 spec:
   type: service
+  scope: {{ .Values.resourceProvider.scope | quote }}
+  description: {{ .Values.resourceProvider.description | quote }}
+
+{{- with .Values.resourceProvider.allow.namespaces }}
+  allow:
+    namespaces:
+{{ toYaml . | indent 6 }}
+{{- end }}
   outputs:
     env:
      DID_RESOLVER: {{ printf "http://%s.%s.svc.cluster.local" (include "universal-resolver.serviceName" .) .Release.Namespace | quote }}

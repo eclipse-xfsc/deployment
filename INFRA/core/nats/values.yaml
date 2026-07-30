@@ -4,6 +4,8 @@ nats:
 
 resourceProvider:
   name: nats
+  scope: Cluster
+  description: Nats Connection
   allow:
     namespaces: []
 

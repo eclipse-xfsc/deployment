@@ -4,6 +4,8 @@ universal-resolver:
 
 resourceProvider:
   name: universal-resolver
+  scope: Cluster
+  description: Universal Resolver
   allow:
     namespaces: []
 
