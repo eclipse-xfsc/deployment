@@ -15,7 +15,7 @@ spec:
 {{- end }}
   outputs:
     env:
-      REDIS_HOST: {{ printf "%s.%s.svc.cluster.local" (include "redis.fullname" .) .Release.Namespace | quote }}
+      REDIS_HOSTS: {{ printf "%s.%s.svc.cluster.local" (include "redis.fullname" .) .Release.Namespace | quote }}
       REDIS_PORT: "6379"
       REDIS_TLS: {{ .Values.resourceProvider.tls | quote }}
       REDIS_CLUSTER: {{ .Values.resourceProvider.cluster | quote }}
