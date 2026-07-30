@@ -9,3 +9,6 @@ excludes:
 project:
   name: ocm-wstack
   description: Argo-CD-Projekt für ocm wstack
+sourceRepos: 
+  - https://github.com/eclipse-xfsc/deployment.git
+  - node-654e3bca7fbeeed18f81d7c7.ps-xaas.io
