@@ -6,6 +6,7 @@ matrix:
   enabled: false
 excludes: 
  - "OCM W-Stack/tenant"
+ - "OCM W-Stack/Policies"
 project:
   name: ocm-wstack
   description: Argo-CD-Projekt für ocm wstack
