@@ -24,6 +24,8 @@ kubectl create secret generic external-dns \
   -n infrastructure \
   --from-literal=token="$TOKEN"
 
+helm install -n infrastructure storage XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/02_basic-values.yaml --set storageClass="$STORAGE_CLASS"
+./check-applicationset.sh storage argocd
 helm install -n infrastructure storage XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/03_storage-values.yaml --set storageClass="$STORAGE_CLASS"
 ./check-applicationset.sh storage argocd
 helm install -n infrastructure network XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/04_network-values.yaml --set storageClass="$STORAGE_CLASS" --set profile="$PROFILE" --set domain="$DOMAIN" --set email="$EMAIL" 
