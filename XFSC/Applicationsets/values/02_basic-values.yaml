@@ -4,6 +4,17 @@ name: basic
 namespace: infrastructure
 storageClass: local-path
 
+openbao:
+  address: http://openbao.security.svc.cluster.local:8200
+  authPath: kubernetes
+  role: xfsc-infrastructure-resource-provisioner
+  kvMount: infrastructure
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+  secretStore:
+    enabled: true
+    name: openbao
+
 matrix:
   enabled: false
 

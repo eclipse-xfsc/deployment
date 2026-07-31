@@ -9,12 +9,6 @@ INTERVAL_SECONDS="${INTERVAL_SECONDS:-10}"
 REFRESH_TYPE="${REFRESH_TYPE:-normal}"
 
 START_TIME="$(date +%s)"
-REFRESHED_APPLICATIONS_FILE="$(mktemp)"
-
-cleanup() {
-  rm -f "$REFRESHED_APPLICATIONS_FILE"
-}
-trap cleanup EXIT
 
 while true; do
   applications="$(
@@ -45,13 +39,12 @@ while true; do
   if [[ "$count" -eq 0 ]]; then
     echo "Noch keine Applications für ApplicationSet '${APPSET_NAME}' gefunden."
   else
-    degraded_applications="$(
+    degraded_synced_applications="$(
       jq -r '
         .[]
         | select(
             (.status.health.status // "Unknown") == "Degraded"
             and (.status.sync.status // "Unknown") == "Synced"
-            and (.status.operationState.phase // "Unknown") == "Succeeded"
           )
         | .metadata.name
       ' <<< "$appset_applications"
@@ -60,12 +53,7 @@ while true; do
     while IFS= read -r application_name; do
       [[ -z "$application_name" ]] && continue
 
-      if grep -Fxq "$application_name" "$REFRESHED_APPLICATIONS_FILE"; then
-        echo "Refresh für '${application_name}' wurde bereits ausgelöst."
-        continue
-      fi
-
-      echo "Application '${application_name}' ist Degraded, aber Synced und die Operation war erfolgreich."
+      echo "Application '${application_name}' ist Degraded und Synced."
       echo "Löse ${REFRESH_TYPE}-Refresh aus ..."
 
       if kubectl annotate application.argoproj.io "$application_name" \
@@ -73,12 +61,11 @@ while true; do
         "argocd.argoproj.io/refresh=${REFRESH_TYPE}" \
         --overwrite
       then
-        printf '%s\n' "$application_name" >> "$REFRESHED_APPLICATIONS_FILE"
         echo "Refresh für '${application_name}' wurde ausgelöst."
       else
         echo "Refresh für '${application_name}' konnte nicht ausgelöst werden." >&2
       fi
-    done <<< "$degraded_applications"
+    done <<< "$degraded_synced_applications"
 
     not_ready="$(
       jq -r '
