@@ -1,12 +1,15 @@
-{{- if .Values.redis.enabled }}
 {{- if and .Values.redis.enabled (eq .Values.redis.mode "cluster") }}
 apiVersion: redis.redis.opstreelabs.in/v1beta2
 kind: RedisCluster
 metadata:
   name: {{ include "redis.fullname" . }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
-  clusterSize: {{ .Values.redis.cluster.masterCount }}
+  clusterSize: {{ required "redis.cluster.nodes is required in cluster mode" .Values.redis.cluster.nodes }}
+  persistenceEnabled: {{ .Values.redis.cluster.persistence.enabled }}
 
   kubernetesConfig:
     image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
@@ -25,8 +28,22 @@ spec:
     podSecurityContext:
 {{ toYaml .Values.redis.podSecurityContext | indent 6 }}
 
+{{- if .Values.redis.cluster.persistence.enabled }}
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+{{- $storageClass := .Values.redis.cluster.persistence.storageClass | default .Values.global.storageClass }}
+{{- if $storageClass }}
+        storageClassName: {{ $storageClass | quote }}
+{{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.cluster.persistence.size | quote }}
+{{- end }}
+
   redisExporter:
     enabled: {{ .Values.redis.redisExporter.enabled }}
-    image: {{ .Values.redis.redisExporter.image | quote }}
-{{- end }}
+    image: {{ required "redis.redisExporter.image is required by the OpsTree Redis CRD" .Values.redis.redisExporter.image | quote }}
 {{- end }}

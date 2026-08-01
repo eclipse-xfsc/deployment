@@ -44,18 +44,15 @@ redis:
   enabled: true
 
   mode: standalone # standalone | cluster
+  port: 6379
 
   cluster:
+    # Number of leader nodes. The operator creates the same number of followers.
     nodes: 3
-    replicas: 1
-    leader:
-      persistence:
-        enabled: true
-        size: 8Gi
-    follower:
-      persistence:
-        enabled: true
-        size: 8Gi
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: ""
 
   image:
     repository: quay.io/opstree/redis
@@ -100,4 +97,3 @@ resourceProvider:
     namespaces: []
 
   tls: "false"
-  cluster: "false"

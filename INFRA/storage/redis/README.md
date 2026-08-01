@@ -77,3 +77,14 @@ syncPolicy:
     - CreateNamespace=true
     - ServerSideApply=true
 ```
+
+## Redis mode and generated hosts
+
+Set `redis.mode` to `standalone` or `cluster`. In cluster mode, `redis.cluster.nodes`
+controls `spec.clusterSize` and the generated `REDIS_HOSTS` seed list. Every host
+contains the configured `redis.port`, for example:
+
+`release-leader-0.release-leader-headless.namespace.svc.cluster.local:6379`
+
+The OpsTree `RedisCluster` CRD uses one shared `storage` definition for leader and
+follower StatefulSets, configured through `redis.cluster.persistence`.

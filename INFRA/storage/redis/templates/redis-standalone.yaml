@@ -1,4 +1,3 @@
-{{- if .Values.redis.enabled }}
 {{- if and .Values.redis.enabled (eq .Values.redis.mode "standalone") }}
 apiVersion: redis.redis.opstreelabs.in/v1beta2
 kind: Redis
@@ -39,11 +38,6 @@ spec:
 {{- end }}
 
   redisExporter:
-   enabled: {{ .Values.redis.redisExporter.enabled }}
-   image: {{ required
-    "redis.redisExporter.image is required by the OpsTree Redis CRD"
-    .Values.redis.redisExporter.image
-    | quote
-  }}
-{{- end }}
+    enabled: {{ .Values.redis.redisExporter.enabled }}
+    image: {{ required "redis.redisExporter.image is required by the OpsTree Redis CRD" .Values.redis.redisExporter.image | quote }}
 {{- end }}
