@@ -13,6 +13,11 @@ spec:
     namespaces:
 {{ toYaml . | indent 6 }}
 {{- end }}
+
+  adminSecretRef:
+   namespace: {{ .Release.Namespace }}
+   name: {{ include "redis.authSecret" . }}
+
   outputs:
     env:
       {{- if eq .Values.redis.mode "cluster" }}

@@ -13,6 +13,10 @@ spec:
     namespaces:
 {{ toYaml . | indent 6 }}
 {{- end }}
+  adminSecretRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ include "cass.authSecret" . }}
+
   outputs:
     env:
       CASSANDRA_HOST: {{ printf "%s.%s.svc.cluster.local" (include "cass.fullname" .) .Release.Namespace | quote }}

@@ -13,6 +13,9 @@ spec:
     namespaces:
 {{ toYaml . | indent 6 }}
 {{- end }}
+  adminSecretRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ include "minio.configSecret" . }}
   outputs:
     env:
       S3_ENDPOINT: {{ printf "https://minio.%s.svc.cluster.local" .Release.Namespace | quote }}
