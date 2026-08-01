@@ -21,3 +21,18 @@
 {{- printf "%s-root-auth" (include "redis.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end }}
+
+{{- define "redis.clusterHosts" -}}
+{{- $root := . -}}
+{{- $hosts := list -}}
+{{- range $i := until (int $root.Values.redis.cluster.masterCount) -}}
+  {{- $host := printf "%s-leader-%d.%s-leader.%s.svc.cluster.local:%d"
+      (include "redis.fullname" $root)
+      $i
+      (include "redis.fullname" $root)
+      $root.Release.Namespace
+      (int $root.Values.redis.port) -}}
+  {{- $hosts = append $hosts $host -}}
+{{- end -}}
+{{- join "," $hosts -}}
+{{- end -}}

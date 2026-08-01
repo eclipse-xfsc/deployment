@@ -15,8 +15,17 @@ spec:
 {{- end }}
   outputs:
     env:
-      REDIS_HOSTS: {{ printf "%s.%s.svc.cluster.local" (include "redis.fullname" .) .Release.Namespace | quote }}
-      REDIS_PORT: "6379"
+      {{- if eq .Values.redis.mode "cluster" }}
+      REDIS_HOSTS: {{ include "redis.clusterHosts" . | quote }}
+      REDIS_ISCLUSTER: "true"
+      {{- else }}
+      REDIS_HOSTS: {{ printf "%s.%s.svc.cluster.local:%d"
+        (include "redis.fullname" .)
+        .Release.Namespace
+        (int .Values.redis.port) | quote }}
+      REDIS_ISCLUSTER: "false"
+      {{- end }}
+
+      REDIS_PORT: {{ .Values.redis.port | quote }}
       REDIS_TLS: {{ .Values.resourceProvider.tls | quote }}
-      REDIS_ISCLUSTER: {{ .Values.resourceProvider.cluster | quote }}
 {{- end }}

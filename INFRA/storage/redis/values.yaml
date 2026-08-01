@@ -43,6 +43,20 @@ externalSecret:
 redis:
   enabled: true
 
+  mode: standalone # standalone | cluster
+
+  cluster:
+    nodes: 3
+    replicas: 1
+    leader:
+      persistence:
+        enabled: true
+        size: 8Gi
+    follower:
+      persistence:
+        enabled: true
+        size: 8Gi
+
   image:
     repository: quay.io/opstree/redis
     tag: v8.6.2

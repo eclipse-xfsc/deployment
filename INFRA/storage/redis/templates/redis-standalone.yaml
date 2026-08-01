@@ -1,4 +1,5 @@
 {{- if .Values.redis.enabled }}
+{{- if and .Values.redis.enabled (eq .Values.redis.mode "standalone") }}
 apiVersion: redis.redis.opstreelabs.in/v1beta2
 kind: Redis
 metadata:
@@ -44,4 +45,5 @@ spec:
     .Values.redis.redisExporter.image
     | quote
   }}
+{{- end }}
 {{- end }}

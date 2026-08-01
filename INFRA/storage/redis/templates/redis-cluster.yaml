@@ -1,0 +1,32 @@
+{{- if .Values.redis.enabled }}
+{{- if and .Values.redis.enabled (eq .Values.redis.mode "cluster") }}
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: {{ include "redis.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  clusterSize: {{ .Values.redis.cluster.masterCount }}
+
+  kubernetesConfig:
+    image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+    imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+    redisSecret:
+      name: {{ include "redis.authSecret" . }}
+      key: password
+    resources:
+{{ toYaml .Values.redis.resources | indent 6 }}
+
+  redisLeader:
+    podSecurityContext:
+{{ toYaml .Values.redis.podSecurityContext | indent 6 }}
+
+  redisFollower:
+    podSecurityContext:
+{{ toYaml .Values.redis.podSecurityContext | indent 6 }}
+
+  redisExporter:
+    enabled: {{ .Values.redis.redisExporter.enabled }}
+    image: {{ .Values.redis.redisExporter.image | quote }}
+{{- end }}
+{{- end }}
