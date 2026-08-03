@@ -10,7 +10,7 @@ storage-service:
 
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
-
+  serviceAccount: ocm-wstack-resource-provisioner
   resources:
     # requests:
     #   cpu: 25m
