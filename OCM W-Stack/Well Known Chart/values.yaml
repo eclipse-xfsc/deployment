@@ -1,5 +1,6 @@
 well-known-service:
   image: 
+    tag: 0.0.0-dev
     pullPolicy: Always
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
@@ -7,18 +8,5 @@ well-known-service:
   config:
     loglevel: DEBUG
     isdev: false
-    postgres:
-      host: postgres-postgresql.NAMESPACE.svc.cluster.local       
-      port: 5432
-      database: wellknown
-      user: postgres
-      password: 
-        key: postgresql-password
-        name: wellknown-db-secret
-      params: sslmode:disable
-    nats:
-      url: nats.NAMESPACE.svc.cluster.local:4222
-      queuegroup: wellknown
-    issuer: cloud-wallet.DOMAIN
     importer:
       broadcast:

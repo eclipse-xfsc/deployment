@@ -6,7 +6,7 @@ storage-service:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
     imagePullPolicy: Always
     name: storage-service
-    tag: main
+    tag: 0.0.0-dev
 
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
@@ -32,48 +32,17 @@ storage-service:
       port: 8080
       address: 0.0.0.0
 
-  ingress:
-    enabled: false
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
-      nginx.org/client-max-body-size: 2K
-      nginx.ingress.kubernetes.io/rewrite-target: /v1/tenants/tenant_space/storage/$2
-    hosts:
-      - host:
-        paths:
-          - path: /storage(/|$)(.*)
-            port: 8080
-    tls:
-      - secretName: xfsc-wildcard
-        hosts:
-          - cloud-wallet.DOMAIN
   security:
     runAsNonRoot: false
     runAsUid: 1000
     runAsGid: 1000
   config:
     port: 8080
-    cassandra:
-      hosts: cassandra.NAMESPACE.svc.cluster.local:9042
-      keyspace: tenant_space
-      user: cassandra
-      passwordSecret: cassandra
-      passwordKey: cassandra-password
     crypto:
       signKey: storagekey
-      namespace: NAMESPACE
+      namespace: ocm-wstack
     service:
       profiles: API
-      country: DE
-      region: EU
       mode: DIRECT
     messaging:
-      enabled: true
       storageTopic: storage.service.store
-      host: nats://nats.NAMESPACE.svc.cluster.local:4222
-      protocol: nats
-      queueGroup: storage-service
-    vault:
-      address: http://vault.NAMESPACE.svc.cluster.local:8200
-      tokenName: vault
-      tokenKey: token
