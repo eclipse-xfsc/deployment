@@ -59,11 +59,29 @@ spec:
             - name: RESOURCE_MAX_TTL
               value: {{ .Values.openbao.resourceProvisioner.tokenMaxTTL | quote }}
 
+            - name: READER_SA
+              value: {{ include "app-namespace.storeReaderServiceAccount" . | quote }}
+
+            - name: READER_POLICY
+              value: {{ include "app-namespace.storeReaderPolicy" . | quote }}
+
+            - name: READER_ROLE
+              value: {{ include "app-namespace.storeReaderRole" . | quote }}
+
+            - name: READER_TTL
+              value: {{ .Values.openbao.storeReader.tokenTTL | quote }}
+
+            - name: READER_MAX_TTL
+              value: {{ .Values.openbao.storeReader.tokenMaxTTL | quote }}
+
             - name: ENGINE_MOUNT_PREFIX
               value: {{ .Values.openbao.resourceProvisioner.engineMountPrefix | quote }}
 
             - name: STORE_MOUNT
               value: {{ .Values.openbao.storeMountPath | quote }}
+
+            - name: STORE_SECRET_PREFIX
+              value: {{ .Values.openbao.storeSecretPrefix | default "" | quote }}
 
             - name: BOOTSTRAP_SECRET_PATH
               value: {{ .Values.openbao.bootstrapSecret.path | quote }}
@@ -178,6 +196,18 @@ spec:
                   ;;
               esac
 
+              if [ -n "$STORE_SECRET_PREFIX" ]; then
+                STORE_SECRET_PREFIX="${STORE_SECRET_PREFIX#/}"
+                STORE_SECRET_PREFIX="${STORE_SECRET_PREFIX%/}"
+
+                case "$STORE_SECRET_PREFIX" in
+                  *..*)
+                    echo "STORE_SECRET_PREFIX must not contain '..': ${STORE_SECRET_PREFIX}"
+                    exit 1
+                    ;;
+                esac
+              fi
+
               echo "Ensuring KV-v2 engine at mount ${STORE_MOUNT}..."
 
               MOUNTS_JSON="$(
@@ -213,7 +243,6 @@ spec:
               echo "Allowed engine mount prefix: ${ENGINE_MOUNT_PREFIX}/*"
 
               cat > /tmp/resource-policy.hcl <<POLICY
-              # List mounted secrets engines.
               path "sys/mounts" {
                 capabilities = [
                   "read",
@@ -221,9 +250,6 @@ spec:
                 ]
               }
 
-              # Create, inspect, configure and remove engines below:
-              #
-              #   ${ENGINE_MOUNT_PREFIX}/*
               path "sys/mounts/${ENGINE_MOUNT_PREFIX}/*" {
                 capabilities = [
                   "create",
@@ -235,16 +261,13 @@ spec:
                 ]
               }
 
-              # CLI mount discovery for engines below the prefix.
               path "sys/internal/ui/mounts/${ENGINE_MOUNT_PREFIX}/*" {
                 capabilities = [
                   "read"
                 ]
               }
 
-              # KV-v2 data access for engines directly below the prefix:
-              #
-              #   ${ENGINE_MOUNT_PREFIX}/<engine>/data/*
+              # KV-v2 engines directly below the configured prefix.
               path "${ENGINE_MOUNT_PREFIX}/+/data/*" {
                 capabilities = [
                   "create",
@@ -298,7 +321,7 @@ spec:
                 ]
               }
 
-              # Transit key management.
+              # Transit engines directly below the configured prefix.
               path "${ENGINE_MOUNT_PREFIX}/+/keys" {
                 capabilities = [
                   "read",
@@ -358,7 +381,7 @@ spec:
                 ]
               }
 
-              # Access to the KV-v2 engine containing the service token.
+              # KV-v2 engine containing the generated service token.
               path "${STORE_MOUNT}/data/*" {
                 capabilities = [
                   "create",
@@ -404,7 +427,6 @@ spec:
                 ]
               }
 
-              # CLI mount discovery for the nested token store.
               path "sys/internal/ui/mounts/${STORE_MOUNT}" {
                 capabilities = [
                   "read"
@@ -445,6 +467,84 @@ spec:
                 policies="$RESOURCE_POLICY" \
                 token_ttl="$RESOURCE_TTL" \
                 token_max_ttl="$RESOURCE_MAX_TTL"
+
+              if [ -n "$STORE_SECRET_PREFIX" ]; then
+                READER_DATA_PATH="${STORE_MOUNT}/data/${STORE_SECRET_PREFIX}/*"
+                READER_METADATA_ROOT="${STORE_MOUNT}/metadata/${STORE_SECRET_PREFIX}"
+                READER_METADATA_PATH="${STORE_MOUNT}/metadata/${STORE_SECRET_PREFIX}/*"
+              else
+                READER_DATA_PATH="${STORE_MOUNT}/data/*"
+                READER_METADATA_ROOT="${STORE_MOUNT}/metadata"
+                READER_METADATA_PATH="${STORE_MOUNT}/metadata/*"
+              fi
+
+              echo "Generating store reader policy..."
+              echo "Reader data path: ${READER_DATA_PATH}"
+
+              cat > /tmp/reader-policy.hcl <<POLICY
+              # Read KV-v2 secret values.
+              path "${READER_DATA_PATH}" {
+                capabilities = [
+                  "read"
+                ]
+              }
+
+              # List and inspect KV-v2 metadata.
+              path "${READER_METADATA_ROOT}" {
+                capabilities = [
+                  "read",
+                  "list"
+                ]
+              }
+
+              path "${READER_METADATA_PATH}" {
+                capabilities = [
+                  "read",
+                  "list"
+                ]
+              }
+
+              # Required for CLI and External Secrets mount discovery.
+              path "sys/internal/ui/mounts/${STORE_MOUNT}" {
+                capabilities = [
+                  "read"
+                ]
+              }
+
+              path "sys/internal/ui/mounts/${STORE_MOUNT}/*" {
+                capabilities = [
+                  "read"
+                ]
+              }
+
+              path "auth/token/lookup-self" {
+                capabilities = [
+                  "read"
+                ]
+              }
+
+              path "auth/token/renew-self" {
+                capabilities = [
+                  "update"
+                ]
+              }
+              POLICY
+
+              echo "Writing store reader policy ${READER_POLICY}..."
+
+              bao policy write \
+                "$READER_POLICY" \
+                /tmp/reader-policy.hcl
+
+              echo "Writing store reader Kubernetes role ${READER_ROLE}..."
+
+              bao write \
+                "auth/${AUTH_MOUNT_PATH}/role/${READER_ROLE}" \
+                bound_service_account_names="$READER_SA" \
+                bound_service_account_namespaces="$TARGET_NAMESPACE" \
+                policies="$READER_POLICY" \
+                token_ttl="$READER_TTL" \
+                token_max_ttl="$READER_MAX_TTL"
 
               echo "Ensuring token role ${SERVICE_TOKEN_ROLE}..."
 
@@ -531,11 +631,14 @@ spec:
 
               echo
               echo "Configured:"
-              echo "  Policy:         ${RESOURCE_POLICY}"
-              echo "  Role:           ${RESOURCE_ROLE}"
-              echo "  ServiceAccount: ${RESOURCE_SA}"
-              echo "  Namespace:      ${TARGET_NAMESPACE}"
-              echo "  Engine prefix:  ${ENGINE_MOUNT_PREFIX}/*"
-              echo "  Token role:     ${SERVICE_TOKEN_ROLE}"
-              echo "  Token store:    ${STORE_MOUNT}/${BOOTSTRAP_SECRET_PATH}"
+              echo "  Resource policy: ${RESOURCE_POLICY}"
+              echo "  Resource role:   ${RESOURCE_ROLE}"
+              echo "  Resource SA:     ${RESOURCE_SA}"
+              echo "  Reader policy:   ${READER_POLICY}"
+              echo "  Reader role:     ${READER_ROLE}"
+              echo "  Reader SA:       ${READER_SA}"
+              echo "  Namespace:       ${TARGET_NAMESPACE}"
+              echo "  Engine prefix:   ${ENGINE_MOUNT_PREFIX}/*"
+              echo "  Token role:      ${SERVICE_TOKEN_ROLE}"
+              echo "  Token store:     ${STORE_MOUNT}/${BOOTSTRAP_SECRET_PATH}"
 {{- end }}
