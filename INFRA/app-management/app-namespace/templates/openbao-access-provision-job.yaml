@@ -79,6 +79,12 @@ spec:
             - name: STORE_PREFIX
               value: {{ .Values.openbao.storeSecretPrefix | quote }}
 
+            - name: STORE_ALLOW_ENGINE_MANAGEMENT
+              value: {{ dig "permissions" "engineManagement" false .Values.openbao.storeReader | quote }}
+
+            - name: STORE_ENGINE_MOUNT_PREFIX
+              value: {{ dig "permissions" "engineMountPrefix" "" .Values.openbao.storeReader | quote }}
+
             - name: BOOTSTRAP_SECRET_PATH
               value: {{ .Values.openbao.bootstrapSecret.path | quote }}
 
@@ -177,6 +183,43 @@ spec:
                   ;;
               esac
 
+              if [ "$STORE_ALLOW_ENGINE_MANAGEMENT" = "true" ]; then
+                case "$STORE_ENGINE_MOUNT_PREFIX" in
+                  "")
+                    echo "openbao.storeReader.permissions.engineMountPrefix must not be empty when engineManagement is enabled."
+                    exit 1
+                    ;;
+
+                  /*)
+                    echo "STORE_ENGINE_MOUNT_PREFIX must not start with '/': ${STORE_ENGINE_MOUNT_PREFIX}"
+                    exit 1
+                    ;;
+
+                  *..*)
+                    echo "STORE_ENGINE_MOUNT_PREFIX must not contain '..': ${STORE_ENGINE_MOUNT_PREFIX}"
+                    exit 1
+                    ;;
+
+                  *\**)
+                    echo "STORE_ENGINE_MOUNT_PREFIX must not contain '*'."
+                    echo "Configure the prefix as 'catalogue' instead of 'catalogue/*'."
+                    exit 1
+                    ;;
+
+                  */)
+                    STORE_ENGINE_MOUNT_PREFIX="${STORE_ENGINE_MOUNT_PREFIX%/}"
+                    ;;
+                esac
+
+                case "$STORE_ENGINE_MOUNT_PREFIX" in
+                  */*)
+                    echo "STORE_ENGINE_MOUNT_PREFIX must be a single path segment."
+                    echo "Example: catalogue"
+                    exit 1
+                    ;;
+                esac
+              fi
+
               echo "Ensuring KV-v2 engine at mount ${STORE_MOUNT}..."
 
               MOUNTS_JSON="$(
@@ -223,6 +266,7 @@ spec:
                   "sudo"
                 ]
               }
+
               path "sys/internal/ui/mounts/*" {
                 capabilities = ["read"]
               }
@@ -356,6 +400,40 @@ spec:
               path "${STORE_METADATA_PATH}" {
                 capabilities = ["read", "list"]
               }
+              POLICY
+
+              if [ "$STORE_ALLOW_ENGINE_MANAGEMENT" = "true" ]; then
+                cat >> /tmp/store-policy.hcl <<POLICY
+
+              # Allow the store reader to manage secrets engines only below
+              # the configured mount prefix.
+              #
+              # Example prefix:
+              #   catalogue
+              #
+              # Allowed mount paths:
+              #   catalogue/postgres
+              #   catalogue/redis
+              #   catalogue/tenant-a
+              path "sys/mounts/${STORE_ENGINE_MOUNT_PREFIX}/*" {
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "sudo"
+                ]
+              }
+
+              # Allow UI and API mount introspection only for engines below
+              # the configured prefix.
+              path "sys/internal/ui/mounts/${STORE_ENGINE_MOUNT_PREFIX}/*" {
+                capabilities = ["read"]
+              }
+              POLICY
+              fi
+
+              cat >> /tmp/store-policy.hcl <<'POLICY'
 
               path "auth/token/lookup-self" {
                 capabilities = ["read"]
@@ -398,7 +476,11 @@ spec:
                 echo "Creating temporary service token for KV access..."
 
                 TEMP_SERVICE_TOKEN="$(
-                  bao token create -field=token -role="$SERVICE_TOKEN_ROLE" -display-name="${SERVICE_TOKEN_DISPLAY_NAME}-bootstrap")"
+                  bao token create \
+                    -field=token \
+                    -role="$SERVICE_TOKEN_ROLE" \
+                    -display-name="${SERVICE_TOKEN_DISPLAY_NAME}-bootstrap"
+                )"
 
                 if [ -z "$TEMP_SERVICE_TOKEN" ]; then
                   echo "Failed to create temporary service token."
@@ -421,7 +503,9 @@ spec:
                     bao token lookup >/dev/null 2>&1; then
                     echo "Existing service token is valid."
                     SERVICE_TOKEN="$EXISTING_TOKEN"
-                    BAO_TOKEN="$TEMP_SERVICE_TOKEN" bao token revoke -self >/dev/null 2>&1 || true
+
+                    BAO_TOKEN="$TEMP_SERVICE_TOKEN" \
+                      bao token revoke -self >/dev/null 2>&1 || true
                   else
                     echo "Existing service token is invalid or expired."
                   fi
@@ -443,11 +527,11 @@ spec:
               echo "  ${STORE_MOUNT}/${BOOTSTRAP_SECRET_PATH}"
 
               BAO_TOKEN="$SERVICE_TOKEN" \
-              bao kv put \
-                -mount="$STORE_MOUNT" \
-                "$BOOTSTRAP_SECRET_PATH" \
-                "${VAULT_ADDR_KEY}=${BAO_ADDR}" \
-                "${VAULT_TOKEN_KEY}=${SERVICE_TOKEN}"
+                bao kv put \
+                  -mount="$STORE_MOUNT" \
+                  "$BOOTSTRAP_SECRET_PATH" \
+                  "${VAULT_ADDR_KEY}=${BAO_ADDR}" \
+                  "${VAULT_TOKEN_KEY}=${SERVICE_TOKEN}"
 
               echo
               echo "Configured:"
@@ -455,4 +539,8 @@ spec:
               echo "  Resource role:  ${RESOURCE_ROLE}"
               echo "  Store role:     ${STORE_ROLE}"
               echo "  Bootstrap path: ${STORE_MOUNT}/${BOOTSTRAP_SECRET_PATH}"
+
+              if [ "$STORE_ALLOW_ENGINE_MANAGEMENT" = "true" ]; then
+                echo "  Store engines:  ${STORE_ENGINE_MOUNT_PREFIX}/*"
+              fi
 {{- end }}

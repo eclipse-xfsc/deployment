@@ -5,7 +5,7 @@ targetNamespace:
     xsfc.io/zone: orce
 
 openbao:
-  storeMountPath: orce
+  storeMountPath: apps/orce/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
     serviceAccount:
@@ -13,6 +13,9 @@ openbao:
   storeReader:
     serviceAccount:
       name: orce-store-reader
+    permissions:
+      engineManagement: true
+      engineMountPrefix: orce
 
 clusterSecretStore:
   enabled: true

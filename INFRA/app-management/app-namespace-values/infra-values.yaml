@@ -5,7 +5,7 @@ targetNamespace:
     xsfc.io/zone: infrastructure
 
 openbao:
-  storeMountPath: infrastructure
+  storeMountPath: apps/infrastructure/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
     serviceAccount:
@@ -13,6 +13,9 @@ openbao:
   storeReader:
     serviceAccount:
       name: infrastructure-store-reader
+    permissions:
+      engineManagement: true
+      engineMountPrefix: infrastructure
 
 clusterSecretStore:
   enabled: true

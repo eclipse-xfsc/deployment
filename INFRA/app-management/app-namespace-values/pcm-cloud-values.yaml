@@ -5,7 +5,7 @@ targetNamespace:
     xsfc.io/zone: pcm-cloud
 
 openbao:
-  storeMountPath: pcm-cloud
+  storeMountPath: apps/pcm-cloud/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
     serviceAccount:
@@ -13,6 +13,9 @@ openbao:
   storeReader:
     serviceAccount:
       name: pcm-cloud-store-reader
+    permissions:
+      engineManagement: true
+      engineMountPrefix: pcm-cloud
 
 clusterSecretStore:
   enabled: true
