@@ -5,7 +5,7 @@ targetNamespace:
     xsfc.io/zone: catalogue
 
 openbao:
-  storeMountPath: apps/catalogue/openbao
+  storeMountPath: catalogue/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
     serviceAccount:
