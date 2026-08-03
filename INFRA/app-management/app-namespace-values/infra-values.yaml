@@ -8,14 +8,14 @@ openbao:
   storeMountPath: infrastructure/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
+    engineMountPrefix: infrastructure
     serviceAccount:
       name: infrastructure-resource-provisioner
-  storeReader:
-    serviceAccount:
-      name: infrastructure-store-reader
-    permissions:
-      engineManagement: true
-      engineMountPrefix: infrastructure
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 24h
+      explicitMaxTTL: 0
 
 clusterSecretStore:
   enabled: true

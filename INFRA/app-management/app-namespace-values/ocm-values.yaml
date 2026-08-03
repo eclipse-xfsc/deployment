@@ -8,14 +8,14 @@ openbao:
   storeMountPath: ocm/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
+    engineMountPrefix: ocm
     serviceAccount:
       name: ocm-resource-provisioner
-  storeReader:
-    serviceAccount:
-      name: ocm-store-reader
-    permissions:
-      engineManagement: true
-      engineMountPrefix: ocm
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 0
+      explicitMaxTTL: 0
 
 clusterSecretStore:
   enabled: true

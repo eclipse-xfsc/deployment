@@ -8,14 +8,14 @@ openbao:
   storeMountPath: pcm-cloud/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
+    engineMountPrefix: ocm-cloud-wstack
     serviceAccount:
-      name: pcm-cloud-resource-provisioner
-  storeReader:
-    serviceAccount:
-      name: pcm-cloud-store-reader
-    permissions:
-      engineManagement: true
-      engineMountPrefix: pcm-cloud
+      name: ocm-cloud-resource-provisioner
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 0
+      explicitMaxTTL: 0
 
 clusterSecretStore:
   enabled: true

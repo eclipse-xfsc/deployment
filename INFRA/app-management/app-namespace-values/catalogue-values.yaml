@@ -8,14 +8,14 @@ openbao:
   storeMountPath: catalogue/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
+    engineMountPrefix: catalogue
     serviceAccount:
       name: catalogue-resource-provisioner
-  storeReader:
-    serviceAccount:
-      name: catalogue-store-reader
-    permissions:
-      engineManagement: true
-      engineMountPrefix: catalogue
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 0
+      explicitMaxTTL: 0
 
 clusterSecretStore:
   enabled: true

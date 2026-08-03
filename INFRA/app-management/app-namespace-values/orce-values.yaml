@@ -8,14 +8,15 @@ openbao:
   storeMountPath: orce/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
+    engineMountPrefix: orce-wstack
     serviceAccount:
       name: orce-resource-provisioner
-  storeReader:
-    serviceAccount:
-      name: orce-store-reader
-    permissions:
-      engineManagement: true
-      engineMountPrefix: orce
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 0
+      explicitMaxTTL: 0
+
 
 clusterSecretStore:
   enabled: true

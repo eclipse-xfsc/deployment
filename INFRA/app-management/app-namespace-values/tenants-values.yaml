@@ -8,14 +8,14 @@ openbao:
   storeMountPath: tenants/openbao
   storeSecretPrefix: ""
   resourceProvisioner:
+    engineMountPrefix: tenants-wstack
     serviceAccount:
       name: tenants-resource-provisioner
-  storeReader:
-    serviceAccount:
-      name: tenants-store-reader
-    permissions:
-      engineManagement: true
-      engineMountPrefix: tenants
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 0
+      explicitMaxTTL: 0
 
 clusterSecretStore:
   enabled: true
