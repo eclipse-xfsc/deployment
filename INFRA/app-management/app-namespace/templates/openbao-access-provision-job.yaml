@@ -232,7 +232,7 @@ spec:
                 MOUNT_TYPE="$(
                   echo "$MOUNTS_JSON" |
                     sed -n \
-                      "s/.*\"${STORE_MOUNT}\\/\"[[:space:]]*:[[:space:]]*{[^}]*\"type\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p"
+                      "s#.*\"${STORE_MOUNT}/\"[[:space:]]*:[[:space:]]*{[^}]*\"type\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*#\\1#p"
                 )"
 
                 if [ -n "$MOUNT_TYPE" ] && [ "$MOUNT_TYPE" != "kv" ]; then
@@ -274,10 +274,11 @@ spec:
               fi
 
               if [ "$ALLOW_KV" = "true" ]; then
-                cat >> /tmp/resource-policy.hcl <<'POLICY'
-              # KV-v2 access for one-segment mounts such as apps,
-              # tenants and infra.
-              path "+/data/*" {
+                cat >> /tmp/resource-policy.hcl <<POLICY
+              # KV-v2 access for the configured store mount:
+              # ${STORE_MOUNT}
+
+              path "${STORE_MOUNT}/data/*" {
                 capabilities = [
                   "create",
                   "read",
@@ -287,7 +288,7 @@ spec:
                 ]
               }
 
-              path "+/metadata/*" {
+              path "${STORE_MOUNT}/metadata/*" {
                 capabilities = [
                   "create",
                   "read",
@@ -297,16 +298,33 @@ spec:
                 ]
               }
 
-              path "+/delete/*" {
+              path "${STORE_MOUNT}/delete/*" {
                 capabilities = ["update"]
               }
 
-              path "+/undelete/*" {
+              path "${STORE_MOUNT}/undelete/*" {
                 capabilities = ["update"]
               }
 
-              path "+/destroy/*" {
+              path "${STORE_MOUNT}/destroy/*" {
                 capabilities = ["update"]
+              }
+
+              # Required by the CLI preflight mount lookup.
+              path "${STORE_MOUNT}" {
+                capabilities = ["read", "list"]
+              }
+
+              path "${STORE_MOUNT}/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "sys/internal/ui/mounts/${STORE_MOUNT}" {
+                capabilities = ["read"]
+              }
+
+              path "sys/internal/ui/mounts/${STORE_MOUNT}/*" {
+                capabilities = ["read"]
               }
               POLICY
               fi
@@ -479,6 +497,7 @@ spec:
                   bao token create \
                     -field=token \
                     -role="$SERVICE_TOKEN_ROLE" \
+                    -policy="$RESOURCE_POLICY" \
                     -display-name="${SERVICE_TOKEN_DISPLAY_NAME}-bootstrap"
                 )"
 
