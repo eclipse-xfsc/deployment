@@ -5,7 +5,7 @@ targetNamespace:
     xsfc.io/zone: tenants
 
 openbao:
-  storeMountPath: tenants
+  storeMountPath: tenants/system
   storeSecretPrefix: ""
   resourceProvisioner:
     engineMountPrefix: tenants-wstack

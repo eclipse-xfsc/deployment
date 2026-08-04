@@ -5,7 +5,7 @@ targetNamespace:
     xsfc.io/zone: orce
 
 openbao:
-  storeMountPath: orce
+  storeMountPath: orce/system
   storeSecretPrefix: ""
   resourceProvisioner:
     engineMountPrefix: orce-wstack

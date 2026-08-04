@@ -5,7 +5,7 @@ targetNamespace:
     xsfc.io/zone: pcm-cloud
 
 openbao:
-  storeMountPath: pcm-cloud
+  storeMountPath: pcm-cloud/system
   storeSecretPrefix: ""
   resourceProvisioner:
     engineMountPrefix: ocm-cloud-wstack
