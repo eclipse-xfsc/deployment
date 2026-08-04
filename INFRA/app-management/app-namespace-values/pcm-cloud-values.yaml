@@ -10,6 +10,7 @@ openbao:
   resourceProvisioner:
     engineMountPrefix: ocm-cloud-wstack
     serviceAccount:
+      create: true
       name: ocm-cloud-resource-provisioner
     tokenTTL: 15m
     tokenMaxTTL: 1h

@@ -10,6 +10,7 @@ openbao:
   resourceProvisioner:
     engineMountPrefix: ocm
     serviceAccount:
+      create: true
       name: ocm-resource-provisioner
     tokenTTL: 15m
     tokenMaxTTL: 1h

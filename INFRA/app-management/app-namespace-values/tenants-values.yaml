@@ -10,6 +10,7 @@ openbao:
   resourceProvisioner:
     engineMountPrefix: tenants-wstack
     serviceAccount:
+      create: true
       name: tenants-resource-provisioner
     tokenTTL: 15m
     tokenMaxTTL: 1h

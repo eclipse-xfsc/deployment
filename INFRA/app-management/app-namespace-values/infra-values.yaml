@@ -10,6 +10,7 @@ openbao:
   resourceProvisioner:
     engineMountPrefix: infrastructure
     serviceAccount:
+      create: true
       name: infrastructure-resource-provisioner
     tokenTTL: 15m
     tokenMaxTTL: 1h
