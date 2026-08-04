@@ -5,7 +5,7 @@ targetNamespace:
     xsfc.io/zone: infrastructure
 
 openbao:
-  storeMountPath: infrastructure/openbao
+  storeMountPath: infrastructure
   storeSecretPrefix: ""
   resourceProvisioner:
     engineMountPrefix: infrastructure

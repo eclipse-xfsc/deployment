@@ -6,7 +6,7 @@ openbao:
   address: http://openbao.security.svc.cluster.local:8200
   authPath: kubernetes
   role: xfsc-infrastructure-resource-provisioner
-  kvMount: infrastructure/storage
+  kvMount: infrastructure
 
   serviceAccount:
     name: infrastructure-resource-provisioner
