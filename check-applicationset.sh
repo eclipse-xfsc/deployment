@@ -2,18 +2,74 @@
 
 set -euo pipefail
 
-APPSET_NAME="${1:?Usage: $0 <applicationset-name> [namespace]}"
-NAMESPACE="${2:-argocd}"
+APPSET_NAME="${1:?Usage: $0 <applicationset-name> [argocd-namespace]}"
+ARGOCD_NAMESPACE="${2:-argocd}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-600}"
 INTERVAL_SECONDS="${INTERVAL_SECONDS:-10}"
 REFRESH_TYPE="${REFRESH_TYPE:-normal}"
 
 START_TIME="$(date +%s)"
 
+refresh_external_secrets() {
+  local application_name="$1"
+  local target_namespace="$2"
+  local refresh_timestamp
+
+  if [[ -z "$target_namespace" ]]; then
+    echo "Application '${application_name}' besitzt keinen Ziel-Namespace."
+    echo "ExternalSecrets werden nicht aktualisiert."
+    return 0
+  fi
+
+  if ! kubectl api-resources \
+    --api-group=external-secrets.io \
+    --namespaced=true \
+    --output=name |
+    grep -qx "externalsecrets.external-secrets.io"
+  then
+    echo "ExternalSecret-CRD ist nicht verfügbar."
+    return 0
+  fi
+
+  if ! kubectl get namespace "$target_namespace" >/dev/null 2>&1; then
+    echo "Ziel-Namespace '${target_namespace}' existiert nicht."
+    return 0
+  fi
+
+  refresh_timestamp="$(date +%s)"
+
+  echo "Aktualisiere ExternalSecrets im Namespace '${target_namespace}' ..."
+
+  external_secret_count="$(
+    kubectl get externalsecrets.external-secrets.io \
+      --namespace "$target_namespace" \
+      --no-headers \
+      2>/dev/null |
+      wc -l |
+      tr -d ' '
+  )"
+
+  if [[ "$external_secret_count" -eq 0 ]]; then
+    echo "Keine ExternalSecrets im Namespace '${target_namespace}' gefunden."
+    return 0
+  fi
+
+  if kubectl annotate externalsecrets.external-secrets.io \
+    --all \
+    --namespace "$target_namespace" \
+    "force-sync=${refresh_timestamp}" \
+    --overwrite
+  then
+    echo "${external_secret_count} ExternalSecret(s) im Namespace '${target_namespace}' wurden aktualisiert."
+  else
+    echo "ExternalSecrets im Namespace '${target_namespace}' konnten nicht aktualisiert werden." >&2
+  fi
+}
+
 while true; do
   applications="$(
     kubectl get applications.argoproj.io \
-      --namespace "$NAMESPACE" \
+      --namespace "$ARGOCD_NAMESPACE" \
       --output json
   )"
 
@@ -46,18 +102,27 @@ while true; do
             (.status.health.status // "Unknown") == "Degraded"
             and (.status.sync.status // "Unknown") == "Synced"
           )
-        | .metadata.name
+        | [
+            .metadata.name,
+            (.spec.destination.namespace // "")
+          ]
+        | @tsv
       ' <<< "$appset_applications"
     )"
 
-    while IFS= read -r application_name; do
+    while IFS=$'\t' read -r application_name target_namespace; do
       [[ -z "$application_name" ]] && continue
 
       echo "Application '${application_name}' ist Degraded und Synced."
-      echo "Löse ${REFRESH_TYPE}-Refresh aus ..."
+
+      refresh_external_secrets \
+        "$application_name" \
+        "$target_namespace"
+
+      echo "Löse ${REFRESH_TYPE}-Refresh für Application '${application_name}' aus ..."
 
       if kubectl annotate application.argoproj.io "$application_name" \
-        --namespace "$NAMESPACE" \
+        --namespace "$ARGOCD_NAMESPACE" \
         "argocd.argoproj.io/refresh=${REFRESH_TYPE}" \
         --overwrite
       then
@@ -76,6 +141,7 @@ while true; do
           )
         | [
             .metadata.name,
+            "namespace=" + (.spec.destination.namespace // "Unknown"),
             "sync=" + (.status.sync.status // "Unknown"),
             "health=" + (.status.health.status // "Unknown"),
             "operation=" + (.status.operationState.phase // "Unknown")
