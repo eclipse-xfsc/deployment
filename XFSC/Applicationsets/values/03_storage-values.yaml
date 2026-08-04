@@ -8,7 +8,7 @@ excludes:
  - "INFRA/storage/minio-operator"
 matrix: 
   enabled: false
-
+revisionHistoryLimit: 3
 project:
   name: infrastructure
   description: Argo-CD-Projekt für Infrastruktur-Komponenten

@@ -4,6 +4,7 @@ name: ocm-wstack
 namespace: ocm-wstack
 matrix: 
   enabled: false
+revisionHistoryLimit: 3
 excludes: 
  - "OCM W-Stack/tenant"
  - "OCM W-Stack/Policies"

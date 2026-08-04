@@ -69,6 +69,7 @@ spec:
 
     spec:
       project: {{ $projectName | quote }}
+      revisionHistoryLimit: {{ .Values.revisionHistoryLimit | default 5 }}
 
       source:
         repoURL: https://github.com/eclipse-xfsc/deployment.git
