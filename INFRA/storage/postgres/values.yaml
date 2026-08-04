@@ -83,7 +83,7 @@ cluster:
 
 resourceProvider:
   enabled: true
-  name: ""
+  name: "postgres"
   scope: Cluster
   description: PostgreSQL connection provided by this CloudNativePG cluster.
   allow:

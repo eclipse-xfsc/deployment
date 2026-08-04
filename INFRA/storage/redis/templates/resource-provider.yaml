@@ -2,7 +2,7 @@
 apiVersion: resources.xfsc.io/v1alpha1
 kind: ResourceProvider
 metadata:
-  name: {{ default (printf "%s-redis" (include "redis.fullname" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
+  name: {{ default (printf "%s-provider" (include "redis.fullname" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace }}
 spec:
   type: redis

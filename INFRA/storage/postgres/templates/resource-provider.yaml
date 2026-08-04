@@ -2,7 +2,7 @@
 apiVersion: resources.xfsc.io/v1alpha1
 kind: ResourceProvider
 metadata:
-  name: {{ default (printf "%s-postgres" (include "xfsc-postgresql-cnpg.fullname" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
+  name: {{ default (printf "%s-provider" (include "xfsc-postgresql-cnpg.fullname" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
 spec:
   type: postgres
   scope: {{ .Values.resourceProvider.scope | quote }}

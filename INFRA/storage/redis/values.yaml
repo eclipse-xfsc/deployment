@@ -89,7 +89,7 @@ redis:
 
 resourceProvider:
   enabled: true
-  name: "redis-main"
+  name: "redis"
   scope: Cluster
   description: Redis connection provided by this OpsTree-managed Redis instance.
 

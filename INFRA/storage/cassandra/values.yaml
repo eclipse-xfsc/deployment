@@ -69,7 +69,7 @@ passwordBootstrap:
 
 resourceProvider:
   enabled: true
-  name: ""
+  name: "cassandra"
   scope: Cluster
   description: Cassandra connection provided by this internal StatefulSet cluster.
   allow:
