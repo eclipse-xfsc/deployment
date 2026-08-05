@@ -14,7 +14,7 @@ openbao:
     enabled: true
     name: openbao
   clusterSecretStore:
-    name: infrastructure
+    name: infrastructure-openbao
 openbaoInit:
   enabled: true
   image:
