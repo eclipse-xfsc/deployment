@@ -5,5 +5,5 @@ name: sd-jwt-service
 version: 1.0.1
 dependencies:
   - name: sd-jwt-service
-    version: 1.2.3-helm
+    version: 1.2.4-helm
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services

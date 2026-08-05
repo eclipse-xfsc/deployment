@@ -8,6 +8,7 @@ revisionHistoryLimit: 3
 excludes: 
  - "OCM W-Stack/tenant"
  - "OCM W-Stack/Policies"
+ - "OCM W-Stack/Didcomm"
 project:
   name: ocm-wstack
   description: Argo-CD-Projekt für ocm wstack

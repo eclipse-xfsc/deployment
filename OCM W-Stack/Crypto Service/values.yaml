@@ -1,10 +1,5 @@
 signer:
-  useConfigMap: false
-  configMapName: my-configmap
-  useSecretRef: false
-  secretRefName: my-secret
-  signer: 
-    vault:
-      secret: vault
+  image:  
+    tag: 0.0.0-dev
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
