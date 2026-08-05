@@ -36,7 +36,7 @@ fi
 
 echo "PROFILE=$PROFILE"
 echo "DOMAIN=$DOMAIN"
-echo "TOKEN=$DNSTOKEN"
+#echo "TOKEN=$DNSTOKEN"
 
 kubectl create namespace observability
 helm repo add otel https://open-telemetry.github.io/opentelemetry-helm-charts

@@ -6,7 +6,7 @@ EMAIL=$4
 
 echo "PROFILE=$PROFILE"
 echo "DOMAIN=$DOMAIN"
-echo "TOKEN=$TOKEN"
+#echo "TOKEN=$TOKEN"
 helm install -n security infrastructure-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/infra-values.yaml
 helm install -n security catalogue-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/catalogue-values.yaml
 helm install -n security ocm-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/ocm-values.yaml
