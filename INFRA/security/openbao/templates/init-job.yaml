@@ -352,6 +352,22 @@ spec:
                 ]
               }
 
+              path "+/data/*" {
+                capabilities = ["create", "read", "update", "delete"]
+              }
+
+              path "+/metadata/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "+/+/data/*" {
+                capabilities = ["create", "read", "update", "delete"]
+              }
+
+              path "+/+/metadata/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
               # ------------------------------------------------------------
               # Managed ACL policies
               #
