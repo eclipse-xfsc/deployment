@@ -1,3 +1,5 @@
 kubernetes-operator:
   image:
     tag: 2.2.0
+  openbao:
+   address: http://openbao.security.svc.cluster.local:8200
