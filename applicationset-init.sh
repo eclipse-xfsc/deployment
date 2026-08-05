@@ -16,7 +16,7 @@ helm install -n security pcm-cloud-namespace INFRA/app-management/app-namespace 
 helm install -n security tenant-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/tenant-values.yaml
 
 helm dependency build INFRA/kubernetes-operator
-helm install -n infrastructure kubernetes-operator INFRA/kubernetes-operator
+helm install -n security kubernetes-operator INFRA/kubernetes-operator
 
 STORAGE_CLASS=$(kubectl get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}')
 

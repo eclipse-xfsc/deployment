@@ -1,5 +1,9 @@
 kubernetes-operator:
   image:
-    tag: 2.2.0
+    tag: 2.3.1
+  serviceAccount:
+    create: false
+    name: "openbao-provisioner"
   openbao:
    address: http://openbao.security.svc.cluster.local:8200
+   role: openbao-provisioner
