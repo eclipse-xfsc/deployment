@@ -5,7 +5,7 @@ credential-retrieval-service:
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
     name: credential-retrieval-service
-    tag: "latest"
+    tag: "0.0.0-dev"
     pullPolicy: Always
 
   podAnnotations: 
@@ -21,38 +21,10 @@ credential-retrieval-service:
     runAsUid: 1000
     runAsGid: 1000
 
-  ingress:
-    enabled: false
-    annotations:
-      nginx.org/client-max-body-size: 2K
-      nginx.ingress.kubernetes.io/rewrite-target: /v1/tenants/tenant_space/offering/$2
-    hosts:
-      - host: cloud-wallet.DOMAIN
-        paths:
-          - path: /api/offering(/|$)(.*)
-            port: 8080
-            pathType: ImplementationSpecific
-
-    tls:
-      - secretName: xfsc-wildcard
-        hosts:
-          - cloud-wallet.DOMAIN
   config:
     disableTLS: true
     country: DE
     region: EU
-    signerTopic: signer-topic
-    storageTopic: storage.service.store
     offeringTopic: offering
     offeringPolicy:
     metadataPolicy:
-    nats:
-      url: nats://nats.NAMESPACE.svc.cluster.local:4222
-      queuegroup: offering
-      requestTimeOut: 10s
-    cassandra:
-      hosts: cassandra.NAMESPACE.svc.cluster.local:9042
-      keyspace: tenant_space
-      user: cassandra
-      passwordSecret: cassandra
-      passwordKey: cassandra-password

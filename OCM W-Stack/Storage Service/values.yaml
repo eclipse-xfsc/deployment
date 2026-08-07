@@ -6,12 +6,11 @@ storage-service:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
     imagePullPolicy: Always
     name: storage-service
-    tag: 0.0.0-dev
+    tag: 1.2.1
 
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
 
-  serviceAccount: ocm-wstack-resource-provisioner
   resources:
     # requests:
     #   cpu: 25m
