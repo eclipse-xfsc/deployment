@@ -5,5 +5,5 @@ name: storage-service
 version: 1.0.14
 dependencies:
   - name: storage-service
-    version: 1.2.1-helm
+    version: 1.2.2-helm
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack

@@ -2,7 +2,7 @@ apiVersion: v2
 appVersion: v1.0.0
 description: Credential Retrieval Service
 name: credential-retrieval-service
-version: 1.0.1
+version: 1.0.2
 dependencies:
   - name: credential-retrieval-service
     version: 0.0.0-dev.helm
