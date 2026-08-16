@@ -1,0 +1,187 @@
+nameOverride: ""
+fullnameOverride: ""
+
+gatewayClassName: envoy
+
+# Tenant host, e.g. wallet.customer.example
+hostname: cloud-wallet.DOMAIN
+
+gateway:
+  annotations: {}
+  listenerName: https
+  port: 443
+  allowedRoutes:
+    namespaces:
+      from: Same
+
+certificate:
+  enabled: true
+  secretName: ""
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+    group: cert-manager.io
+  duration: ""
+  renewBefore: ""
+  privateKey:
+    algorithm: RSA
+    size: 4096
+
+httpRoute:
+  annotations: {}
+
+routes:
+  # Credential Issuance
+  - name: credential-issuance
+    path: /api/issuance/credential
+    pathType: Exact
+    rewrite: /v1/tenants/tenant_space/credential
+    backend:
+      name: issuance-service
+      port: 8080
+    headers:
+      set: {}
+      add: {}
+      remove: []
+
+  # Credential Retrieval
+  - name: credential-retrieval
+    path: /api/offering
+    pathType: PathPrefix
+    rewrite: /v1/tenants/tenant_space/offering
+    backend:
+      name: credential-retrieval-service
+      port: 8080
+    headers:
+      set: {}
+      add: {}
+      remove: []
+
+  # Credential Verification
+  - name: credential-verification
+    path: /api/presentation
+    pathType: PathPrefix
+    rewrite: /v1/tenants/tenant_space/presentation
+    backend:
+      name: credential-verification-service
+      port: 8080
+    headers:
+      set:
+        X-DID: did:web:cloud-wallet.DOMAIN
+        X-NAMESPACE: tenant_space
+        X-KEY: eckey
+      add: {}
+      remove: []
+
+  # DIDComm Connector
+  - name: didcomm
+    path: /api/didcomm
+    pathType: PathPrefix
+    rewrite: /
+    backend:
+      name: didcomm-connector
+      port: 9090
+    headers:
+      set: {}
+      add: {}
+      remove: []
+
+  # OIDC Pre-Authorization Bridge metadata
+  - name: oidc-configuration
+    path: /.well-known/openid-configuration
+    pathType: Exact
+    backend:
+      name: pre-authorization-bridge
+      port: 8080
+    headers:
+      set: {}
+      add: {}
+      remove: []
+
+  # OIDC Pre-Authorization Bridge token endpoint
+  - name: token
+    path: /token
+    pathType: Exact
+    backend:
+      name: pre-authorization-bridge
+      port: 8080
+    headers:
+      set: {}
+      add: {}
+      remove: []
+
+  # OID4VCI Credential Issuer Metadata
+  - name: openid-credential-issuer
+    path: /.well-known/openid-credential-issuer
+    pathType: Exact
+    rewrite: /v1/tenants/tenant_space/.well-known/openid-credential-issuer
+    backend:
+      name: well-known-service
+      port: 8080
+    headers:
+      set: {}
+      add: {}
+      remove: []
+
+  # Status List Service
+  - name: status-list
+    path: /api/status
+    pathType: PathPrefix
+    rewrite: /v1/tenants/tenant_space/status
+    backend:
+      name: status-list-service
+      port: 8080
+    headers:
+      set:
+        X-DID: did:web:cloud-wallet.DOMAIN
+        X-NAMESPACE: tenant_space
+        X-KEY: signerkey
+        X-GROUP: ""
+        X-HOST: cloud-wallet.DOMAIN
+        X-TYPE: StatusList2021
+      add: {}
+      remove: []
+
+  # DID Document -> signer
+  - name: did-document
+    path: /.well-known/did.json
+    pathType: Exact
+    rewrite: /v1/did/document
+    backend:
+      name: signer
+      port: 8080
+    headers:
+      set:
+        X-DID: did:web:cloud-wallet.DOMAIN
+        X-NAMESPACE: tenant_space
+      add: {}
+      remove: []
+
+  # DID Configuration -> signer
+  - name: did-configuration
+    path: /.well-known/did-configuration.json
+    pathType: Exact
+    rewrite: /v1/did/configuration
+    backend:
+      name: signer
+      port: 8080
+    headers:
+      set:
+        X-ORIGIN: cloud-wallet.DOMAIN
+        X-NAMESPACE: tenant_space
+      add: {}
+      remove: []
+
+  # JWKS -> signer
+  - name: jwks
+    path: /.well-known/jwks.json
+    pathType: Exact
+    rewrite: /v1/jwks
+    backend:
+      name: signer
+      port: 8080
+    headers:
+      set:
+        X-NAMESPACE: tenant_space
+      add: {}
+      remove: []
