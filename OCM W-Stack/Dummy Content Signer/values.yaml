@@ -8,6 +8,4 @@ dummycontentsigner:
 
   config:
     nats:
-      url: nats://nats.NAMESPACE.svc.cluster.local:4222
       queuegroup: dummysigner
-      requestTimeOut: 10s
