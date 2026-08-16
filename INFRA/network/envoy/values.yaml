@@ -1,5 +1,5 @@
 gatewayClass:
-    name: envoy
+  name: envoy
 
 envoy-gateway:
   enabled: true
@@ -20,3 +20,12 @@ envoy-gateway:
     limits:
       cpu: 500m
       memory: 512Mi
+
+  provider:
+    kubernetes:
+      envoyService:
+        type: LoadBalancer
+        annotations:
+          load-balancer.hetzner.cloud/network-zone: eu-central
+          # alternativ statt network-zone:
+          # load-balancer.hetzner.cloud/location: nbg1
