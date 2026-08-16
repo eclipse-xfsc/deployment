@@ -2,7 +2,7 @@ apiVersion: v2
 name: xfsc-external-dns
 description: Minimal wrapper around ExternalDNS
 type: application
-version: 0.1.6
+version: 0.1.7
 appVersion: "0.18.0"
 
 dependencies:

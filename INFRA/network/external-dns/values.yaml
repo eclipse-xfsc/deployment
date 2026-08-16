@@ -4,8 +4,11 @@ external-dns:
   logLevel: debug
   policy: sync
 
-  registry: noop
+  registry: txt
 
   txtOwnerId: xfsc
+
+  extraArgs:
+    - --txt-prefix=reg-%{record_type}.
 
   domainFilters: []
