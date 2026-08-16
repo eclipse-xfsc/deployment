@@ -2,7 +2,7 @@ apiVersion: v2
 name: xfsc-envoy-gateway
 description: Minimal wrapper chart for Envoy Gateway without Gateway, listeners or routes
 type: application
-version: 0.1.2
+version: 0.1.3
 appVersion: "1.8.3"
 dependencies:
   - name: gateway-helm
