@@ -2,10 +2,10 @@ apiVersion: v2
 name: xfsc-external-dns
 description: Minimal wrapper around ExternalDNS
 type: application
-version: 0.1.2
+version: 0.1.3
 appVersion: "0.18.0"
 
 dependencies:
 - name: external-dns
-  version: "*"
+  version: ""
   repository: https://kubernetes-sigs.github.io/external-dns/
