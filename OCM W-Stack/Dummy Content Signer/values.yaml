@@ -1,19 +1,12 @@
 dummycontentsigner:
   image:
-    tag: main
+    tag: 0.0.0-dev2
     pullPolicy: Always
 
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
 
   config:
-    origin: "https://cloud-wallet.DOMAIN"
-    credential_issuer: "https://cloud-wallet.DOMAIN"
-    authorization_server: 
-      - "https://cloud-wallet.DOMAIN"
-    credential_endpoint: https://cloud-wallet.DOMAIN/api/issuance/credential
-    signerUrl: http://signer.NAMESPACE.svc.cluster.local:8080/v1/credential
-    signerKey: signerkey
     nats:
       url: nats://nats.NAMESPACE.svc.cluster.local:4222
       queuegroup: dummysigner
