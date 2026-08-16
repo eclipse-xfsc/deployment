@@ -1,6 +1,6 @@
 dummycontentsigner:
   image:
-    tag: 0.0.0-dev2
+    tag: 2.1.0
     pullPolicy: Always
 
   podAnnotations: 

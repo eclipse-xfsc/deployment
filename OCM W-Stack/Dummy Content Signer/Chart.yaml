@@ -6,5 +6,5 @@ version: 1.0.6
 appVersion: "1.0.0"
 dependencies:
   - name: dummycontentsigner
-    version: 0.0.0-dev2.helm
+    version: 2.1.0-helm
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
