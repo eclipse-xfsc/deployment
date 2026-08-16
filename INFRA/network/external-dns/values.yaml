@@ -2,7 +2,7 @@ external-dns:
   sources:
     - gateway-httproute
   logLevel: debug
-  policy: upsert-only
+  policy: sync
 
   registry: noop
 
