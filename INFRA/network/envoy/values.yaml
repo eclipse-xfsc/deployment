@@ -1,3 +1,6 @@
+gatewayClass:
+    name: envoy
+
 envoy-gateway:
   enabled: true
 
