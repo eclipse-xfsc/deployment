@@ -83,18 +83,27 @@ terraform-apply: terraform-install
 	export KUBECONFIG="$(CURDIR)/kubeconfig.yaml"; \
 	kubectl -n kube-system create secret generic hcloud \
 		--from-literal=token="$${HCLOUD_TOKEN}" \
+		--from-literal=network="xfsc-network" \
 		--dry-run=client -o yaml | kubectl apply -f -; \
 	helm repo add hcloud https://charts.hetzner.cloud --force-update; \
 	helm repo update; \
 	helm upgrade --install hcloud-cloud-controller-manager \
 		hcloud/hcloud-cloud-controller-manager \
 		--namespace kube-system \
+		--set networking.enabled=true \
+		--set-string networking.clusterCIDR="10.42.0.0/16" \
 		--set env.HCLOUD_TOKEN.valueFrom.secretKeyRef.name=hcloud \
-		--set env.HCLOUD_TOKEN.valueFrom.secretKeyRef.key=token; \
+		--set env.HCLOUD_TOKEN.valueFrom.secretKeyRef.key=token \
+		--set env.HCLOUD_NETWORK.valueFrom.secretKeyRef.name=hcloud \
+		--set env.HCLOUD_NETWORK.valueFrom.secretKeyRef.key=network \
+		--set-string env.HCLOUD_NETWORK_ROUTES_ENABLED.value="false"; \
 	kubectl rollout status deployment/hcloud-cloud-controller-manager \
 		-n kube-system \
 		--timeout=180s; \
-	kubectl get pods -n kube-system -l app.kubernetes.io/name=hcloud-cloud-controller-manager
+	kubectl get pods -n kube-system \
+		-l app.kubernetes.io/name=hcloud-cloud-controller-manager; \
+	kubectl get nodes \
+		-o custom-columns=NAME:.metadata.name,PROVIDER_ID:.spec.providerID,INTERNAL_IP:.status.addresses[0].address
 
 terraform-destroy: terraform-install
 	$(TF) destroy

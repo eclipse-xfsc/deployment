@@ -91,6 +91,8 @@ write_files:
         --advertise-address "$${NODE_IP}"
         --flannel-iface "$${PRIVATE_INTERFACE}"
         --write-kubeconfig-mode "0600"
+        --disable-cloud-controller
+        --kubelet-arg "cloud-provider=external"
       )
 
 %{ if cluster_init ~}

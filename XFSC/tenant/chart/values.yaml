@@ -37,7 +37,7 @@ httpRoute:
 
 openbao:
   enabled: true
-  address: http://openbao.infrastructure.svc.cluster.local:8200
+  address: http://openbao.security.svc.cluster.local:8200
   image:
     repository: openbao/openbao
     tag: "2.4.4"

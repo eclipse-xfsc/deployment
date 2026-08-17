@@ -117,6 +117,7 @@ write_files:
         --node-name "$${NODE_NAME}"
         --node-ip "$${NODE_IP}"
         --flannel-iface "$${PRIVATE_INTERFACE}"
+        --kubelet-arg "cloud-provider=external"
       )
 
       if systemctl list-unit-files --no-legend |

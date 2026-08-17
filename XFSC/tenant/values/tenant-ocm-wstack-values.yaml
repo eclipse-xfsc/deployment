@@ -2,7 +2,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 tenant:
-  id: tenant_space
+  id: demo_tenant
   # Empty -> derived from tenant.id by lowercasing and replacing '_' with '-'.
   subdomain: ""
   domain: domain.com
@@ -37,7 +37,7 @@ httpRoute:
 
 openbao:
   enabled: true
-  address: http://openbao.infrastructure.svc.cluster.local:8200
+  address: http://openbao.security.svc.cluster.local:8200
   image:
     repository: openbao/openbao
     tag: "2.4.4"
@@ -109,7 +109,7 @@ routes:
     path: /api/auth/token
     targetPath: /token
     backend:
-      name: pre-authorization-bridge
+      name: pre-authorization-bridge-service
       port: 8080
 
   - name: openid-credential-issuer

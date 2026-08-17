@@ -1,4 +1,4 @@
-cluster_name = "xsfc"
+cluster_name = "xfsc"
 location     = "hel1"
 
 # Restrict both lists to your own public IP/CIDR in production.
