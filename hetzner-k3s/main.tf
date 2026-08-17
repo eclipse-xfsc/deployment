@@ -303,7 +303,7 @@ resource "hcloud_primary_ip" "control_plane_ipv4" {
 resource "hcloud_server" "control_plane" {
   count = var.control_plane_count
   name = format(
-    "%s-control-%02d",
+    "%s-control-plane-%02d",
     var.cluster_name,
     count.index + 1
   )
