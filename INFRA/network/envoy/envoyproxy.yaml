@@ -9,6 +9,7 @@ spec:
     kubernetes:
       envoyService:
         type: {{ .Values.envoyProxy.service.type | default "LoadBalancer" }}
+        externalTrafficPolicy: Cluster
         {{- with .Values.envoyProxy.service.annotations }}
         annotations:
           {{- toYaml . | nindent 10 }}

@@ -22,6 +22,10 @@ envoyProxy:
     type: LoadBalancer
     annotations:
       load-balancer.hetzner.cloud/network-zone: eu-central
+      load-balancer.hetzner.cloud/use-private-ip: "true"
+      load-balancer.hetzner.cloud/protocol: tcp
+      load-balancer.hetzner.cloud/health-check-protocol: tcp
+      load-balancer.hetzner.cloud/uses-proxyprotocol: "false"
       # Alternative:
       # load-balancer.hetzner.cloud/location: nbg1
 
