@@ -21,6 +21,10 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- required "tenant.id is required" .Values.tenant.id -}}
 {{- end }}
 
+{{- define "xfsc-tenant-gateway.namespace" -}}
+{{- required "tenant.id is required" .Values.tenant.namespace -}}
+{{- end }}
+
 {{- define "xfsc-tenant-gateway.subdomain" -}}
 {{- if .Values.tenant.subdomain -}}
 {{- .Values.tenant.subdomain | lower | replace "_" "-" -}}

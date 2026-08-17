@@ -3,12 +3,13 @@ fullnameOverride: ""
 
 tenant:
   id: demo_tenant
+  namespace: ocm-wstack
   # Empty -> derived from tenant.id by lowercasing and replacing '_' with '-'.
   subdomain: ""
   domain: domain.com
   # Every route receives the same complete X-* header set.
   key: eckey
-  group: default
+  group: demo-tenant
   type: StatusList2021
 
 certificate:
@@ -128,6 +129,13 @@ routes:
   - name: did-document
     path: /.well-known/did.json
     targetPath: /v1/did/document
+    backend:
+      name: signer
+      port: 8080
+
+  - name: did-list
+    path: /.well-known/did/list
+    targetPath: /v1/did/list
     backend:
       name: signer
       port: 8080

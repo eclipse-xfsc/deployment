@@ -48,7 +48,7 @@ spec:
           requestHeaderModifier:
             set:
               - name: X-NAMESPACE
-                value: {{ include "xfsc-tenant-gateway.tenantId" $ | quote }}
+                value: {{ include "xfsc-tenant-gateway.namespace" $ | quote }}
               - name: X-DID
                 value: {{ include "xfsc-tenant-gateway.did" $ | quote }}
               - name: X-KEY
@@ -61,6 +61,10 @@ spec:
                 value: {{ $.Values.tenant.type | default "StatusList2021" | quote }}
               - name: X-ORIGIN
                 value: {{ include "xfsc-tenant-gateway.hostname" $ | quote }}
+              - name: X-ENGINE
+                value: "transit"
+              - name: X-Nonce
+                value: 34jkjefd012x13jcnyyyy
       backendRefs:
         - group: ""
           kind: Service
