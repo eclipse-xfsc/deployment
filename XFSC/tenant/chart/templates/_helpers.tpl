@@ -17,18 +17,33 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{- define "xfsc-tenant-gateway.hostname" -}}
-{{- $subdomain := required "tenant.subdomain is required" .Values.tenant.subdomain -}}
-{{- $domain := required "tenant.domain is required" .Values.tenant.domain -}}
-{{- printf "%s.%s" $subdomain $domain -}}
-{{- end }}
-
 {{- define "xfsc-tenant-gateway.tenantId" -}}
 {{- required "tenant.id is required" .Values.tenant.id -}}
 {{- end }}
 
+{{- define "xfsc-tenant-gateway.subdomain" -}}
+{{- if .Values.tenant.subdomain -}}
+{{- .Values.tenant.subdomain | lower | replace "_" "-" -}}
+{{- else -}}
+{{- include "xfsc-tenant-gateway.tenantId" . | lower | replace "_" "-" -}}
+{{- end -}}
+{{- end }}
+
+{{- define "xfsc-tenant-gateway.hostname" -}}
+{{- $domain := required "tenant.domain is required" .Values.tenant.domain -}}
+{{- printf "%s.%s" (include "xfsc-tenant-gateway.subdomain" .) $domain -}}
+{{- end }}
+
 {{- define "xfsc-tenant-gateway.did" -}}
 {{- printf "did:web:%s" (include "xfsc-tenant-gateway.hostname" .) -}}
+{{- end }}
+
+{{- define "xfsc-tenant-gateway.tlsSecretName" -}}
+{{- if .Values.certificate.secretName -}}
+{{- .Values.certificate.secretName -}}
+{{- else -}}
+{{- printf "%s-tls" (include "xfsc-tenant-gateway.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 {{- end }}
 
 {{- define "xfsc-tenant-gateway.openbaoServiceAccountName" -}}
@@ -44,13 +59,5 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- .Values.openbao.transit.mountPath | trimSuffix "/" -}}
 {{- else -}}
 {{- include "xfsc-tenant-gateway.tenantId" . -}}
-{{- end -}}
-{{- end }}
-
-{{- define "xfsc-tenant-gateway.tlsSecretName" -}}
-{{- if .Values.certificate.secretName -}}
-{{- .Values.certificate.secretName -}}
-{{- else -}}
-{{- printf "%s-tls" (include "xfsc-tenant-gateway.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end }}

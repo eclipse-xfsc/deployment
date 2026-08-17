@@ -58,10 +58,7 @@ spec:
                 fi
               }
 
-              create_key {{ .Values.tenant.keys.verification | quote }} {{ .Values.openbao.transit.keyType | default "ecdsa-p256" | quote }}
-              {{- if ne .Values.tenant.keys.status .Values.tenant.keys.verification }}
-              create_key {{ .Values.tenant.keys.status | quote }} {{ .Values.openbao.transit.keyType | default "ecdsa-p256" | quote }}
-              {{- end }}
+              create_key {{ required "tenant.key is required" .Values.tenant.key | quote }} {{ .Values.openbao.transit.keyType | default "ecdsa-p256" | quote }}
               {{- range .Values.openbao.transit.additionalKeys }}
               create_key {{ required "openbao.transit.additionalKeys[].name is required" .name | quote }} {{ .keyType | default $.Values.openbao.transit.keyType | default "ecdsa-p256" | quote }}
               {{- end }}

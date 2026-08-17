@@ -11,9 +11,9 @@ metadata:
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
-      kind: Gateway
+      kind: ListenerSet
       name: {{ include "xfsc-tenant-gateway.fullname" . }}
-      sectionName: {{ .Values.gateway.listenerName | default "https" | quote }}
+      sectionName: {{ .Values.listenerSet.listenerName | default "https" | quote }}
   hostnames:
     - {{ include "xfsc-tenant-gateway.hostname" . | quote }}
   rules:
@@ -23,12 +23,11 @@ spec:
   {{- if $routeEnabled }}
     {{- $path := required (printf "path is required for route %s" $route.name) $route.path }}
     {{- $targetPath := $route.targetPath | default "" }}
-    {{- if and (hasPrefix "/api/" $path) (not $targetPath) }}
+    {{- if $route.targetPathTemplate }}
+      {{- $targetPath = replace "{tenant}" (include "xfsc-tenant-gateway.tenantId" $) $route.targetPathTemplate }}
+    {{- else if and (hasPrefix "/api/" $path) (not $targetPath) }}
       {{- $targetPath = printf "/v1/tenants/%s/%s" (include "xfsc-tenant-gateway.tenantId" $) (trimPrefix "/api/" $path) }}
     {{- end }}
-    {{- $headerProfile := $route.headers | default "" }}
-    {{- $tenantHeaders := $.Values.httpRoute.defaults.tenantHeaders | default true }}
-    {{- if hasKey $route "tenantHeaders" }}{{- $tenantHeaders = $route.tenantHeaders }}{{- end }}
     - name: {{ $route.name | trunc 63 | trimSuffix "-" }}
       matches:
         - path:
@@ -37,7 +36,6 @@ spec:
           {{- with $route.method }}
           method: {{ . | quote }}
           {{- end }}
-      {{- if or $targetPath $tenantHeaders $headerProfile }}
       filters:
         {{- if $targetPath }}
         - type: URLRewrite
@@ -46,42 +44,23 @@ spec:
               type: ReplaceFullPath
               replaceFullPath: {{ $targetPath | quote }}
         {{- end }}
-        {{- if or $tenantHeaders $headerProfile }}
         - type: RequestHeaderModifier
           requestHeaderModifier:
             set:
-              {{- if $tenantHeaders }}
               - name: X-NAMESPACE
                 value: {{ include "xfsc-tenant-gateway.tenantId" $ | quote }}
-              {{- end }}
-              {{- if eq $headerProfile "did" }}
-              - name: X-DID
-                value: {{ include "xfsc-tenant-gateway.did" $ | quote }}
-              {{- else if eq $headerProfile "verification" }}
               - name: X-DID
                 value: {{ include "xfsc-tenant-gateway.did" $ | quote }}
               - name: X-KEY
-                value: {{ $.Values.tenant.keys.verification | quote }}
-              {{- else if eq $headerProfile "status" }}
-              - name: X-DID
-                value: {{ include "xfsc-tenant-gateway.did" $ | quote }}
-              - name: X-KEY
-                value: {{ $.Values.tenant.keys.status | quote }}
+                value: {{ required "tenant.key is required" $.Values.tenant.key | quote }}
               - name: X-GROUP
-                value: {{ $.Values.tenant.status.group | default "" | quote }}
+                value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.group | quote }}
               - name: X-HOST
                 value: {{ include "xfsc-tenant-gateway.hostname" $ | quote }}
               - name: X-TYPE
-                value: {{ $.Values.tenant.status.type | default "StatusList2021" | quote }}
-              {{- else if eq $headerProfile "didConfiguration" }}
+                value: {{ $.Values.tenant.type | default "StatusList2021" | quote }}
               - name: X-ORIGIN
                 value: {{ include "xfsc-tenant-gateway.hostname" $ | quote }}
-              {{- else if eq $headerProfile "jwks" }}
-              {{- else if $headerProfile }}
-              {{- fail (printf "unknown headers profile %q for route %s" $headerProfile $route.name) }}
-              {{- end }}
-        {{- end }}
-      {{- end }}
       backendRefs:
         - group: ""
           kind: Service

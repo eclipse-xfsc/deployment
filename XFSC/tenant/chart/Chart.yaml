@@ -1,6 +1,6 @@
 apiVersion: v2
 name: xfsc-tenant-gateway
-description: Per-tenant Envoy Gateway API resources with TLS and XFSC routes
-version: 0.6.0
+description: Per-tenant ListenerSet, Certificate, HTTPRoute and OpenBao bootstrap for the shared XFSC Envoy Gateway
+version: 0.9.0
 appVersion: 1.0.0
 kubeVersion: '>=1.28.0-0'

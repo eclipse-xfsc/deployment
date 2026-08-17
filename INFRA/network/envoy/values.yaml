@@ -6,10 +6,13 @@ gateway:
   namespace: infrastructure
   http:
     port: 80
-  allowedListeners:
+  # Needed so cert-manager's HTTP-01 solver routes from tenant namespaces
+  # can attach to the shared HTTP listener.
+  allowedRoutes:
     namespaces:
       from: All
-  allowedRoutes:
+  # Required for tenant ListenerSets to attach later.
+  allowedListeners:
     namespaces:
       from: All
 
@@ -19,7 +22,7 @@ envoyProxy:
     type: LoadBalancer
     annotations:
       load-balancer.hetzner.cloud/network-zone: eu-central
-      # Alternatively pin the LB to a location instead of a network zone:
+      # Alternative:
       # load-balancer.hetzner.cloud/location: nbg1
 
 envoy-gateway:

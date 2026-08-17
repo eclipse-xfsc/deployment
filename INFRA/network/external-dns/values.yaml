@@ -5,7 +5,7 @@ external-dns:
   policy: sync
 
   registry: txt
-
+  enableGatewayListenerSets: true
   txtOwnerId: xfsc
 
   extraArgs:
