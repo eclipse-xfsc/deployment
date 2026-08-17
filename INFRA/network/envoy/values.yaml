@@ -26,6 +26,7 @@ envoyProxy:
       load-balancer.hetzner.cloud/protocol: tcp
       load-balancer.hetzner.cloud/health-check-protocol: tcp
       load-balancer.hetzner.cloud/uses-proxyprotocol: "false"
+      load-balancer.hetzner.cloud/disable-private-ingress: "true"
       # Alternative:
       # load-balancer.hetzner.cloud/location: nbg1
 
