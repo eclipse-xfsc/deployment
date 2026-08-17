@@ -1,46 +1,55 @@
 # XFSC Tenant Gateway
 
-Creates one isolated Gateway API stack per tenant:
+Gateway API chart for one XFSC tenant.
 
-- one `Gateway`
-- one HTTPS listener
-- one cert-manager `Certificate`
-- one `HTTPRoute` with any number of path rules
-
-It assumes Envoy Gateway, Gateway API CRDs, cert-manager and optionally ExternalDNS are already installed.
-
-## Install
-
-```bash
-helm upgrade --install tenant-a ./xfsc-tenant-gateway \
-  --namespace tenant-a \
-  --create-namespace \
-  --set hostname=tenant-a.example.com
-```
-
-## Route configuration
-
-Each entry in `routes` supports:
-
-- `path`
-- `pathType`
-- optional `rewrite`
-- backend Service name and port
-- optional request headers using `set`, `add`, and `remove`
-
-Backend Services must be in the same namespace as the release.
-
-## ExternalDNS
-
-Configure ExternalDNS with the Gateway HTTPRoute source, commonly:
+The public hostname is always derived from:
 
 ```yaml
-sources:
-  - gateway-httproute
+tenant:
+  subdomain: dieserTenant
+  domain: domain.com
 ```
 
-It can then discover the hostname from `HTTPRoute.spec.hostnames`.
+which produces `dieserTenant.domain.com`. Public endpoints live below that hostname, normally under `/api/...` or `/.well-known/...`.
 
-## Prerequisites
+## Routing conventions
 
-cert-manager must have Gateway API support enabled when using Gateway-derived functionality. This chart creates an explicit `Certificate`, so certificate issuance itself does not depend on the Gateway annotation shim.
+- HTTPRoute path matching is always `Exact`.
+- `/api/<path>` automatically rewrites to `/v1/tenants/<tenant.id>/<path>`.
+- `targetPath` overrides that convention for exceptional backends.
+- Non-`/api` routes without `targetPath` are forwarded unchanged.
+- `X-NAMESPACE` is injected automatically unless disabled per route.
+- Header profiles add the remaining service-specific XFSC headers.
+
+The authorization token endpoint is exposed as `/api/auth/token` and rewritten to `/token` on the pre-authorization bridge. The bridge's OpenID configuration must advertise the public URL `https://<subdomain>.<domain>/api/auth/token`.
+
+
+## OpenBao Transit bootstrap
+
+When `openbao.enabled=true`, a Helm post-install/post-upgrade Job authenticates to OpenBao using the Job ServiceAccount and Kubernetes auth. It creates one Transit secrets engine whose mount path defaults to `tenant.id`, then creates `tenant.keys.verification` and `tenant.keys.status`. Additional keys can be configured under `openbao.transit.additionalKeys`.
+
+The OpenBao Kubernetes auth role configured in `openbao.auth.role` must already exist and must grant the Job enough policy permissions to inspect/create the tenant mount and read/create its Transit keys. Example for tenant `tenant_space`:
+
+```hcl
+path "sys/mounts" {
+  capabilities = ["read"]
+}
+path "sys/mounts/tenant_space" {
+  capabilities = ["create", "read", "update"]
+}
+path "tenant_space/keys/*" {
+  capabilities = ["create", "read", "update"]
+}
+```
+
+The Job is idempotent: an existing Transit mount or key is retained. Helm runs it after installs and upgrades.
+
+## DID
+
+The DID is not configurable separately. It is always derived from the public tenant host:
+
+```text
+did:web:<tenant.subdomain>.<tenant.domain>
+```
+
+For example, `tenant.subdomain=alice` and `tenant.domain=example.com` results in `did:web:alice.example.com`. The public DID document remains at `https://alice.example.com/.well-known/did.json`.

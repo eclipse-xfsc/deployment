@@ -3,8 +3,48 @@ fullnameOverride: ""
 
 gatewayClassName: envoy
 
-# Tenant host, e.g. wallet.customer.example
-hostname: cloud-wallet.DOMAIN
+tenant:
+  id: demo_tenant
+  subdomain: demo-tenant
+  domain: changemedomain
+  # DID is always generated as: did:web:<subdomain>.<domain>
+  keys:
+    verification: eckey
+    status: signerkey
+  status:
+    group: "test"
+    type: StatusList2021
+
+# Optional tenant bootstrap in OpenBao.
+# The Transit mount defaults to tenant.id and the verification/status keys above
+# are created automatically in that mount.
+openbao:
+  enabled: true
+  address: http://openbao.security.svc.cluster.local:8200
+  image:
+    repository: openbao/openbao
+    tag: "2.4.4"
+    pullPolicy: IfNotPresent
+  auth:
+    mount: kubernetes
+    role: xfsc-ocm-wstack-resource-provisioner
+  serviceAccount:
+    create: true
+    name: "ocm-wstack-resource-provisioner"
+    annotations: {}
+  transit:
+    # Empty -> tenant.id, e.g. tenant_space/
+    mountPath: "ocm-wstack/demo-tenant"
+    # Both tenant.keys.verification and tenant.keys.status use this type.
+    keyType: ecdsa-p256
+    # Optional extra Transit keys created in the same mount.
+    # Each entry can override keyType.
+    additionalKeys: []
+    # - name: another-key
+    #   keyType: ed25519
+  job:
+    annotations: {}
+    backoffLimit: 3
 
 gateway:
   annotations: {}
@@ -18,7 +58,7 @@ certificate:
   enabled: true
   secretName: ""
   issuerRef:
-    name: letsencrypt-production
+    name: letsencrypt
     kind: ClusterIssuer
     group: cert-manager.io
   duration: ""
@@ -29,159 +69,97 @@ certificate:
 
 httpRoute:
   annotations: {}
+  defaults:
+    tenantHeaders: true
 
+# Routing rules:
+# - hostname is always <tenant.subdomain>.<tenant.domain>
+# - path matching is always Exact
+# - /api/<path> automatically rewrites to /v1/tenants/<tenant.id>/<path>
+# - targetPath overrides the automatic rewrite for special routes
+# - non-/api routes without targetPath are forwarded unchanged
 routes:
-  # Credential Issuance
   - name: credential-issuance
     path: /api/issuance/credential
-    pathType: Exact
-    rewrite: /v1/tenants/tenant_space/credential
     backend:
       name: issuance-service
       port: 8080
-    headers:
-      set: {}
-      add: {}
-      remove: []
 
-  # Credential Retrieval
-  - name: credential-retrieval
-    path: /api/offering
-    pathType: PathPrefix
-    rewrite: /v1/tenants/tenant_space/offering
-    backend:
-      name: credential-retrieval-service
-      port: 8080
-    headers:
-      set: {}
-      add: {}
-      remove: []
+  # - name: credential-offering
+  #   path: /api/offering
+  #   backend:
+  #     name: credential-retrieval-service
+  #     port: 8080
 
-  # Credential Verification
+  # - name: offering-create
+  #   method: POST
+  #   path: /api/offering/create
+  #   backend:
+  #     name: credential-offering-service
+  #     port: 8080
+
   - name: credential-verification
     path: /api/presentation
-    pathType: PathPrefix
-    rewrite: /v1/tenants/tenant_space/presentation
+    headers: verification
     backend:
       name: credential-verification-service
       port: 8080
-    headers:
-      set:
-        X-DID: did:web:cloud-wallet.DOMAIN
-        X-NAMESPACE: tenant_space
-        X-KEY: eckey
-      add: {}
-      remove: []
 
-  # DIDComm Connector
-  - name: didcomm
-    path: /api/didcomm
-    pathType: PathPrefix
-    rewrite: /
-    backend:
-      name: didcomm-connector
-      port: 9090
-    headers:
-      set: {}
-      add: {}
-      remove: []
+  # - name: didcomm
+  #   path: /api/didcomm
+  #   targetPath: /
+  #   backend:
+  #     name: didcomm-connector
+  #     port: 9090
 
-  # OIDC Pre-Authorization Bridge metadata
-  - name: oidc-configuration
+  - name: openid-configuration
     path: /.well-known/openid-configuration
-    pathType: Exact
     backend:
-      name: pre-authorization-bridge
+      name: pre-authorization-bridge-service
       port: 8080
-    headers:
-      set: {}
-      add: {}
-      remove: []
 
-  # OIDC Pre-Authorization Bridge token endpoint
-  - name: token
-    path: /token
-    pathType: Exact
+  - name: pre-authorization-token
+    method: POST
+    path: /api/auth/token
+    targetPath: /token
     backend:
-      name: pre-authorization-bridge
+      name: pre-authorization-bridge-service
       port: 8080
-    headers:
-      set: {}
-      add: {}
-      remove: []
 
-  # OID4VCI Credential Issuer Metadata
   - name: openid-credential-issuer
     path: /.well-known/openid-credential-issuer
-    pathType: Exact
-    rewrite: /v1/tenants/tenant_space/.well-known/openid-credential-issuer
+    targetPath: /v1/tenants/tenant_space/.well-known/openid-credential-issuer
     backend:
       name: well-known-service
       port: 8080
-    headers:
-      set: {}
-      add: {}
-      remove: []
 
-  # Status List Service
   - name: status-list
     path: /api/status
-    pathType: PathPrefix
-    rewrite: /v1/tenants/tenant_space/status
+    headers: status
     backend:
       name: status-list-service
       port: 8080
-    headers:
-      set:
-        X-DID: did:web:cloud-wallet.DOMAIN
-        X-NAMESPACE: tenant_space
-        X-KEY: signerkey
-        X-GROUP: ""
-        X-HOST: cloud-wallet.DOMAIN
-        X-TYPE: StatusList2021
-      add: {}
-      remove: []
 
-  # DID Document -> signer
   - name: did-document
     path: /.well-known/did.json
-    pathType: Exact
-    rewrite: /v1/did/document
+    targetPath: /v1/did/document
+    headers: did
     backend:
       name: signer
       port: 8080
-    headers:
-      set:
-        X-DID: did:web:cloud-wallet.DOMAIN
-        X-NAMESPACE: tenant_space
-      add: {}
-      remove: []
 
-  # DID Configuration -> signer
   - name: did-configuration
     path: /.well-known/did-configuration.json
-    pathType: Exact
-    rewrite: /v1/did/configuration
+    targetPath: /v1/did/configuration
+    headers: didConfiguration
     backend:
       name: signer
       port: 8080
-    headers:
-      set:
-        X-ORIGIN: cloud-wallet.DOMAIN
-        X-NAMESPACE: tenant_space
-      add: {}
-      remove: []
 
-  # JWKS -> signer
   - name: jwks
     path: /.well-known/jwks.json
-    pathType: Exact
-    rewrite: /v1/jwks
+    targetPath: /v1/jwks
+    headers: jwks
     backend:
       name: signer
       port: 8080
-    headers:
-      set:
-        X-NAMESPACE: tenant_space
-      add: {}
-      remove: []

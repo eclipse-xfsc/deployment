@@ -1,18 +1,36 @@
 gatewayClass:
   name: envoy
 
+gateway:
+  name: envoy-gateway
+  namespace: infrastructure
+  http:
+    port: 80
+  allowedListeners:
+    namespaces:
+      from: All
+  allowedRoutes:
+    namespaces:
+      from: All
+
+envoyProxy:
+  name: envoy
+  service:
+    type: LoadBalancer
+    annotations:
+      load-balancer.hetzner.cloud/network-zone: eu-central
+      # Alternatively pin the LB to a location instead of a network zone:
+      # load-balancer.hetzner.cloud/location: nbg1
+
 envoy-gateway:
   enabled: true
-
   deployment:
     replicas: 1
-
   config:
     envoyGateway:
       logging:
         level:
           default: info
-
   resources:
     requests:
       cpu: 100m
@@ -20,12 +38,3 @@ envoy-gateway:
     limits:
       cpu: 500m
       memory: 512Mi
-
-  provider:
-    kubernetes:
-      envoyService:
-        type: LoadBalancer
-        annotations:
-          load-balancer.hetzner.cloud/network-zone: eu-central
-          # alternativ statt network-zone:
-          # load-balancer.hetzner.cloud/location: nbg1

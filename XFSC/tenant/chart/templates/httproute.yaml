@@ -15,52 +15,71 @@ spec:
       name: {{ include "xfsc-tenant-gateway.fullname" . }}
       sectionName: {{ .Values.gateway.listenerName | default "https" | quote }}
   hostnames:
-    - {{ required "hostname is required" .Values.hostname | quote }}
+    - {{ include "xfsc-tenant-gateway.hostname" . | quote }}
   rules:
-    {{- range $route := .Values.routes }}
-    - matches:
+  {{- range $route := .Values.routes }}
+  {{- $routeEnabled := true }}
+  {{- if hasKey $route "enabled" }}{{- $routeEnabled = $route.enabled }}{{- end }}
+  {{- if $routeEnabled }}
+    {{- $path := required (printf "path is required for route %s" $route.name) $route.path }}
+    {{- $targetPath := $route.targetPath | default "" }}
+    {{- if and (hasPrefix "/api/" $path) (not $targetPath) }}
+      {{- $targetPath = printf "/v1/tenants/%s/%s" (include "xfsc-tenant-gateway.tenantId" $) (trimPrefix "/api/" $path) }}
+    {{- end }}
+    {{- $headerProfile := $route.headers | default "" }}
+    {{- $tenantHeaders := $.Values.httpRoute.defaults.tenantHeaders | default true }}
+    {{- if hasKey $route "tenantHeaders" }}{{- $tenantHeaders = $route.tenantHeaders }}{{- end }}
+    - name: {{ $route.name | trunc 63 | trimSuffix "-" }}
+      matches:
         - path:
-            type: {{ $route.pathType | default "PathPrefix" }}
-            value: {{ required (printf "path is required for route %s" $route.name) $route.path | quote }}
-      {{- $hasRewrite := ne ($route.rewrite | default "") "" }}
-      {{- $headerSet := dig "headers" "set" dict $route }}
-      {{- $headerAdd := dig "headers" "add" dict $route }}
-      {{- $headerRemove := dig "headers" "remove" list $route }}
-      {{- $hasSet := gt (len $headerSet) 0 }}
-      {{- $hasAdd := gt (len $headerAdd) 0 }}
-      {{- $hasRemove := gt (len $headerRemove) 0 }}
-      {{- if or $hasRewrite $hasSet $hasAdd $hasRemove }}
+            type: Exact
+            value: {{ $path | quote }}
+          {{- with $route.method }}
+          method: {{ . | quote }}
+          {{- end }}
+      {{- if or $targetPath $tenantHeaders $headerProfile }}
       filters:
-        {{- if $hasRewrite }}
+        {{- if $targetPath }}
         - type: URLRewrite
           urlRewrite:
             path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: {{ $route.rewrite | quote }}
+              type: ReplaceFullPath
+              replaceFullPath: {{ $targetPath | quote }}
         {{- end }}
-        {{- if or $hasSet $hasAdd $hasRemove }}
+        {{- if or $tenantHeaders $headerProfile }}
         - type: RequestHeaderModifier
           requestHeaderModifier:
-            {{- if $hasSet }}
             set:
-              {{- range $name, $value := $headerSet }}
-              - name: {{ $name | quote }}
-                value: {{ $value | quote }}
+              {{- if $tenantHeaders }}
+              - name: X-NAMESPACE
+                value: {{ include "xfsc-tenant-gateway.tenantId" $ | quote }}
               {{- end }}
-            {{- end }}
-            {{- if $hasAdd }}
-            add:
-              {{- range $name, $value := $headerAdd }}
-              - name: {{ $name | quote }}
-                value: {{ $value | quote }}
+              {{- if eq $headerProfile "did" }}
+              - name: X-DID
+                value: {{ include "xfsc-tenant-gateway.did" $ | quote }}
+              {{- else if eq $headerProfile "verification" }}
+              - name: X-DID
+                value: {{ include "xfsc-tenant-gateway.did" $ | quote }}
+              - name: X-KEY
+                value: {{ $.Values.tenant.keys.verification | quote }}
+              {{- else if eq $headerProfile "status" }}
+              - name: X-DID
+                value: {{ include "xfsc-tenant-gateway.did" $ | quote }}
+              - name: X-KEY
+                value: {{ $.Values.tenant.keys.status | quote }}
+              - name: X-GROUP
+                value: {{ $.Values.tenant.status.group | default "" | quote }}
+              - name: X-HOST
+                value: {{ include "xfsc-tenant-gateway.hostname" $ | quote }}
+              - name: X-TYPE
+                value: {{ $.Values.tenant.status.type | default "StatusList2021" | quote }}
+              {{- else if eq $headerProfile "didConfiguration" }}
+              - name: X-ORIGIN
+                value: {{ include "xfsc-tenant-gateway.hostname" $ | quote }}
+              {{- else if eq $headerProfile "jwks" }}
+              {{- else if $headerProfile }}
+              {{- fail (printf "unknown headers profile %q for route %s" $headerProfile $route.name) }}
               {{- end }}
-            {{- end }}
-            {{- if $hasRemove }}
-            remove:
-              {{- range $name := $headerRemove }}
-              - {{ $name | quote }}
-              {{- end }}
-            {{- end }}
         {{- end }}
       {{- end }}
       backendRefs:
@@ -69,4 +88,5 @@ spec:
           name: {{ required (printf "backend.name is required for route %s" $route.name) $route.backend.name | quote }}
           port: {{ required (printf "backend.port is required for route %s" $route.name) $route.backend.port }}
           weight: {{ $route.backend.weight | default 1 }}
-    {{- end }}
+  {{- end }}
+  {{- end }}

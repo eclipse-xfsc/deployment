@@ -1,43 +1,17 @@
-# XFSC Envoy Gateway
+# XFSC Shared Envoy Gateway
 
-Minimal wrapper chart for installing the Envoy Gateway control plane without creating a `Gateway`, listener, or route.
+This chart installs Envoy Gateway and owns the shared infrastructure resources used by all later tenant releases:
 
-## Contents
+- `GatewayClass/envoy`
+- `EnvoyProxy/infrastructure/envoy` with the Hetzner LoadBalancer annotations
+- `Gateway/infrastructure/envoy-gateway`
+- one shared HTTP listener on port 80 for ACME HTTP-01
+- `allowedListeners: All` so future tenant `ListenerSet` resources can attach
+- `allowedRoutes: All` on the shared HTTP listener so cert-manager solver routes can attach
 
-The chart installs the official Envoy Gateway Helm chart as an OCI dependency:
+Tenant HTTPS listeners are NOT known at infrastructure-install time. They are added later through tenant-owned `ListenerSet` resources.
 
-```text
-oci://docker.io/envoyproxy/gateway-helm
-```
-
-No tenant-facing Gateway API resources are included.
-
-## Install
-
-```bash
-helm dependency build ./xfsc-envoy-gateway
-
-helm upgrade --install envoy-gateway ./xfsc-envoy-gateway \
-  --namespace envoy-gateway-system \
-  --create-namespace
-```
-
-## Verify
-
-```bash
-kubectl get pods -n envoy-gateway-system
-kubectl get gatewayclass
-kubectl get gateways -A
-```
-
-The final command should return no tenant `Gateway` resources until you create them separately.
-
-## Uninstall
-
-```bash
-helm uninstall envoy-gateway -n envoy-gateway-system
-```
-
-## Scope
-
-This chart does not install cert-manager or ExternalDNS. Install those as separate platform components. They remain idle for tenant traffic until suitable `Gateway`, `HTTPRoute`, `Certificate`, or DNS source resources exist.
+Requirements:
+- Gateway API v1.5+ Standard CRDs so `ListenerSet` and `Gateway.spec.allowedListeners` exist.
+- Envoy Gateway 1.8.x.
+- If ExternalDNS follows tenant HTTPRoutes through ListenerSets, enable `--gateway-listener-sets`.

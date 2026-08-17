@@ -1,0 +1,68 @@
+{{- if .Values.openbao.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-openbao-bootstrap" (include "xfsc-tenant-gateway.fullname" .) | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "xfsc-tenant-gateway.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- with .Values.openbao.job.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  backoffLimit: {{ .Values.openbao.job.backoffLimit | default 3 }}
+  template:
+    metadata:
+      labels:
+        {{- include "xfsc-tenant-gateway.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "xfsc-tenant-gateway.openbaoServiceAccountName" . }}
+      containers:
+        - name: openbao-bootstrap
+          image: "{{ .Values.openbao.image.repository }}:{{ .Values.openbao.image.tag }}"
+          imagePullPolicy: {{ .Values.openbao.image.pullPolicy }}
+          env:
+            - name: BAO_ADDR
+              value: {{ .Values.openbao.address | quote }}
+            - name: AUTH_MOUNT
+              value: {{ .Values.openbao.auth.mount | default "kubernetes" | quote }}
+            - name: AUTH_ROLE
+              value: {{ required "openbao.auth.role is required when openbao.enabled=true" .Values.openbao.auth.role | quote }}
+            - name: TRANSIT_PATH
+              value: {{ include "xfsc-tenant-gateway.transitMountPath" . | quote }}
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              JWT="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+              export BAO_TOKEN="$(bao write -field=token "auth/${AUTH_MOUNT}/login" role="${AUTH_ROLE}" jwt="${JWT}")"
+
+              if bao secrets list -format=json | grep -q "\"${TRANSIT_PATH}/\""; then
+                echo "Transit engine ${TRANSIT_PATH}/ already exists"
+              else
+                echo "Creating Transit engine ${TRANSIT_PATH}/"
+                bao secrets enable -path="${TRANSIT_PATH}" transit
+              fi
+
+              create_key() {
+                key_name="$1"
+                key_type="$2"
+                if bao read "${TRANSIT_PATH}/keys/${key_name}" >/dev/null 2>&1; then
+                  echo "Transit key ${TRANSIT_PATH}/${key_name} already exists"
+                else
+                  echo "Creating Transit key ${TRANSIT_PATH}/${key_name} (${key_type})"
+                  bao write "${TRANSIT_PATH}/keys/${key_name}" type="${key_type}"
+                fi
+              }
+
+              create_key {{ .Values.tenant.keys.verification | quote }} {{ .Values.openbao.transit.keyType | default "ecdsa-p256" | quote }}
+              {{- if ne .Values.tenant.keys.status .Values.tenant.keys.verification }}
+              create_key {{ .Values.tenant.keys.status | quote }} {{ .Values.openbao.transit.keyType | default "ecdsa-p256" | quote }}
+              {{- end }}
+              {{- range .Values.openbao.transit.additionalKeys }}
+              create_key {{ required "openbao.transit.additionalKeys[].name is required" .name | quote }} {{ .keyType | default $.Values.openbao.transit.keyType | default "ecdsa-p256" | quote }}
+              {{- end }}
+{{- end }}

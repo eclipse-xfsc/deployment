@@ -8,7 +8,7 @@ metadata:
 spec:
   secretName: {{ include "xfsc-tenant-gateway.tlsSecretName" . }}
   dnsNames:
-    - {{ required "hostname is required" .Values.hostname | quote }}
+    - {{ include "xfsc-tenant-gateway.hostname" . | quote }}
   issuerRef:
     name: {{ required "certificate.issuerRef.name is required" .Values.certificate.issuerRef.name | quote }}
     kind: {{ .Values.certificate.issuerRef.kind | default "ClusterIssuer" | quote }}
@@ -20,6 +20,6 @@ spec:
   renewBefore: {{ . | quote }}
   {{- end }}
   privateKey:
-    algorithm: {{ .Values.certificate.privateKey.algorithm | default "RSA" | quote }}
-    size: {{ .Values.certificate.privateKey.size | default 2048 }}
+    algorithm: {{ .Values.certificate.privateKey.algorithm | default "RSA" }}
+    size: {{ .Values.certificate.privateKey.size | default 4096 }}
 {{- end }}
