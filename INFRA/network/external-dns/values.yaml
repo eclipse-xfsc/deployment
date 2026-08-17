@@ -10,5 +10,7 @@ external-dns:
 
   extraArgs:
     - --txt-prefix=reg-%{record_type}.
+    - --managed-record-types=A
+    - --exclude-record-types=AAAA
 
   domainFilters: []
