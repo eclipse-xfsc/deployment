@@ -5,5 +5,5 @@ name: cryptoservice
 version: 1.0.8
 dependencies:
   - name: signer
-    version: 0.0.0-dev.helm
+    version: 2.2.0-helm
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa

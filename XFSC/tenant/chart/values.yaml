@@ -58,6 +58,22 @@ openbao:
     annotations: {}
     backoffLimit: 3
 
+tenantRegistration:
+  enabled: true
+
+  image:
+    repository: curlimages/curl
+    tag: "8.16.0"
+    pullPolicy: IfNotPresent
+
+  # Interner Service des Dummy Content Signers.
+  # Namespace bei Bedarf anpassen.
+  serviceUrl: "http://dummycontentsigner.ocm-wstack.svc.cluster.local:8080"
+
+  job:
+    annotations: {}
+    backoffLimit: 6
+
 # Routing rules:
 # - path matching is always Exact
 # - /api/<path> automatically rewrites to /v1/tenants/<tenant.id>/<path>

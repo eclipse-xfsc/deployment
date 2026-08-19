@@ -1,6 +1,6 @@
 dummycontentsigner:
   image:
-    tag: 2.1.0
+    tag: 0.0.0-tenant-registry
     pullPolicy: Always
 
   podAnnotations: 
