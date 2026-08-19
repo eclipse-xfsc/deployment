@@ -2,11 +2,11 @@ apiVersion: v2
 name: xfsc-envoy-gateway
 description: Shared Envoy Gateway for dynamically added XFSC tenant ListenerSets
 type: application
-version: 0.3.2
+version: 0.3.3
 appVersion: "1.8.3"
 dependencies:
   - name: gateway-helm
     alias: envoy-gateway
-    version: "1.8.3"
+    version: "1.9.0"
     repository: "oci://docker.io/envoyproxy"
     condition: envoy-gateway.enabled
