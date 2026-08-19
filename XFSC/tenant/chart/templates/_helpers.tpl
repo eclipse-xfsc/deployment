@@ -65,3 +65,50 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- include "xfsc-tenant-gateway.tenantId" . -}}
 {{- end -}}
 {{- end }}
+
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "tenant.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+*/}}
+{{- define "tenant.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Common chart label.
+*/}}
+{{- define "tenant.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Common labels.
+*/}}
+{{- define "tenant.labels" -}}
+helm.sh/chart: {{ include "tenant.chart" . }}
+{{ include "tenant.selectorLabels" . }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels.
+*/}}
+{{- define "tenant.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "tenant.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

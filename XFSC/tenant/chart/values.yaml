@@ -116,8 +116,9 @@ routes:
 
   - name: openid-configuration
     path: /.well-known/openid-configuration
+    targetPath: /.well-known/openid-configuration
     backend:
-      name: pre-authorization-bridge
+      name: pre-authorization-bridge-service
       port: 8080
 
   - name: pre-authorization-token
@@ -125,7 +126,7 @@ routes:
     path: /api/auth/token
     targetPath: /token
     backend:
-      name: pre-authorization-bridge
+      name: pre-authorization-bridge-service
       port: 8080
 
   - name: openid-credential-issuer
