@@ -1,0 +1,17 @@
+credential-offering-bootstrap:
+  enabled: true
+
+  image:
+    repository: ghcr.io/your-org/credential-offering-bootstrap
+    tag: "0.2.0"
+
+  nats:
+    url: nats://nats.infrastructure.svc.cluster.local:4222
+    issuanceSubject: issuer.dummycontentsigner.request
+
+  resourceClaim:
+    enabled: false
+    provider: nats
+
+  httpRoute:
+    enabled: false

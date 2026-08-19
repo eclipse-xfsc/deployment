@@ -1,0 +1,6 @@
+apiVersion: v2
+name: credential-offering-bootstrap
+description: REST to NATS bootstrap adapter for OID4VCI credential offering creation
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

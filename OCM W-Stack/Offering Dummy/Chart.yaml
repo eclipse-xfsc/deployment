@@ -1,0 +1,10 @@
+apiVersion: v2
+name: credential-offering-bootstrap-wrapper
+description: Wrapper chart for the XFSC OID4VCI credential offering bootstrap REST-to-NATS adapter
+type: application
+version: 0.1.0
+appVersion: "0.2.0"
+dependencies:
+  - name: credential-offering-bootstrap
+    version: 0.1.0
+    condition: credential-offering-bootstrap.enabled
