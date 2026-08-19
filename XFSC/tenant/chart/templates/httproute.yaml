@@ -56,15 +56,21 @@ spec:
               - name: X-GROUP
                 value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.group | quote }}
               - name: X-HOST
-                value: {{ include "xfsc-tenant-gateway.hostname" $ | quote }}
+                value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
               - name: X-TYPE
                 value: {{ $.Values.tenant.type | default "StatusList2021" | quote }}
               - name: X-ORIGIN
-                value: {{ include "xfsc-tenant-gateway.hostname" $ | quote }}
+                value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
               - name: X-ENGINE
                 value: "transit"
               - name: X-Nonce
                 value: 34jkjefd012x13jcnyyyy
+              - name: X-Issuer
+                value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
+              - name: X-JWKSURL
+                value: {{ printf "%s/.well-known/openid-configuration" (include "xfsc-tenant-gateway.uri" $) | quote }}
+              - name: X-TOKENENDPOINT
+                value: {{ printf "%s/api/auth/token" (include "xfsc-tenant-gateway.uri" $) | quote }}
       backendRefs:
         - group: ""
           kind: Service

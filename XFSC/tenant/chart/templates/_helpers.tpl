@@ -38,6 +38,11 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- printf "%s.%s" (include "xfsc-tenant-gateway.subdomain" .) $domain -}}
 {{- end }}
 
+{{- define "xfsc-tenant-gateway.uri" -}}
+{{- $domain := required "tenant.domain is required" .Values.tenant.domain -}}
+{{- printf "https://%s.%s" (include "xfsc-tenant-gateway.subdomain" .) $domain -}}
+{{- end }}
+
 {{- define "xfsc-tenant-gateway.did" -}}
 {{- printf "did:web:%s" (include "xfsc-tenant-gateway.hostname" .) -}}
 {{- end }}
