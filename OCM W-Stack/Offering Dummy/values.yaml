@@ -2,8 +2,9 @@ credential-offering-bootstrap:
   enabled: true
 
   image:
-    repository: ghcr.io/your-org/credential-offering-bootstrap
-    tag: "0.2.0"
+    repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
+    name: credential-offering-bootstrap
+    tag: "dev"
 
   nats:
     url: nats://nats.infrastructure.svc.cluster.local:4222
