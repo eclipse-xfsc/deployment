@@ -5,3 +5,4 @@
 terraform.*
 rendered.yaml
 log.txt
+*.tgz
