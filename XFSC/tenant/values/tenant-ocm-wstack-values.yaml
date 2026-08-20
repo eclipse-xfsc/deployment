@@ -81,9 +81,10 @@ routes:
 
   - name: offering-create
     method: POST
-    path: /api/offering/create
+    path: /test/offering/create
+    targetPath: /api/offering/create
     backend:
-      name: credential-offering-service
+      name: offering-dummy-credential-offering-bootstrap
       port: 8080
 
   - name: credential-verification
