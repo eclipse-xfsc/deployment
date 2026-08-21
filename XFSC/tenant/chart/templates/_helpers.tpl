@@ -47,6 +47,10 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- printf "did:web:%s" (include "xfsc-tenant-gateway.hostname" .) -}}
 {{- end }}
 
+{{- define "xfsc-tenant-gateway.issuerkid" -}}
+{{- printf "did:web:%s#%s" (include "xfsc-tenant-gateway.hostname" .) .Values.tenant.key -}}
+{{- end }}
+
 {{- define "xfsc-tenant-gateway.tlsSecretName" -}}
 {{- if .Values.certificate.secretName -}}
 {{- .Values.certificate.secretName -}}

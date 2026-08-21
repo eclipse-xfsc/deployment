@@ -69,7 +69,6 @@ openbao:
 routes:
   - name: credential-issuance
     path: /api/credential
-    targetPath: /credential
     backend:
       name: issuance-service
       port: 8080

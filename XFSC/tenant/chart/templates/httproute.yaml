@@ -51,6 +51,8 @@ spec:
                 value: {{ include "xfsc-tenant-gateway.namespace" $ | quote }}
               - name: X-DID
                 value: {{ include "xfsc-tenant-gateway.did" $ | quote }}
+              - name: X-ISSUERKID
+                value: {{ required "tenant.issuerkid is required" $.Values.tenant.key | quote }}
               - name: X-KEY
                 value: {{ required "tenant.key is required" $.Values.tenant.key | quote }}
               - name: X-GROUP
@@ -67,10 +69,13 @@ spec:
                 value: 34jkjefd012x13jcnyyyy
               - name: X-Issuer
                 value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
-              - name: X-JWKSURL
-                value: {{ printf "%s/.well-known/openid-configuration" (include "xfsc-tenant-gateway.uri" $) | quote }}
+              - name: X-JWKS-URL
+                value: {{ printf "%s/.well-known/jwks.json" (include "xfsc-tenant-gateway.uri" $) | quote }}
               - name: X-TOKENENDPOINT
                 value: {{ printf "%s/api/auth/token" (include "xfsc-tenant-gateway.uri" $) | quote }}
+              - name: x-audience-url
+                value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
+                
       backendRefs:
         - group: ""
           kind: Service

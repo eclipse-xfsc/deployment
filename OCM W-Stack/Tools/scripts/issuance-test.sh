@@ -5,7 +5,7 @@ BASE_URL=$1
 echo $1
 OFFERING_URL="${BASE_URL}/test/offering/create"
 TOKEN_URL="${BASE_URL}/api/auth/token"
-ISSUANCE_URL="${BASE_URL}/api/issuance/credential"
+ISSUANCE_URL="${BASE_URL}/api/credential"
 
 echo "==> Creating credential offering"
 
@@ -76,4 +76,4 @@ curl -sS \
   -H "Content-Type: application/json" \
   -d '{
     "format": "jwt_vc_json"
-  }' | jq .
+  }' 
