@@ -3,3 +3,5 @@ signer:
     tag: 2.2.2
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
+  log: 
+    level: info
