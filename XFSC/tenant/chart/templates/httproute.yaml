@@ -58,7 +58,7 @@ spec:
               - name: X-GROUP
                 value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.group | quote }}
               - name: X-GROUPID
-                value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.group | quote }}
+                value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.groupid | quote }}
               - name: X-HOST
                 value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
               - name: X-TYPE

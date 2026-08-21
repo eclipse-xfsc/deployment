@@ -2,14 +2,16 @@ nameOverride: ""
 fullnameOverride: ""
 
 tenant:
-  id: demo_tenant
+  id: demo_tenant2
+  groupid: ocm-wstack
+
   namespace: ocm-wstack
+  group: demo-tenant2
   # Empty -> derived from tenant.id by lowercasing and replacing '_' with '-'.
   subdomain: ""
   domain: domain.com
   # Every route receives the same complete X-* header set.
   key: eckey
-  group: demo-tenant
   type: StatusList2021
 
 certificate:
@@ -52,7 +54,7 @@ openbao:
     annotations: {}
   transit:
     # Empty -> tenant.id
-    mountPath: "ocm-wstack/demo-tenant"
+    mountPath: "ocm-wstack/demo-tenant2"
     keyType: ecdsa-p256
     additionalKeys: []
   job:
