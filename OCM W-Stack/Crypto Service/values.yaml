@@ -1,5 +1,5 @@
 signer:
   image:  
-    tag: 2.2.1
+    tag: 2.2.2
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
