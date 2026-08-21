@@ -105,7 +105,66 @@ terraform-apply: terraform-install
 	kubectl get nodes \
 		-o custom-columns=NAME:.metadata.name,PROVIDER_ID:.spec.providerID,INTERNAL_IP:.status.addresses[0].address
 
+ARGOCD_NAMESPACE ?= argocd
+
 terraform-destroy: terraform-install
+	@if [ -f kubeconfig.yaml ]; then \
+		export KUBECONFIG="$(CURDIR)/kubeconfig.yaml"; \
+		\
+		echo "Deleting Argo CD ApplicationSets..."; \
+		if kubectl get namespace "$(ARGOCD_NAMESPACE)" >/dev/null 2>&1; then \
+			kubectl delete applicationsets.argoproj.io \
+				--all \
+				-n "$(ARGOCD_NAMESPACE)" \
+				--wait=true || true; \
+		else \
+			echo "Argo CD namespace $(ARGOCD_NAMESPACE) does not exist, skipping."; \
+		fi; \
+		\
+		echo "Waiting for Argo CD applications to be removed..."; \
+		for i in $$(seq 1 60); do \
+			count=$$(kubectl get applications.argoproj.io \
+				-n "$(ARGOCD_NAMESPACE)" \
+				--no-headers 2>/dev/null | wc -l); \
+			if [ "$$count" -eq 0 ]; then \
+				echo "All Argo CD applications removed."; \
+				break; \
+			fi; \
+			echo "Still waiting for $$count Argo CD application(s)..."; \
+			sleep 5; \
+		done; \
+		\
+		echo "Uninstalling all Helm releases in all namespaces..."; \
+		helm list --all-namespaces \
+			--output json | \
+		jq -r '.[] | [.namespace, .name] | @tsv' | \
+		while IFS=$$'\t' read -r ns release; do \
+			[ -z "$$ns" ] && continue; \
+			[ -z "$$release" ] && continue; \
+			echo "Uninstalling Helm release $$ns/$$release"; \
+			helm uninstall "$$release" \
+				--namespace "$$ns" \
+				--wait \
+				--timeout 5m || true; \
+		done; \
+		\
+		echo "Deleting remaining Kubernetes LoadBalancer services..."; \
+		kubectl get svc -A \
+			--field-selector spec.type=LoadBalancer \
+			-o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\n"}{end}' | \
+		while IFS=$$'\t' read -r ns name; do \
+			[ -z "$$ns" ] && continue; \
+			[ -z "$$name" ] && continue; \
+			echo "Deleting LoadBalancer service $$ns/$$name"; \
+			kubectl delete svc \
+				-n "$$ns" \
+				"$$name" \
+				--wait=true || true; \
+		done; \
+		\
+		echo "Waiting for HCCM to remove Hetzner Load Balancers..."; \
+		sleep 15; \
+	fi
 	$(TF) destroy
 
 clean:
