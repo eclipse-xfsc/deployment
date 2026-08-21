@@ -57,6 +57,8 @@ spec:
                 value: {{ required "tenant.key is required" $.Values.tenant.key | quote }}
               - name: X-GROUP
                 value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.group | quote }}
+              - name: X-GROUPID
+                value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.group | quote }}
               - name: X-HOST
                 value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
               - name: X-TYPE
@@ -75,6 +77,9 @@ spec:
                 value: {{ printf "%s/api/auth/token" (include "xfsc-tenant-gateway.uri" $) | quote }}
               - name: x-audience-url
                 value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
+              - name: x-signerkey
+                value: {{ required "tenant.key is required" $.Values.tenant.key | quote }}
+                
                 
       backendRefs:
         - group: ""

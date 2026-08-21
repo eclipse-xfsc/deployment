@@ -75,5 +75,5 @@ curl -sS \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "format": "jwt_vc_json"
+    "format": "vc+sd-jwt"
   }' 
