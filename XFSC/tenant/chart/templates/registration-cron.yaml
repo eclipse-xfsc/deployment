@@ -1,0 +1,96 @@
+{{- if .Values.tenantRegistration.enabled }}
+
+{{- $tenantID := required "tenant.id is required" .Values.tenant.id -}}
+
+{{- $subdomain := .Values.tenant.subdomain -}}
+{{- if not $subdomain -}}
+  {{- $subdomain = lower $tenantID | replace "_" "-" -}}
+{{- end -}}
+
+{{- $domain := required "tenant.domain is required" .Values.tenant.domain -}}
+{{- $host := printf "%s.%s" $subdomain $domain -}}
+{{- $baseURL := printf "https://%s" $host -}}
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "tenant.fullname" . }}-registration
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "tenant.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: tenant-registration
+  {{- with .Values.tenantRegistration.cron.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+spec:
+  schedule: {{ .Values.tenantRegistration.cron.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.tenantRegistration.cron.successfulJobsHistoryLimit | default 1 }}
+  failedJobsHistoryLimit: {{ .Values.tenantRegistration.cron.failedJobsHistoryLimit | default 3 }}
+
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.tenantRegistration.job.backoffLimit }}
+
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: {{ include "tenant.name" . }}
+            app.kubernetes.io/instance: {{ .Release.Name }}
+            app.kubernetes.io/component: tenant-registration
+
+        spec:
+          restartPolicy: Never
+
+          containers:
+            - name: register-tenant
+              image: "{{ .Values.tenantRegistration.image.repository }}:{{ .Values.tenantRegistration.image.tag }}"
+              imagePullPolicy: {{ .Values.tenantRegistration.image.pullPolicy }}
+
+              env:
+                - name: TENANT_ID
+                  value: {{ $tenantID | quote }}
+
+                - name: BASE_URL
+                  value: {{ $baseURL | quote }}
+
+                - name: REGISTRATION_SERVICE
+                  value: {{ .Values.tenantRegistration.serviceUrl | quote }}
+
+              command:
+                - /bin/sh
+                - -ec
+
+              args:
+                - |
+                  echo "Registering tenant '${TENANT_ID}'"
+                  echo "Issuer: ${BASE_URL}"
+
+                  curl \
+                    --fail \
+                    --show-error \
+                    --silent \
+                    --retry 10 \
+                    --retry-delay 3 \
+                    --retry-connrefused \
+                    -X PUT \
+                    "${REGISTRATION_SERVICE}/internal/tenants/${TENANT_ID}" \
+                    -H "Content-Type: application/json" \
+                    -d "$(cat <<EOF
+                  {
+                    "credentialIssuer": "${BASE_URL}",
+                    "authorizationServers": [
+                      "${BASE_URL}"
+                    ],
+                    "credentialEndpoint": "${BASE_URL}/api/issuance/credential"
+                  }
+                  EOF
+                  )"
+
+                  echo
+                  echo "Tenant '${TENANT_ID}' registered successfully"
+
+{{- end }}

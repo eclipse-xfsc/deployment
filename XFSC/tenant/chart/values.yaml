@@ -74,6 +74,12 @@ tenantRegistration:
     annotations: {}
     backoffLimit: 6
 
+  cron:
+    schedule: "*/15 * * * *"
+    successfulJobsHistoryLimit: 1
+    failedJobsHistoryLimit: 3
+    annotations: {}
+
 # Routing rules:
 # - path matching is always Exact
 # - /api/<path> automatically rewrites to /v1/tenants/<tenant.id>/<path>
