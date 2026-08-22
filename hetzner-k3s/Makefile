@@ -107,6 +107,9 @@ terraform-apply: terraform-install
 
 ARGOCD_NAMESPACE ?= argocd
 
+terraform-destroy-cluster: terraform-install
+	$(TF) destroy
+
 terraform-destroy: terraform-install
 	@if [ -f kubeconfig.yaml ]; then \
 		export KUBECONFIG="$(CURDIR)/kubeconfig.yaml"; \
