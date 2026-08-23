@@ -15,6 +15,7 @@ curl -sS \
   "${OFFERING_URL}" \
   -H "Content-Type: application/json" \
   -d '{
+    "tenant_id" : "demo_tenant",
     "identifier": "DeveloperCredential",
     "payload": {
       "given_name": "Ada",
@@ -75,5 +76,5 @@ curl -sS \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "format": "vc+sd-jwt"
+    "format": "ldp_vc"
   }' 

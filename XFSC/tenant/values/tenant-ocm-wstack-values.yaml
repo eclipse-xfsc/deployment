@@ -2,11 +2,12 @@ nameOverride: ""
 fullnameOverride: ""
 
 tenant:
-  id: demo_tenant2
+  id: demo_tenant
   groupid: ocm-wstack
 
   namespace: ocm-wstack
-  group: demo-tenant2
+  group: demo-tenant
+  
   # Empty -> derived from tenant.id by lowercasing and replacing '_' with '-'.
   subdomain: ""
   domain: domain.com
@@ -125,6 +126,7 @@ routes:
 
   - name: status-list
     path: /api/status
+    pathType: PathPrefix
     backend:
       name: status-list-service
       port: 8080

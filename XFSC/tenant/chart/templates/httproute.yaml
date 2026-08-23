@@ -23,6 +23,7 @@ spec:
   {{- if $routeEnabled }}
     {{- $path := required (printf "path is required for route %s" $route.name) $route.path }}
     {{- $targetPath := $route.targetPath | default "" }}
+    {{- $pathType := $route.pathType | default "Exact" }}
     {{- if $route.targetPathTemplate }}
       {{- $targetPath = replace "{tenant}" (include "xfsc-tenant-gateway.tenantId" $) $route.targetPathTemplate }}
     {{- else if and (hasPrefix "/api/" $path) (not $targetPath) }}
@@ -31,7 +32,7 @@ spec:
     - name: {{ $route.name | trunc 63 | trimSuffix "-" }}
       matches:
         - path:
-            type: Exact
+            type: {{ $pathType }}
             value: {{ $path | quote }}
           {{- with $route.method }}
           method: {{ . | quote }}
@@ -41,8 +42,13 @@ spec:
         - type: URLRewrite
           urlRewrite:
             path:
+              {{- if eq $pathType "PathPrefix" }}
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ $targetPath | quote }}
+              {{- else }}
               type: ReplaceFullPath
               replaceFullPath: {{ $targetPath | quote }}
+              {{- end }}
         {{- end }}
         - type: RequestHeaderModifier
           requestHeaderModifier:
@@ -67,8 +73,6 @@ spec:
                 value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
               - name: X-ENGINE
                 value: "transit"
-              - name: X-Nonce
-                value: 34jkjefd012x13jcnyyyy
               - name: X-Issuer
                 value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
               - name: X-JWKS-URL
@@ -78,9 +82,7 @@ spec:
               - name: x-audience-url
                 value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
               - name: x-signerkey
-                value: {{ required "tenant.key is required" $.Values.tenant.key | quote }}
-                
-                
+                value: {{ required "tenant.key is required" $.Values.tenant.key | quote }}        
       backendRefs:
         - group: ""
           kind: Service
