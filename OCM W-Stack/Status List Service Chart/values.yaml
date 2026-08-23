@@ -5,7 +5,7 @@ status-list-service:
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
     name: status-list-service
-    tag: 1.1.0
+    tag: 1.1.2
     pullPolicy: Always
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
