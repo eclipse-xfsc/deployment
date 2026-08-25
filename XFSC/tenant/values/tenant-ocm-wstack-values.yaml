@@ -55,7 +55,7 @@ openbao:
     annotations: {}
   transit:
     # Empty -> tenant.id
-    mountPath: "ocm-wstack/demo-tenant2"
+    mountPath: "ocm-wstack/demo-tenant"
     keyType: ecdsa-p256
     additionalKeys: []
   job:
