@@ -1,4 +1,4 @@
-tag: k8s-bootstrap
+tag: oidvci10
 path: "OCM W-Stack/*"
 name: ocm-wstack
 namespace: ocm-wstack
