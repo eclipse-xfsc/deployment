@@ -30,6 +30,10 @@ echo "$OFFER_RESPONSE" | jq .
 
 OFFER_URI="$(echo "$OFFER_RESPONSE" | jq -r '.offer.credential_offer')"
 
+qrencode -t PNG -o qr.png $OFFER_URI
+
+read
+
 ENCODED_OFFER="$(
 python3 - "$OFFER_URI" <<'PY'
 import sys

@@ -109,6 +109,12 @@ routes:
       name: pre-authorization-bridge-service
       port: 8080
 
+  - name: oauth-authorization-server
+    path: /.well-known/oauth-authorization-server
+    backend:
+      name: pre-authorization-bridge-service
+      port: 8080
+
   - name: pre-authorization-token
     method: POST
     path: /api/auth/token
