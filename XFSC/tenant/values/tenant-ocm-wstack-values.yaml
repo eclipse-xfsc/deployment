@@ -76,6 +76,12 @@ routes:
       name: issuance-service
       port: 8080
 
+  - name: credential-issuance-nonce
+    path: /api/nonce
+    backend:
+      name: issuance-service
+      port: 8080
+
   - name: credential-offering
     path: /api/offering
     backend:
