@@ -1,7 +1,7 @@
 apiVersion: v2
 name: pre-authorization-bridge
 description: pre-authorization-bridge deployment
-version: 0.1.3
+version: 0.1.4
 dependencies:
   - name: pre-authorization-bridge
     version: 2.5.3-oidvci10.helm
