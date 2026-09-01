@@ -1,6 +1,6 @@
 sd-jwt-service:
   image:
     name: sd-jwt-service
-    tag: "1.2.4"
+    tag: "1.2.7"
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
