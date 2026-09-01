@@ -1,6 +1,6 @@
 well-known-service:
   image: 
-    tag: 1.5.1-oidvci10
+    tag: 1.5.2-oidvci10
     pullPolicy: Always
   podAnnotations: 
     inject.xfsc.io/enabled: "true"
