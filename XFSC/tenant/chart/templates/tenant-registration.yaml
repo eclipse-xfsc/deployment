@@ -76,8 +76,8 @@ spec:
                 "authorizationServers": [
                   "${BASE_URL}"
                 ],
-                "credentialEndpoint": "${BASE_URL}/api/issuance/credential",
-                "nonceEndpoint": "${BASE_URL}/api/issuance/credential"
+                "credentialEndpoint": "${BASE_URL}/api/credential",
+                "nonceEndpoint": "${BASE_URL}/api/nonce"
               }
               EOF
               )"

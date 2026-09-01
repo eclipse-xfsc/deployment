@@ -2,11 +2,11 @@ nameOverride: ""
 fullnameOverride: ""
 
 tenant:
-  id: demo_tenant
+  id: demo_tenant2
   groupid: ocm-wstack
 
   namespace: ocm-wstack
-  group: demo-tenant
+  group: demo-tenant2
   
   # Empty -> derived from tenant.id by lowercasing and replacing '_' with '-'.
   subdomain: ""
@@ -55,7 +55,7 @@ openbao:
     annotations: {}
   transit:
     # Empty -> tenant.id
-    mountPath: "ocm-wstack/demo-tenant"
+    mountPath: "ocm-wstack/demo-tenant2"
     keyType: ecdsa-p256
     additionalKeys: []
   job:
