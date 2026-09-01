@@ -1,7 +1,7 @@
 pre-authorization-bridge:
   image: 
     pullPolicy: Always
-    tag: "2.5.4-oidvci10"
+    tag: "2.5.5-oidvci10"
   ingress:
    enabled: false
 
