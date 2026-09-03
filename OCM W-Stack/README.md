@@ -109,3 +109,292 @@ If successful, deployment produces:
 - Ingress secured with the provided TLS certificate.  
 
 ---
+
+# Paradym Integration Specifics
+
+## Overview
+
+The Paradym/Credo integration exposed several important details around
+OID4VCI issuance and SD-JWT VC verification. The most important finding
+was the relationship between the issuer signing key, the `did:web` DID
+Document, and the `assertionMethod` verification relationship.
+
+## Issuer DID
+
+The SD-JWT VC issuer must be consistent with the DID used for issuer key
+resolution.
+
+Instead of:
+
+``` json
+{
+  "iss": "https://demo-tenant2.dccuitl.de"
+}
+```
+
+the working credential used:
+
+``` json
+{
+  "iss": "did:web:demo-tenant2.dccuitl.de"
+}
+```
+
+This allows Paradym/Credo to resolve the issuer through the DID
+Document.
+
+## JWT `kid` and Verification Method
+
+The `kid` in the SD-JWT VC header must point to the corresponding
+verification method in the DID Document.
+
+Working header:
+
+``` json
+{
+  "typ": "dc+sd-jwt",
+  "alg": "ES256",
+  "kid": "did:web:demo-tenant2.dccuitl.de#eckey"
+}
+```
+
+The DID Document therefore needs a matching verification method:
+
+``` json
+{
+  "verificationMethod": [
+    {
+      "id": "did:web:demo-tenant2.dccuitl.de#eckey",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:demo-tenant2.dccuitl.de",
+      "publicKeyJwk": {
+        "alg": "ES256",
+        "crv": "P-256",
+        "kid": "eckey",
+        "kty": "EC",
+        "x": "...",
+        "y": "..."
+      }
+    }
+  ]
+}
+```
+
+## Signing Key Consistency
+
+The public key exposed through `publicKeyJwk` must correspond exactly to
+the private key used to sign the SD-JWT VC.
+
+For an ES256/P-256 key, the `x` and `y` coordinates published in the DID
+Document must belong to the actual signing key.
+
+A correct `kid` is not sufficient if the credential was signed using a
+different private key.
+
+## `assertionMethod` Is Required for the Paradym Integration
+
+This was the key integration-specific finding.
+
+Having the signing key only in `verificationMethod` was not sufficient
+for Paradym/Credo. The verification method also had to be explicitly
+authorized for assertions through `assertionMethod`.
+
+``` json
+{
+  "assertionMethod": [
+    "did:web:demo-tenant2.dccuitl.de#eckey"
+  ]
+}
+```
+
+The relevant DID Document therefore looks like:
+
+``` json
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:web:demo-tenant2.dccuitl.de",
+  "controller": "did:web:demo-tenant2.dccuitl.de",
+  "verificationMethod": [
+    {
+      "id": "did:web:demo-tenant2.dccuitl.de#eckey",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:demo-tenant2.dccuitl.de",
+      "publicKeyJwk": {
+        "alg": "ES256",
+        "crv": "P-256",
+        "kid": "eckey",
+        "kty": "EC",
+        "x": "...",
+        "y": "..."
+      }
+    }
+  ],
+  "assertionMethod": [
+    "did:web:demo-tenant2.dccuitl.de#eckey"
+  ]
+}
+```
+
+After adding `assertionMethod`, Paradym accepted the credential.
+
+## Holder Binding via `cnf.jwk`
+
+Paradym creates a holder key for the credential request and includes its
+public JWK in the OID4VCI proof JWT.
+
+Example proof header:
+
+``` json
+{
+  "alg": "ES256",
+  "typ": "openid4vci-proof+jwt",
+  "jwk": {
+    "kty": "EC",
+    "crv": "P-256",
+    "kid": "...",
+    "x": "...",
+    "y": "..."
+  }
+}
+```
+
+The same holder key must be bound to the issued SD-JWT VC using
+`cnf.jwk`:
+
+``` json
+{
+  "cnf": {
+    "jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "kid": "...",
+      "x": "...",
+      "y": "..."
+    }
+  }
+}
+```
+
+The holder key in `cnf.jwk` must correspond to the key from the
+credential proof. In particular, the `x` and `y` coordinates must match.
+
+## SD-JWT VC Header
+
+The working SD-JWT VC header was:
+
+``` json
+{
+  "typ": "dc+sd-jwt",
+  "alg": "ES256",
+  "kid": "did:web:demo-tenant2.dccuitl.de#eckey"
+}
+```
+
+## VCT
+
+The credential type was exposed as a URL:
+
+``` json
+{
+  "vct": "https://demo-tenant2.dccuitl.de/api/schema/SD_JWT_DEVELOPER_CREDENTIAL"
+}
+```
+
+This URL can also be used to expose the corresponding Type Metadata.
+
+## Status List URI
+
+The status reference must contain a valid and consistently constructed
+URL:
+
+``` json
+{
+  "status": {
+    "status_list": {
+      "idx": 1,
+      "uri": "https://demo-tenant2.dccuitl.de/api/status/2"
+    }
+  }
+}
+```
+
+Care must be taken when constructing this URI. If the status service
+already returns an absolute URL, the issuer must not append that URL to
+the public origin a second time.
+
+## Credential Response
+
+The credential was returned using the OID4VCI credential response
+structure:
+
+``` json
+{
+  "credentials": [
+    {
+      "credential": "<SD-JWT VC>"
+    }
+  ]
+}
+```
+
+## Successful Paradym Verification Flow
+
+``` text
+OID4VCI Credential Request
+        |
+        v
+Proof JWT containing the holder JWK
+        |
+        v
+Holder JWK is propagated into cnf.jwk
+        |
+        v
+SD-JWT VC
+  typ = dc+sd-jwt
+  iss = did:web:demo-tenant2.dccuitl.de
+  kid = did:web:demo-tenant2.dccuitl.de#eckey
+        |
+        v
+Paradym/Credo resolves the issuer DID
+        |
+        v
+DID Document exposes the signing key
+through verificationMethod
+        |
+        v
+assertionMethod authorizes the same key
+for credential assertions
+        |
+        v
+ES256 signature is verified using publicKeyJwk
+        |
+        v
+Holder binding is verified using cnf.jwk
+        |
+        v
+Credential is accepted
+```
+
+## Key Takeaway
+
+For the Paradym/Credo integration, publishing the issuer signing key
+under `verificationMethod` alone was not sufficient.
+
+The signing key used for the SD-JWT VC also had to be explicitly
+referenced by `assertionMethod`:
+
+``` json
+{
+  "assertionMethod": [
+    "did:web:demo-tenant2.dccuitl.de#eckey"
+  ]
+}
+```
+
+This was the decisive missing piece in the integration.
+
+
+
