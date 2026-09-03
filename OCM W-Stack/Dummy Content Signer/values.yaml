@@ -1,6 +1,6 @@
 dummycontentsigner:
   image:
-    tag: 2.4.2-oidvci10
+    tag: 2.4.3-oidvci10
     pullPolicy: Always
 
   podAnnotations: 
