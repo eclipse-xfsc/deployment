@@ -1,7 +1,7 @@
 issuance-service:
   image:
     pullPolicy: Always
-    tag: 1.8.2-oidvci10
+    tag: 1.8.3-oidvci10
 
   ingress:
    enabled: false
