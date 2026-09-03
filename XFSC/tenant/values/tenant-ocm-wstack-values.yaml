@@ -88,6 +88,14 @@ routes:
       name: credential-retrieval-service
       port: 8080
 
+  - name: vctschema
+    pathType: PathPrefix
+    path: /api/schema
+    targetPath: /api/schema
+    backend:
+      name: dummycontentsigner
+      port: 8080
+
   - name: offering-create
     method: POST
     path: /test/offering/create
@@ -156,7 +164,7 @@ routes:
     backend:
       name: signer
       port: 8080
-
+  
   - name: did-configuration
     path: /.well-known/did-configuration.json
     targetPath: /v1/did/configuration

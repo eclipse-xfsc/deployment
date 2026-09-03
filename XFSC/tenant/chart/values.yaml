@@ -33,7 +33,8 @@ listenerSet:
       from: Same
 
 httpRoute:
-  annotations: {}
+  annotations:
+    external-dns.alpha.kubernetes.io/ttl: "240"
 
 openbao:
   enabled: true

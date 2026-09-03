@@ -15,12 +15,11 @@ curl -sS \
   "${OFFERING_URL}" \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id" : "demo_tenant",
+    "tenant_id" : "demo_tenant2",
     "identifier": "SDJWTCredential",
     "payload": {
       "given_name": "Ada",
-      "family_name": "Lovelace",
-      "vct":"SD_JWT_DEVELOPER_CREDENTIAL"
+      "family_name": "Lovelace"
     }
   }'
 )"
@@ -30,7 +29,7 @@ echo "$OFFER_RESPONSE" | jq .
 
 OFFER_URI="$(echo "$OFFER_RESPONSE" | jq -r '.offer.credential_offer')"
 
-qrencode -t PNG -o qr.png $OFFER_URI
+qrencode -t PNG -o ${PWD}/qr.png $OFFER_URI
 
 read
 

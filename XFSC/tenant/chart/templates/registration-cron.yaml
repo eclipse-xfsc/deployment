@@ -86,7 +86,9 @@ spec:
                       "${BASE_URL}"
                     ],
                     "credentialEndpoint": "${BASE_URL}/api/credential",
-                    "nonceEndpoint": "${BASE_URL}/api/nonce"
+                    "nonceEndpoint": "${BASE_URL}/api/nonce",
+                    "statusEndpoint": "${BASE_URL}/api/status",
+                    "schemaEndpoint": "${BASE_URL}/api/schema"
                   }
                   EOF
                   )"
