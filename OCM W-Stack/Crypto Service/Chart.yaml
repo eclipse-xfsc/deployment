@@ -2,7 +2,7 @@ apiVersion: v1
 appVersion: v1.0.0
 description: Crypto Service Helm Chart
 name: cryptoservice
-version: 1.0.23
+version: 1.0.24
 dependencies:
   - name: signer
     version: 2.3.2-oidvci10.helm
