@@ -15,7 +15,7 @@ curl -sS \
   "${OFFERING_URL}" \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id" : "demo_tenant2",
+    "tenant_id" : "demo-tenant",
     "identifier": "SDJWTCredential",
     "payload": {
       "given_name": "Ada",

@@ -128,7 +128,7 @@ Instead of:
 
 ``` json
 {
-  "iss": "https://demo-tenant2.dccuitl.de"
+  "iss": "https://demo-tenant.dccuitl.de"
 }
 ```
 
@@ -136,7 +136,7 @@ the working credential used:
 
 ``` json
 {
-  "iss": "did:web:demo-tenant2.dccuitl.de"
+  "iss": "did:web:demo-tenant.dccuitl.de"
 }
 ```
 
@@ -154,7 +154,7 @@ Working header:
 {
   "typ": "dc+sd-jwt",
   "alg": "ES256",
-  "kid": "did:web:demo-tenant2.dccuitl.de#eckey"
+  "kid": "did:web:demo-tenant.dccuitl.de#eckey"
 }
 ```
 
@@ -164,9 +164,9 @@ The DID Document therefore needs a matching verification method:
 {
   "verificationMethod": [
     {
-      "id": "did:web:demo-tenant2.dccuitl.de#eckey",
+      "id": "did:web:demo-tenant.dccuitl.de#eckey",
       "type": "JsonWebKey2020",
-      "controller": "did:web:demo-tenant2.dccuitl.de",
+      "controller": "did:web:demo-tenant.dccuitl.de",
       "publicKeyJwk": {
         "alg": "ES256",
         "crv": "P-256",
@@ -202,7 +202,7 @@ authorized for assertions through `assertionMethod`.
 ``` json
 {
   "assertionMethod": [
-    "did:web:demo-tenant2.dccuitl.de#eckey"
+    "did:web:demo-tenant.dccuitl.de#eckey"
   ]
 }
 ```
@@ -215,13 +215,13 @@ The relevant DID Document therefore looks like:
     "https://www.w3.org/ns/did/v1",
     "https://w3id.org/security/suites/jws-2020/v1"
   ],
-  "id": "did:web:demo-tenant2.dccuitl.de",
-  "controller": "did:web:demo-tenant2.dccuitl.de",
+  "id": "did:web:demo-tenant.dccuitl.de",
+  "controller": "did:web:demo-tenant.dccuitl.de",
   "verificationMethod": [
     {
-      "id": "did:web:demo-tenant2.dccuitl.de#eckey",
+      "id": "did:web:demo-tenant.dccuitl.de#eckey",
       "type": "JsonWebKey2020",
-      "controller": "did:web:demo-tenant2.dccuitl.de",
+      "controller": "did:web:demo-tenant.dccuitl.de",
       "publicKeyJwk": {
         "alg": "ES256",
         "crv": "P-256",
@@ -233,7 +233,7 @@ The relevant DID Document therefore looks like:
     }
   ],
   "assertionMethod": [
-    "did:web:demo-tenant2.dccuitl.de#eckey"
+    "did:web:demo-tenant.dccuitl.de#eckey"
   ]
 }
 ```
@@ -289,7 +289,7 @@ The working SD-JWT VC header was:
 {
   "typ": "dc+sd-jwt",
   "alg": "ES256",
-  "kid": "did:web:demo-tenant2.dccuitl.de#eckey"
+  "kid": "did:web:demo-tenant.dccuitl.de#eckey"
 }
 ```
 
@@ -299,7 +299,7 @@ The credential type was exposed as a URL:
 
 ``` json
 {
-  "vct": "https://demo-tenant2.dccuitl.de/api/schema/SD_JWT_DEVELOPER_CREDENTIAL"
+  "vct": "https://demo-tenant.dccuitl.de/api/schema/SD_JWT_DEVELOPER_CREDENTIAL"
 }
 ```
 
@@ -315,7 +315,7 @@ URL:
   "status": {
     "status_list": {
       "idx": 1,
-      "uri": "https://demo-tenant2.dccuitl.de/api/status/2"
+      "uri": "https://demo-tenant.dccuitl.de/api/status/2"
     }
   }
 }
@@ -354,8 +354,8 @@ Holder JWK is propagated into cnf.jwk
         v
 SD-JWT VC
   typ = dc+sd-jwt
-  iss = did:web:demo-tenant2.dccuitl.de
-  kid = did:web:demo-tenant2.dccuitl.de#eckey
+  iss = did:web:demo-tenant.dccuitl.de
+  kid = did:web:demo-tenant.dccuitl.de#eckey
         |
         v
 Paradym/Credo resolves the issuer DID
@@ -389,7 +389,7 @@ referenced by `assertionMethod`:
 ``` json
 {
   "assertionMethod": [
-    "did:web:demo-tenant2.dccuitl.de#eckey"
+    "did:web:demo-tenant.dccuitl.de#eckey"
   ]
 }
 ```
