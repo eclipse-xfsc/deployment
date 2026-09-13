@@ -1,3 +1,4 @@
+./basic-cluster-init.sh
 helm install -n security ocm-wstack-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/ocm-wstack-values.yaml
 
 # OCM W- Stack
