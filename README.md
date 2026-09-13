@@ -63,8 +63,8 @@ The network provides essential network components which are required to bootstra
 |Component|Purpose|Mandatory|Install Prio|
 |--|--|--|--|
 |[Cert Manager](https://cert-manager.io)|Cert Manager is used for let's encrypt certifcates. The package installs an DNS based resolver. |✅ |0|
-|[Ingress](https://developer.konghq.com/kubernetes-ingress-controller/)|The ingress manages the incoming traffic for the cluster. In this case Kong Ingress is used.|✅|1|
-|[Power DNS](https://github.com/PowerDNS/pdns)|Power DNS is an RFC compliant dns for usage together with cert manager|✅ |2|
+| [Envoy Gateway](https://github.com/envoyproxy/gateway) | Envoy Gateway manages incoming traffic for the cluster using the Kubernetes Gateway API. | ✅ | 1 |
+| [BIND9](https://www.isc.org/bind/) | BIND9 provides the authoritative DNS service and DNSSEC support for TRAIN trust zones. | ✅ | 2 |
 |[External DNS](https://github.com/kubernetes-sigs/external-dns)|External DNS manages the connection between ingress and dns.|✅|3|
 
 ## Core
@@ -73,7 +73,6 @@ The core layer consits basic tools which are required for operating the xfsc sta
 
 |Component|Purpose|Mandatory|Install Prio|
 |--|--|--|--|
-
 |[Nats](https://nats.io)| Nats is used as light weight message bus to provide for the application and eventing system. |✅|3|
 |[Universal Resolver](https://github.com/decentralized-identity/universal-resolver/)| The universal resolver provides for applications the capability to resolve DIDs. |✅|3|
 

@@ -56,4 +56,23 @@ helm repo add kyverno https://kyverno.github.io/kyverno/
 helm dependency build INFRA/security/kyverno
 helm install -n security kyverno INFRA/security/kyverno
 ./argocd-bootstrap.sh
-./applicationset-init.sh $PROFILE $DOMAIN $DNSTOKEN $EMAIL
+
+helm install -n security infrastructure-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/infra-values.yaml
+
+helm dependency build INFRA/kubernetes-operator
+helm install -n security kubernetes-operator INFRA/kubernetes-operator
+
+STORAGE_CLASS=$(kubectl get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}')
+
+kubectl create secret generic external-dns \
+  -n infrastructure \
+  --from-literal=token="$TOKEN"
+
+#helm install -n infrastructure basic XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/02_basic-values.yaml --set storageClass="$STORAGE_CLASS"
+#./check-applicationset.sh storage argocd
+helm install -n infrastructure storage XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/03_storage-values.yaml --set storageClass="$STORAGE_CLASS"
+./check-applicationset.sh storage argocd
+helm install -n infrastructure network XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/04_network-values.yaml --set storageClass="$STORAGE_CLASS" --set profile="$PROFILE" --set domain="$DOMAIN" --set email="$EMAIL" 
+./check-applicationset.sh network argocd
+helm install -n infrastructure core XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/05_core-values.yaml --set storageClass="$STORAGE_CLASS"
+./check-applicationset.sh core argocd

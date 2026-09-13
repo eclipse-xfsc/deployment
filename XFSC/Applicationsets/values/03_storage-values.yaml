@@ -1,4 +1,4 @@
-tag: k8s-bootstrap
+tag: main
 path: INFRA/storage/*
 name: storage
 namespace: infrastructure

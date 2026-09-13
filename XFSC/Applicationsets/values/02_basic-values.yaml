@@ -1,4 +1,4 @@
-tag: k8s-bootstrap
+tag: main
 path: INFRA/basic/*
 name: basic
 namespace: infrastructure
