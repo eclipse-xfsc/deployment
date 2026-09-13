@@ -1,0 +1,11 @@
+apiVersion: v2
+name: xfsc-redis-operator
+description: XFSC wrapper for the OpsTree Redis Operator
+type: application
+version: 0.1.0
+appVersion: "0.25.0"
+
+dependencies:
+  - name: redis-operator
+    version: "0.25.0"
+    repository: "https://ot-container-kit.github.io/helm-charts/"

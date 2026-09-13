@@ -1,0 +1,57 @@
+{{- if .Values.monitoring.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-grafana-datasources
+  namespace: {{ .Release.Namespace }}
+  labels:
+    grafana_datasource: "1"
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://{{ .Release.Name }}-monitoring-prometheus.{{ .Release.Namespace }}.svc.cluster.local:9090
+        isDefault: true
+        editable: true
+
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://{{ .Release.Name }}-loki.{{ .Release.Namespace }}.svc.cluster.local:3100
+        editable: true
+
+      - name: Tempo
+        uid: tempo
+        type: tempo
+        access: proxy
+        url: http://{{ .Release.Name }}-tempo.{{ .Release.Namespace }}.svc.cluster.local:3200
+        editable: true
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: loki
+          tracesToMetrics:
+            datasourceUid: prometheus
+          serviceMap:
+            datasourceUid: prometheus
+
+      - name: Alertmanager
+        uid: alertmanager
+        type: alertmanager
+        access: proxy
+        url: http://{{ .Release.Name }}-monitoring-alertmanager.{{ .Release.Namespace }}.svc.cluster.local:9093
+        editable: true
+        jsonData:
+          implementation: prometheus
+
+      - name: Jaeger
+        uid: jaeger
+        type: jaeger
+        access: proxy
+        url: http://{{ .Release.Name }}-jaeger-query.{{ .Release.Namespace }}.svc.cluster.local:16686
+        editable: true
+{{- end }}

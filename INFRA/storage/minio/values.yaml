@@ -1,0 +1,73 @@
+global: 
+  storageClass: 
+openbao:
+  address: http://openbao.security.svc.cluster.local:8200
+  authPath: kubernetes
+  role: xfsc-infrastructure-resource-provisioner
+  kvMount: infrastructure/system
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+  secretStore:
+    enabled: true
+    name: openbao
+
+openbaoInit:
+  enabled: true
+  image:
+    repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
+    tag: latest
+    pullPolicy: Always
+  secretPath: ""
+  values:
+    root-user: minio-root
+    root-password: '$RANDOM_64'
+
+externalSecret:
+  enabled: true
+  apiVersion: external-secrets.io/v1
+  refreshInterval: 15m
+  target:
+    name: ""
+    creationPolicy: Owner
+    deletionPolicy: Retain
+
+tenant:
+  # Wichtig: Deprecated/default secrets des Dependency-Charts leeren.
+  secrets: []
+
+  tenant:
+    name: minio
+
+    image:
+      repository: quay.io/minio/minio
+      tag: RELEASE.2025-04-08T15-41-24Z
+      pullPolicy: IfNotPresent
+
+    configuration:
+      name: minio-env
+
+    configSecret:
+      name: minio-env
+      existingSecret: true
+      accessKey: ""
+      secretKey: ""
+
+    pools:
+      - name: pool-0
+        servers: 1
+        volumesPerServer: 1
+        size: 20Gi
+        storageClassName: ""
+
+    requestAutoCert: true
+    users: []
+
+resourceProvider:
+  enabled: true
+  name: ""
+  scope: Cluster
+  description: S3-compatible connection provided by this MinIO Tenant.
+  allow:
+    namespaces: []
+  region: us-east-1
+  pathStyle: "true"

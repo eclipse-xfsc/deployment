@@ -1,0 +1,557 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-bootstrap
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-bootstrap
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: openbao-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "20"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 3
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Release.Name }}-bootstrap
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: openbao-bootstrap
+
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ .Release.Name }}-bootstrap
+
+      containers:
+        - name: bootstrap
+          image: bitnami/kubectl:latest
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -o pipefail
+
+              RELEASE_NAME="{{ .Release.Name }}"
+              NAMESPACE="{{ .Release.Namespace }}"
+
+              OPENBAO_POD="${RELEASE_NAME}-0"
+              OPENBAO_SERVICE="${RELEASE_NAME}"
+
+              OPENBAO_INTERNAL_ADDR="http://127.0.0.1:8200"
+              OPENBAO_EXTERNAL_ADDR="http://${OPENBAO_SERVICE}.${NAMESPACE}.svc.cluster.local:8200"
+
+              KUBERNETES_AUTH_PATH="kubernetes"
+
+              BOOTSTRAP_SECRET_NAME="${RELEASE_NAME}-bootstrap-root"
+
+              PROVISIONER_SERVICE_ACCOUNT="{{ .Values.provisioner.serviceAccount.name }}"
+              PROVISIONER_POLICY="{{ .Values.provisioner.policyName }}"
+              PROVISIONER_ROLE="{{ .Values.provisioner.roleName }}"
+              MANAGED_RESOURCE_PREFIX="{{ .Values.provisioner.managedResourcePrefix }}"
+
+              PROVISIONER_TOKEN_TTL="{{ .Values.provisioner.tokenTTL }}"
+              PROVISIONER_TOKEN_MAX_TTL="{{ .Values.provisioner.tokenMaxTTL }}"
+
+              STORE_BOOTSTRAP_MATERIAL="{{ .Values.bootstrap.storeBootstrapMaterial }}"
+
+              bao_exec() {
+                kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- "$@"
+              }
+
+              bao_exec_root() {
+                local command="$1"
+
+                kubectl -n "$NAMESPACE" exec "$OPENBAO_POD" -- \
+                  sh -ec "
+                    export BAO_ADDR='$OPENBAO_INTERNAL_ADDR'
+                    export BAO_TOKEN='$ROOT_TOKEN'
+
+                    $command
+                  "
+              }
+
+              echo "Waiting for OpenBao pod ${NAMESPACE}/${OPENBAO_POD}..."
+
+              until kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" >/dev/null 2>&1; do
+                sleep 3
+              done
+
+              echo "Waiting for OpenBao pod to become Running..."
+
+              for i in $(seq 1 120); do
+                PHASE="$(
+                  kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" \
+                    -o jsonpath='{.status.phase}' 2>/dev/null || true
+                )"
+
+                if [ "$PHASE" = "Running" ]; then
+                  break
+                fi
+
+                echo "Current pod phase: ${PHASE:-unknown}"
+                sleep 3
+              done
+
+              if [ "$(
+                kubectl -n "$NAMESPACE" get pod "$OPENBAO_POD" \
+                  -o jsonpath='{.status.phase}'
+              )" != "Running" ]; then
+                echo "OpenBao pod did not reach Running phase."
+                exit 1
+              fi
+
+              echo "Waiting for OpenBao API..."
+
+              STATUS=""
+
+              for i in $(seq 1 120); do
+                set +e
+
+                STATUS="$(
+                  bao_exec \
+                    sh -c "BAO_ADDR='$OPENBAO_INTERNAL_ADDR' bao status" \
+                    2>&1
+                )"
+
+                STATUS_RC=$?
+
+                set -e
+
+                echo "$STATUS"
+
+                if echo "$STATUS" | grep -q "Initialized"; then
+                  break
+                fi
+
+                sleep 3
+              done
+
+              if ! echo "$STATUS" | grep -q "Initialized"; then
+                echo "OpenBao API did not return a valid status."
+                exit 1
+              fi
+
+              INITIALIZED="$(
+                echo "$STATUS" \
+                  | awk '/Initialized/ {print tolower($2); exit}'
+              )"
+
+              SEALED="$(
+                echo "$STATUS" \
+                  | awk '/Sealed/ {print tolower($2); exit}'
+              )"
+
+              if [ "$INITIALIZED" != "true" ]; then
+                echo "Initializing OpenBao..."
+
+                INIT_OUTPUT="$(
+                  bao_exec \
+                    sh -c "
+                      BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                        bao operator init \
+                          -key-shares=5 \
+                          -key-threshold=3
+                    "
+                )"
+
+                UNSEAL_KEY_1="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 1/ {print $2}'
+                )"
+
+                UNSEAL_KEY_2="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 2/ {print $2}'
+                )"
+
+                UNSEAL_KEY_3="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 3/ {print $2}'
+                )"
+
+                UNSEAL_KEY_4="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 4/ {print $2}'
+                )"
+
+                UNSEAL_KEY_5="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Unseal Key 5/ {print $2}'
+                )"
+
+                ROOT_TOKEN="$(
+                  echo "$INIT_OUTPUT" \
+                    | awk -F': ' '/Initial Root Token/ {print $2}'
+                )"
+
+                if [ -z "$ROOT_TOKEN" ] \
+                  || [ -z "$UNSEAL_KEY_1" ] \
+                  || [ -z "$UNSEAL_KEY_2" ] \
+                  || [ -z "$UNSEAL_KEY_3" ]; then
+                  echo "Failed to parse OpenBao initialization output."
+                  exit 1
+                fi
+
+                echo "Unsealing OpenBao..."
+
+                bao_exec \
+                  sh -c "
+                    BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                      bao operator unseal '$UNSEAL_KEY_1' >/dev/null
+                  "
+
+                bao_exec \
+                  sh -c "
+                    BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                      bao operator unseal '$UNSEAL_KEY_2' >/dev/null
+                  "
+
+                bao_exec \
+                  sh -c "
+                    BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                      bao operator unseal '$UNSEAL_KEY_3' >/dev/null
+                  "
+
+                if [ "$STORE_BOOTSTRAP_MATERIAL" = "true" ]; then
+                  echo "Persisting bootstrap material in Kubernetes Secret..."
+
+                  kubectl -n "$NAMESPACE" create secret generic \
+                    "$BOOTSTRAP_SECRET_NAME" \
+                    --from-literal=root_token="$ROOT_TOKEN" \
+                    --from-literal=unseal_key_1="$UNSEAL_KEY_1" \
+                    --from-literal=unseal_key_2="$UNSEAL_KEY_2" \
+                    --from-literal=unseal_key_3="$UNSEAL_KEY_3" \
+                    --from-literal=unseal_key_4="$UNSEAL_KEY_4" \
+                    --from-literal=unseal_key_5="$UNSEAL_KEY_5" \
+                    --dry-run=client \
+                    -o yaml \
+                    | kubectl label \
+                        --local \
+                        -f - \
+                        app.kubernetes.io/name="$RELEASE_NAME" \
+                        app.kubernetes.io/instance="$RELEASE_NAME" \
+                        app.kubernetes.io/component=openbao-bootstrap \
+                        -o yaml \
+                    | kubectl apply -f -
+                fi
+
+              else
+                echo "OpenBao is already initialized."
+
+                ROOT_TOKEN="$(
+                  kubectl -n "$NAMESPACE" get secret "$BOOTSTRAP_SECRET_NAME" \
+                    -o jsonpath='{.data.root_token}' 2>/dev/null \
+                    | base64 -d 2>/dev/null || true
+                )"
+
+                UNSEAL_KEY_1="$(
+                  kubectl -n "$NAMESPACE" get secret "$BOOTSTRAP_SECRET_NAME" \
+                    -o jsonpath='{.data.unseal_key_1}' 2>/dev/null \
+                    | base64 -d 2>/dev/null || true
+                )"
+
+                UNSEAL_KEY_2="$(
+                  kubectl -n "$NAMESPACE" get secret "$BOOTSTRAP_SECRET_NAME" \
+                    -o jsonpath='{.data.unseal_key_2}' 2>/dev/null \
+                    | base64 -d 2>/dev/null || true
+                )"
+
+                UNSEAL_KEY_3="$(
+                  kubectl -n "$NAMESPACE" get secret "$BOOTSTRAP_SECRET_NAME" \
+                    -o jsonpath='{.data.unseal_key_3}' 2>/dev/null \
+                    | base64 -d 2>/dev/null || true
+                )"
+
+                if [ "$SEALED" = "true" ]; then
+                  if [ -z "$UNSEAL_KEY_1" ] \
+                    || [ -z "$UNSEAL_KEY_2" ] \
+                    || [ -z "$UNSEAL_KEY_3" ]; then
+                    echo "OpenBao is sealed, but unseal keys are unavailable."
+                    exit 1
+                  fi
+
+                  echo "Unsealing existing OpenBao instance..."
+
+                  bao_exec \
+                    sh -c "
+                      BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                        bao operator unseal '$UNSEAL_KEY_1' >/dev/null
+                    "
+
+                  bao_exec \
+                    sh -c "
+                      BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                        bao operator unseal '$UNSEAL_KEY_2' >/dev/null
+                    "
+
+                  bao_exec \
+                    sh -c "
+                      BAO_ADDR='$OPENBAO_INTERNAL_ADDR' \
+                        bao operator unseal '$UNSEAL_KEY_3' >/dev/null
+                    "
+                fi
+
+                if [ -z "$ROOT_TOKEN" ]; then
+                  echo "OpenBao is initialized, but no bootstrap root token is available."
+                  echo "The provisioner configuration cannot be reconciled."
+                  exit 1
+                fi
+              fi
+
+              echo "Validating root token..."
+
+              bao_exec_root "
+                bao token lookup >/dev/null
+              "
+
+              echo "Ensuring Kubernetes authentication method..."
+
+              bao_exec_root "
+                bao auth enable \
+                  -path='$KUBERNETES_AUTH_PATH' \
+                  kubernetes >/dev/null 2>&1 || true
+              "
+
+              echo "Configuring Kubernetes authentication..."
+
+              bao_exec_root "
+                bao write \
+                  'auth/$KUBERNETES_AUTH_PATH/config' \
+                  kubernetes_host='https://kubernetes.default.svc' \
+                  disable_local_ca_jwt='false'
+              "
+
+              echo "Writing generic provisioner policy..."
+
+              kubectl -n "$NAMESPACE" exec -i "$OPENBAO_POD" -- \
+                sh -c "cat > /tmp/${PROVISIONER_POLICY}.hcl" <<POLICY_EOF
+              # ------------------------------------------------------------
+              # Secret-engine management
+              # ------------------------------------------------------------
+
+              path "sys/mounts" {
+                capabilities = [
+                  "read",
+                  "list"
+                ]
+              }
+
+              path "sys/mounts/*" {
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list",
+                  "sudo"
+                ]
+              }
+
+              path "+/data/*" {
+                capabilities = ["create", "read", "update", "delete"]
+              }
+
+              path "+/metadata/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              path "+/+/data/*" {
+                capabilities = ["create", "read", "update", "delete"]
+              }
+
+              path "+/+/metadata/*" {
+                capabilities = ["create", "read", "update", "delete", "list"]
+              }
+
+              # ------------------------------------------------------------
+              # Managed ACL policies
+              #
+              # Downstream charts may only manage policies using the
+              # configured prefix, for example:
+              #
+              #   ${MANAGED_RESOURCE_PREFIX}infrastructure-resource
+              #   ${MANAGED_RESOURCE_PREFIX}infrastructure-store-reader
+              # ------------------------------------------------------------
+
+              path "sys/policies/acl/${MANAGED_RESOURCE_PREFIX}*" {
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
+              }
+
+              # ------------------------------------------------------------
+              # Managed Kubernetes authentication roles
+              # ------------------------------------------------------------
+
+              path "auth/${KUBERNETES_AUTH_PATH}/role" {
+                capabilities = [
+                  "read",
+                  "list"
+                ]
+              }
+
+              path "auth/${KUBERNETES_AUTH_PATH}/role/${MANAGED_RESOURCE_PREFIX}*" {
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
+              }
+
+              # ------------------------------------------------------------
+              # Managed token roles
+              #
+              # Downstream charts can create token roles such as:
+              #
+              #   xfsc-infrastructure-resource-token
+              #
+              # The token role controls the permitted policies, TTL,
+              # renewability and orphan behavior of generated tokens.
+              # ------------------------------------------------------------
+
+              path "auth/token/roles" {
+                capabilities = [
+                  "read",
+                  "list"
+                ]
+              }
+
+              path "auth/token/roles/${MANAGED_RESOURCE_PREFIX}*" {
+                capabilities = [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
+              }
+
+              # ------------------------------------------------------------
+              # Token creation through managed token roles
+              #
+              # Example:
+              #
+              #   auth/token/create/xfsc-infrastructure-resource-token
+              # ------------------------------------------------------------
+
+              path "auth/token/create/${MANAGED_RESOURCE_PREFIX}*" {
+                capabilities = [
+                  "create",
+                  "update",
+                  "sudo"
+                ]
+              }
+
+              # Optional fallback for jobs which explicitly create orphan
+              # tokens without using a managed token role.
+              #
+              # Prefer auth/token/create/<managed-role> whenever possible.
+              path "auth/token/create-orphan" {
+                capabilities = [
+                  "create",
+                  "update",
+                  "sudo"
+                ]
+              }
+
+              # ------------------------------------------------------------
+              # Token inspection and renewal
+              # ------------------------------------------------------------
+
+              path "auth/token/lookup-self" {
+                capabilities = [
+                  "read"
+                ]
+              }
+
+              path "auth/token/renew-self" {
+                capabilities = [
+                  "update"
+                ]
+              }
+              POLICY_EOF
+
+              echo "Installing provisioner policy ${PROVISIONER_POLICY}..."
+
+              bao_exec_root "
+                bao policy write \
+                  '$PROVISIONER_POLICY' \
+                  '/tmp/${PROVISIONER_POLICY}.hcl'
+              "
+
+              echo "Creating OpenBao Kubernetes role for the provisioner..."
+
+              bao_exec_root "
+                bao write \
+                  'auth/$KUBERNETES_AUTH_PATH/role/$PROVISIONER_ROLE' \
+                  bound_service_account_names='$PROVISIONER_SERVICE_ACCOUNT' \
+                  bound_service_account_namespaces='$NAMESPACE' \
+                  policies='$PROVISIONER_POLICY' \
+                  token_ttl='$PROVISIONER_TOKEN_TTL' \
+                  token_max_ttl='$PROVISIONER_TOKEN_MAX_TTL'
+              "
+
+              echo "Validating provisioner configuration..."
+
+              bao_exec_root "
+                bao policy read '$PROVISIONER_POLICY' >/dev/null
+                bao read \
+                  'auth/$KUBERNETES_AUTH_PATH/role/$PROVISIONER_ROLE' \
+                  >/dev/null
+              "
+
+              echo "Writing provisioner discovery ConfigMap..."
+
+              kubectl -n "$NAMESPACE" create configmap \
+                "${RELEASE_NAME}-provisioner" \
+                --from-literal=OPENBAO_ADDR="$OPENBAO_EXTERNAL_ADDR" \
+                --from-literal=OPENBAO_AUTH_PATH="$KUBERNETES_AUTH_PATH" \
+                --from-literal=OPENBAO_PROVISIONER_ROLE="$PROVISIONER_ROLE" \
+                --from-literal=OPENBAO_PROVISIONER_POLICY="$PROVISIONER_POLICY" \
+                --from-literal=OPENBAO_PROVISIONER_SERVICE_ACCOUNT="$PROVISIONER_SERVICE_ACCOUNT" \
+                --from-literal=OPENBAO_PROVISIONER_SERVICE_ACCOUNT_NAMESPACE="$NAMESPACE" \
+                --from-literal=OPENBAO_MANAGED_RESOURCE_PREFIX="$MANAGED_RESOURCE_PREFIX" \
+                --dry-run=client \
+                -o yaml \
+                | kubectl label \
+                    --local \
+                    -f - \
+                    type.xsfc.io=openbao-provisioner \
+                    app.kubernetes.io/name=openbao-provisioner \
+                    app.kubernetes.io/instance="$RELEASE_NAME" \
+                    app.kubernetes.io/component=openbao-provisioner \
+                    -o yaml \
+                | kubectl apply -f -
+
+              echo
+              echo "OpenBao bootstrap completed."
+              echo
+              echo "OpenBao address:"
+              echo "  ${OPENBAO_EXTERNAL_ADDR}"
+              echo
+              echo "Provisioner identity:"
+              echo "  ServiceAccount: ${NAMESPACE}/${PROVISIONER_SERVICE_ACCOUNT}"
+              echo "  OpenBao role:   ${PROVISIONER_ROLE}"
+              echo "  OpenBao policy: ${PROVISIONER_POLICY}"
+              echo
+              echo "Managed resource prefix:"
+              echo "  ${MANAGED_RESOURCE_PREFIX}"
+              echo
+              echo "Provisioner capabilities:"
+              echo "  - manage secret engines"
+              echo "  - manage ${MANAGED_RESOURCE_PREFIX}* ACL policies"
+              echo "  - manage ${MANAGED_RESOURCE_PREFIX}* Kubernetes auth roles"
+              echo "  - manage ${MANAGED_RESOURCE_PREFIX}* token roles"
+              echo "  - create service tokens through managed token roles"
+              echo "  - create orphan tokens"

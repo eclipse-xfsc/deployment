@@ -1,0 +1,28 @@
+targetNamespace:
+  create: true
+  name: tenants
+  labels:
+    xsfc.io/zone: tenants
+
+openbao:
+  storeMountPath: tenants/system
+  storeSecretPrefix: ""
+  resourceProvisioner:
+    engineMountPrefix: tenants-wstack
+    serviceAccount:
+      create: true
+      name: tenants-resource-provisioner
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 0
+      explicitMaxTTL: 0
+
+clusterSecretStore:
+  enabled: true
+  name: tenants-openbao
+  allowedNamespaces: []
+
+secretStore:
+  enabled: true
+  name: openbao

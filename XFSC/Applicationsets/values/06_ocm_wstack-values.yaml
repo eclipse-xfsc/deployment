@@ -1,0 +1,18 @@
+tag: oidvci10
+path: "OCM W-Stack/*"
+name: ocm-wstack
+namespace: ocm-wstack
+matrix: 
+  enabled: false
+revisionHistoryLimit: 3
+excludes: 
+ - "OCM W-Stack/tenant"
+ - "OCM W-Stack/Policies"
+ - "OCM W-Stack/Didcomm"
+ - "OCM W-Stack/Tools"
+project:
+  name: ocm-wstack
+  description: Argo-CD-Projekt für ocm wstack
+sourceRepos: 
+  - https://github.com/eclipse-xfsc/deployment.git
+  - node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack

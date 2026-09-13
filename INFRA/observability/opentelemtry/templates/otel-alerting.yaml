@@ -1,0 +1,38 @@
+# templates/otel-alerts.yaml
+{{- if .Values.alerts.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: otel-collector-alerts
+  namespace: {{ .Values.alerts.namespace | default .Release.Namespace }}
+  labels:
+    release: {{ .Release.Name }}
+spec:
+  groups:
+    - name: otel-collector.rules
+      rules:
+        - alert: OTelCollectorDown
+          expr: up{job=~".*otel.*"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: OpenTelemetry Collector is down
+            description: "Prometheus cannot scrape the OpenTelemetry Collector."
+
+        - alert: OTelCollectorHighMemory
+          expr: process_resident_memory_bytes{job=~".*otel.*"} > 500 * 1024 * 1024
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: OpenTelemetry Collector memory usage is high
+
+        - alert: OTelCollectorExporterQueueGrowing
+          expr: rate(otelcol_exporter_queue_size[5m]) > 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: OpenTelemetry exporter queue is growing
+{{- end }}

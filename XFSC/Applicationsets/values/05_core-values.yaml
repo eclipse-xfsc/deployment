@@ -1,0 +1,16 @@
+tag: k8s-bootstrap
+path: INFRA/core/*
+name: core
+namespace: infrastructure
+matrix: 
+  enabled: false
+revisionHistoryLimit: 3
+project:
+  name: infrastructure
+  description: Argo-CD-Projekt für Infrastruktur-Komponenten
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: infrastructure
+    - server: https://kubernetes.default.svc
+      namespace: kube-system

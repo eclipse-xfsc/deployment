@@ -1,9 +1,0 @@
-ingress:
-  hostname: cloud-wallet.DOMAIN
-  enabled: true
-  tenantName: tenant_space
-  service: 
-    backend: signer
-    port: 8080
-  tls: 
-    secret: xfsc-wildcard

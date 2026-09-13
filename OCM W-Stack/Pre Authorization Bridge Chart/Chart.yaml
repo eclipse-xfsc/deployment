@@ -1,8 +1,8 @@
 apiVersion: v2
 name: pre-authorization-bridge
 description: pre-authorization-bridge deployment
-version: 0.1.0
+version: 0.1.6
 dependencies:
   - name: pre-authorization-bridge
-    version: 1.0.1
+    version: 2.5.6-helm
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack

@@ -5,12 +5,10 @@ status-list-service:
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
     name: status-list-service
-    tag: "latest"
-    sha: ""
+    tag: 1.5.0
     pullPolicy: Always
-    pullSecrets: key
-
-  podAnnotations: {}
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
 
   resources:
     requests:
@@ -20,51 +18,9 @@ status-list-service:
       cpu: 150m
       memory: 128Mi
 
-  ingress:
-    enabled: true
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
-      nginx.ingress.kubernetes.io/configuration-snippet: |
-        proxy_set_header X-DID did:web:cloud-wallet.DOMAIN;
-        proxy_set_header X-NAMESPACE tenant_space;
-        proxy_set_header X-KEY signerkey;
-        proxy_set_header X-GROUP "";
-        proxy_set_header X-HOST cloud-wallet.DOMAIN;
-        proxy_set_header X-TYPE StatusList2021;
-      nginx.ingress.kubernetes.io/rewrite-target: /v1/tenants/tenant_space/status/$2
-    hosts:
-      - host: cloud-wallet.DOMAIN
-        paths:
-          - path: /api/status(/|$)(.*)
-            port: 8080
-            pathType: ImplementationSpecific
-
-    tls:
-      - secretName: xfsc-wildcard
-        hosts:
-          - cloud-wallet.DOMAIN
-
   config:
     messaging:
-      protocol: nats
       nats:
-        url: http://nats.NAMESPACE.svc.cluster.local:4222
-        timeoutInSec: 10s
         queueGroup: statuslistservice
     servingPort: 8083
-    database:
-      secretName: statuslist-db-secret
-      userkey: postgresql-username
-      passwordKey: postgresql-password
-      host: postgres-postgresql.NAMESPACE.svc.cluster.local    
-      port: 5432
-      db: status
-      params: "sslmode:disable"
-    creationTopic: status
-    listSizeInBytes: 125000
-    signerTopic: signer
 
-  postgresql:
-    auth:
-      username: user
-      database: status

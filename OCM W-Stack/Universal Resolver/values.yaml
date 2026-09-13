@@ -1,3 +1,0 @@
-universal-resolver:
-  service:
-    port: 8080

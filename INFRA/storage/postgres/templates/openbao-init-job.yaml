@@ -1,0 +1,65 @@
+{{- if .Values.openbaoInit.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-openbao-init" (include "xfsc-postgresql-cnpg.fullname" .) | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-20"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ .Values.openbao.serviceAccount.name }}
+      containers:
+        - name: openbao-init
+          image: "{{ .Values.openbaoInit.image.repository }}:{{ .Values.openbaoInit.image.tag }}"
+          imagePullPolicy: {{ .Values.openbaoInit.image.pullPolicy | quote }}
+          env:
+            - name: OPENBAO_ADDR
+              value: {{ .Values.openbao.address | quote }}
+            - name: OPENBAO_AUTH_PATH
+              value: {{ .Values.openbao.authPath | quote }}
+            - name: OPENBAO_ROLE
+              value: {{ .Values.openbao.role | quote }}
+            - name: KV_MOUNT
+              value: {{ .Values.openbao.kvMount | quote }}
+            - name: KV_SECRET_PATH
+              value: {{ include "xfsc-postgresql-cnpg.secretPath" . | quote }}
+            - name: SECRET_VALUES
+              value: |-
+{{- range $key, $_ := .Values.openbaoInit.values }}
+                {{ $key }}={{ $key | upper | replace "." "_" | replace "-" "_" }}
+{{- end }}
+{{- range $key, $value := .Values.openbaoInit.values }}
+            - name: {{ $key | upper | replace "." "_" | replace "-" "_" }}
+{{- if kindIs "map" $value }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $value.secretKeyRef.name | quote }}
+                  key: {{ $value.secretKeyRef.key | quote }}
+{{- else }}
+              value: {{ $value | quote }}
+{{- end }}
+{{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+{{- end }}

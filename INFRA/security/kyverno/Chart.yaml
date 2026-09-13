@@ -1,0 +1,11 @@
+apiVersion: v2
+name: kyverno-wrapper
+description: Kyverno Wrapper Chart
+type: application
+version: 1.0.0
+appVersion: "1.15.2"
+
+dependencies:
+  - name: kyverno
+    version: 3.5.2
+    repository: https://kyverno.github.io/kyverno/

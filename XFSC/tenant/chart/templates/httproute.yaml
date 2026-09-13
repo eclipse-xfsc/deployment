@@ -1,0 +1,95 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "xfsc-tenant-gateway.fullname" . }}
+  labels:
+    {{- include "xfsc-tenant-gateway.labels" . | nindent 4 }}
+  {{- with .Values.httpRoute.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: ListenerSet
+      name: {{ include "xfsc-tenant-gateway.fullname" . }}
+      sectionName: {{ .Values.listenerSet.listenerName | default "https" | quote }}
+  hostnames:
+    - {{ include "xfsc-tenant-gateway.hostname" . | quote }}
+  rules:
+  {{- range $route := .Values.routes }}
+  {{- $routeEnabled := true }}
+  {{- if hasKey $route "enabled" }}{{- $routeEnabled = $route.enabled }}{{- end }}
+  {{- if $routeEnabled }}
+    {{- $path := required (printf "path is required for route %s" $route.name) $route.path }}
+    {{- $targetPath := $route.targetPath | default "" }}
+    {{- $pathType := $route.pathType | default "Exact" }}
+    {{- if $route.targetPathTemplate }}
+      {{- $targetPath = replace "{tenant}" (include "xfsc-tenant-gateway.tenantId" $) $route.targetPathTemplate }}
+    {{- else if and (hasPrefix "/api/" $path) (not $targetPath) }}
+      {{- $targetPath = printf "/v1/tenants/%s/%s" (include "xfsc-tenant-gateway.tenantId" $) (trimPrefix "/api/" $path) }}
+    {{- end }}
+    - name: {{ $route.name | trunc 63 | trimSuffix "-" }}
+      matches:
+        - path:
+            type: {{ $pathType }}
+            value: {{ $path | quote }}
+          {{- with $route.method }}
+          method: {{ . | quote }}
+          {{- end }}
+      filters:
+        {{- if $targetPath }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              {{- if eq $pathType "PathPrefix" }}
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ $targetPath | quote }}
+              {{- else }}
+              type: ReplaceFullPath
+              replaceFullPath: {{ $targetPath | quote }}
+              {{- end }}
+        {{- end }}
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-NAMESPACE
+                value: {{ include "xfsc-tenant-gateway.namespace" $ | quote }}
+              - name: X-DID
+                value: {{ include "xfsc-tenant-gateway.did" $ | quote }}
+              - name: X-ISSUERKID
+                value: {{ required "tenant.issuerkid is required" $.Values.tenant.key | quote }}
+              - name: X-KEY
+                value: {{ required "tenant.key is required" $.Values.tenant.key | quote }}
+              - name: X-TENANTID
+                value: {{ required "tenant.key is required" $.Values.tenant.id | quote }} 
+              - name: X-GROUP
+                value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.group | quote }}
+              - name: X-GROUPID
+                value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.groupid | quote }}
+              - name: X-HOST
+                value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
+              - name: X-TYPE
+                value: {{ $.Values.tenant.type | default "StatusList2021" | quote }}
+              - name: X-ORIGIN
+                value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
+              - name: X-ENGINE
+                value: "transit"
+              - name: X-Issuer
+                value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
+              - name: X-JWKS-URL
+                value: {{ printf "%s/.well-known/jwks.json" (include "xfsc-tenant-gateway.uri" $) | quote }}
+              - name: X-TOKENENDPOINT
+                value: {{ printf "%s/api/auth/token" (include "xfsc-tenant-gateway.uri" $) | quote }}
+              - name: x-audience-url
+                value: {{ include "xfsc-tenant-gateway.uri" $ | quote }}
+              - name: x-signerkey
+                value: {{ required "tenant.key is required" $.Values.tenant.key | quote }}        
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: {{ required (printf "backend.name is required for route %s" $route.name) $route.backend.name | quote }}
+          port: {{ required (printf "backend.port is required for route %s" $route.name) $route.backend.port }}
+          weight: {{ $route.backend.weight | default 1 }}
+  {{- end }}
+  {{- end }}

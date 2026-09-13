@@ -1,0 +1,9 @@
+**/charts
+**/Chart.lock
+**/*.key
+**/*.pub
+terraform.*
+rendered.yaml
+log.txt
+*.tgz
+**/*.png

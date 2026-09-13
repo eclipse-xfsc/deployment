@@ -1,0 +1,17 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.gateway.name | default "envoy-gateway" | quote }}
+  namespace: {{ .Values.gateway.namespace | default "infrastructure" | quote }}
+spec:
+  gatewayClassName: {{ .Values.gatewayClass.name | default "envoy" | quote }}
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: {{ .Values.gateway.http.port | default 80 }}
+      allowedRoutes:
+        namespaces:
+          from: {{ .Values.gateway.allowedRoutes.namespaces.from | default "All" }}
+  allowedListeners:
+    namespaces:
+      from: {{ .Values.gateway.allowedListeners.namespaces.from | default "All" }}

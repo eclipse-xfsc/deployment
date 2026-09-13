@@ -1,0 +1,12 @@
+universal-resolver:
+  service:
+    port: 8080
+
+resourceProvider:
+  name: universal-resolver
+  scope: Cluster
+  description: Universal Resolver
+  allow:
+    namespaces: []
+
+fullnameOverride: universal-resolver

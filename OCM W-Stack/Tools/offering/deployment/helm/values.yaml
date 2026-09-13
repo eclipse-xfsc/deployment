@@ -1,0 +1,52 @@
+replicaCount: 1
+
+image:
+  repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
+  name: credential-offering-bootstrap
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 8080
+
+podAnnotations:
+  inject.xfsc.io/enabled: "true"
+  inject.xfsc.io/needs: "nats"
+  inject.xfsc.io/env-prefix: "OFFERING"
+
+nats:
+  # dummycontentsigner CredentialRequest listens on
+  # metadata credential Subject + ".request".
+  issuanceSubject: "issuer.dummycontentsigner.request"
+
+cloudEvent:
+  source: "credential-offering-bootstrap"
+
+defaultTenantId: "demo_tenant"
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+probes:
+  liveness:
+    path: /health
+  readiness:
+    path: /health
+
+resourceClaim:
+  enabled: false
+  provider: nats
+  secretName: ""
+  parameters: {}
+
+httpRoute:
+  enabled: false
+  parentRefs: []
+  hostnames: []
+  path: /api/createOffering

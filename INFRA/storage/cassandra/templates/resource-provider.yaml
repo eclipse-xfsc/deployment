@@ -1,0 +1,25 @@
+{{- if .Values.resourceProvider.enabled }}
+apiVersion: resources.xfsc.io/v1alpha1
+kind: ResourceProvider
+metadata:
+  name: {{ default (printf "%s-provider" (include "cass.fullname" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: cassandra
+  scope: {{ .Values.resourceProvider.scope | quote }}
+  description: {{ .Values.resourceProvider.description | quote }}
+{{- with .Values.resourceProvider.allow.namespaces }}
+  allow:
+    namespaces:
+{{ toYaml . | indent 6 }}
+{{- end }}
+  adminSecretRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ include "cass.authSecret" . }}
+
+  outputs:
+    env:
+      CASSANDRA_HOSTS: {{ printf "%s.%s.svc.cluster.local" (include "cass.fullname" .) .Release.Namespace | quote }}
+      CASSANDRA_PORT: "9042"
+      CASSANDRA_DATACENTER: {{ .Values.cluster.datacenter | quote }}
+{{- end }}

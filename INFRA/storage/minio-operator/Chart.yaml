@@ -1,0 +1,10 @@
+apiVersion: v2
+name: xfsc-minio-operator
+description: XFSC wrapper for the official MinIO Operator
+type: application
+version: 0.1.0
+appVersion: "5.0.17"
+dependencies:
+  - name: operator
+    version: "5.0.17"
+    repository: "https://operator.min.io/"

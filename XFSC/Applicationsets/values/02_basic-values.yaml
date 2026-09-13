@@ -1,0 +1,20 @@
+tag: k8s-bootstrap
+path: INFRA/basic/*
+name: basic
+namespace: infrastructure
+storageClass: local-path
+excludes: 
+ - "INFRA/basic/gitea"
+
+matrix:
+  enabled: false
+revisionHistoryLimit: 3
+project:
+  name: infrastructure
+  description: Argo-CD-Projekt für Infrastruktur-Komponenten
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: infrastructure
+    - server: https://kubernetes.default.svc
+      namespace: kube-system

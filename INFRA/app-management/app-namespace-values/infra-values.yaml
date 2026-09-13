@@ -1,0 +1,28 @@
+targetNamespace:
+  create: true
+  name: infrastructure
+  labels:
+    xsfc.io/zone: infrastructure
+
+openbao:
+  storeMountPath: infrastructure/system
+  storeSecretPrefix: ""
+  resourceProvisioner:
+    engineMountPrefix: infrastructure
+    serviceAccount:
+      create: true
+      name: infrastructure-resource-provisioner
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 24h
+      explicitMaxTTL: 0
+
+clusterSecretStore:
+  enabled: true
+  name: infrastructure-openbao
+  allowedNamespaces: []
+
+secretStore:
+  enabled: true
+  name: openbao

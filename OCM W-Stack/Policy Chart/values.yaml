@@ -16,7 +16,8 @@ policy:
   useSecretRef: false
   secretRefName: my-secret
 
-  podAnnotations: {}
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
 
   resources:
     requests:
@@ -73,7 +74,6 @@ policy:
     didResolver: http://didresolver:8080
     signer: http://signer:8080
     NAMESPACE: https://gaiax.vereign.com/ocm
-
 
   ingress:
     enabled: false

@@ -1,0 +1,10 @@
+issuer:
+  name: letsencrypt
+
+acme:
+  email: xfsc@eclipse.com
+  server: https://acme-v02.api.letsencrypt.org/directory
+
+gateway:
+  name: envoy-gateway
+  namespace: infrastructure

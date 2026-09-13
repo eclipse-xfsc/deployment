@@ -1,0 +1,51 @@
+{{- if .Values.imageSignaturePolicy.enabled }}
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+metadata:
+  name: require-signed-images
+  annotations:
+    policies.kyverno.io/title: Require Signed Images
+    policies.kyverno.io/category: Software Supply Chain Security
+    policies.kyverno.io/severity: high
+spec:
+  webhookConfiguration:
+    timeoutSeconds: {{ .Values.imageSignaturePolicy.webhookTimeoutSeconds }}
+
+  evaluation:
+    background:
+      enabled: false
+
+  validationActions:
+    - {{ .Values.imageSignaturePolicy.validationAction }}
+
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+    namespaceSelector:
+{{ toYaml .Values.imageSignaturePolicy.namespaceSelector | indent 6 }}
+
+  matchImageReferences:
+{{- range .Values.imageSignaturePolicy.imageReferences }}
+    - glob: {{ . | quote }}
+{{- end }}
+
+  validationConfigurations:
+    mutateDigest: {{ .Values.imageSignaturePolicy.mutateDigest }}
+    verifyDigest: {{ .Values.imageSignaturePolicy.verifyDigest }}
+    required: {{ .Values.imageSignaturePolicy.required }}
+
+  attestors:
+    - name: cosign
+      cosign:
+        key:
+          data: |
+{{ .Values.imageSignaturePolicy.publicKey | indent 12 }}
+
+  validations:
+    - expression: >-
+        images.containers.map(image, verifyImageSignatures(image, [attestors.cosign])).all(e, e > 0)
+      message: failed the image signature verification
+{{- end }}

@@ -1,5 +1,0 @@
-auth:
-  enabled: true                       
-  existingSecret: preauthbridge-redis   
-  passwordKey: redis-password     
-  usernameKey: redis-user

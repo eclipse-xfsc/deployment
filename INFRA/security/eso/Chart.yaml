@@ -1,0 +1,12 @@
+apiVersion: v2
+name: external-secrets-wrapper
+description: Wrapper chart for External Secrets Operator
+type: application
+version: 1.0.0
+appVersion: "2.5.0"
+
+dependencies:
+  - name: external-secrets
+    version: 2.5.0
+    repository: https://charts.external-secrets.io
+    condition: external-secrets.enabled

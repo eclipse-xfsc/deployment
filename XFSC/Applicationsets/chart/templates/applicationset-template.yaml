@@ -1,0 +1,134 @@
+{{- /*
+Das ApplicationSet verwendet standardmäßig das Argo-CD-Projekt "default".
+Nur wenn project.name gesetzt ist, wird dieses Projekt verwendet.
+*/ -}}
+
+{{- $projectName := "default" -}}
+{{- with .Values.project }}
+  {{- if .name }}
+    {{- $projectName = .name -}}
+  {{- end }}
+{{- end }}
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+
+metadata:
+  name: {{ .Values.name | quote }}
+  namespace: argocd
+
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+
+  generators:
+{{- if (.Values.matrix.enabled | default false) }}
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/eclipse-xfsc/deployment.git
+              revision: {{ .Values.tag | quote }}
+              pathParamPrefix: chart
+              directories:
+                - path: {{ .Values.matrix.charts.path | quote }}
+{{- range .Values.matrix.charts.excludes }}
+                - path: {{ . | quote }}
+                  exclude: true
+{{- end }}
+
+          - git:
+              repoURL: https://github.com/eclipse-xfsc/deployment.git
+              revision: {{ .Values.tag | quote }}
+              pathParamPrefix: values
+              directories:
+                - path: {{ .Values.matrix.values.path | quote }}
+{{- range .Values.matrix.values.excludes }}
+                - path: {{ . | quote }}
+                  exclude: true
+{{- end }}
+{{- else }}
+    - git:
+        repoURL: https://github.com/eclipse-xfsc/deployment.git
+        revision: {{ .Values.tag | quote }}
+        directories:
+          - path: {{ .Values.path | quote }}
+{{- range .Values.excludes }}
+          - path: {{ . | quote }}
+            exclude: true
+{{- end }}
+{{- end }}
+
+  template:
+    metadata:
+{{- if (.Values.matrix.enabled | default false) }}
+      name: '{{ "{{ .chart.path.basenameNormalized }}" }}-{{ "{{ .values.path.basenameNormalized }}" }}'
+{{- else }}
+      name: '{{ "{{ .path.basenameNormalized }}" }}'
+{{- end }}
+
+    spec:
+      project: {{ $projectName | quote }}
+      revisionHistoryLimit: {{ .Values.revisionHistoryLimit | default 5 }}
+
+      source:
+        repoURL: https://github.com/eclipse-xfsc/deployment.git
+        targetRevision: {{ .Values.tag | quote }}
+
+{{- if (.Values.matrix.enabled | default false) }}
+        path: '{{ "{{ .chart.path.path }}" }}'
+        helm:
+          ignoreMissingValueFiles: true
+          valueFiles:
+            - '../../../{{ "{{ .values.path.path }}" }}/values.yaml'
+{{- if .Values.profile }}
+            - '../../../{{ "{{ .values.path.path }}" }}/profiles/{{ .Values.profile }}.yaml'
+{{- end }}
+{{- else }}
+        path: '{{ "{{ .path.path }}" }}'
+        helm:
+          ignoreMissingValueFiles: true
+          valueFiles:
+            - values.yaml
+{{- if .Values.profile }}
+            - 'profiles/{{ .Values.profile }}.yaml'
+{{- end }}
+{{- end }}
+
+          parameters:
+            - name: global.storageClass
+              value: {{ .Values.storageClass | quote }}
+
+{{- if .Values.domain }}
+            - name: global.domain
+              value: {{ .Values.domain | quote }}
+
+            - name: external-dns.domainFilters[0]
+              value: {{ .Values.domain | quote }}
+{{- end }}
+
+{{- if .Values.profile }}
+            - name: global.profile
+              value: {{ .Values.profile | quote }}
+{{- end }}
+
+{{- if .Values.email }}
+            - name: global.email
+              value: {{ .Values.email | quote }}
+
+            - name: acme.email
+              value: {{ .Values.email | quote }}
+{{- end }}
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: {{ .Values.namespace | quote }}
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

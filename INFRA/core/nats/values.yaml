@@ -1,0 +1,44 @@
+nats:
+  auth:
+    enabled: true
+
+resourceProvider:
+  name: nats
+  scope: Cluster
+  description: Nats Connection
+  allow:
+    namespaces: []
+
+externalSecret:
+  enabled: true
+  apiVersion: external-secrets.io/v1
+  refreshInterval: 15m
+
+  target:
+    # Empty means <release-name>-root-auth
+    name: ""
+    creationPolicy: Owner
+    deletionPolicy: Retain
+
+openbao:
+  address: http://openbao.security.svc.cluster.local:8200
+  authPath: kubernetes
+  role: xfsc-infrastructure-resource-provisioner
+  kvMount: infrastructure/system
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+  secretStore:
+    enabled: true
+    name: openbao
+  clusterSecretStore:
+    name: infrastructure
+openbaoInit:
+  enabled: true
+  image:
+    repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
+    tag: "latest"
+    pullPolicy: Always
+  secretPath: ""
+  values:
+    username: nats
+    password: $RANDOM_32

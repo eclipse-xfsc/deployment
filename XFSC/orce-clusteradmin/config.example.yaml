@@ -1,0 +1,10 @@
+server:
+  address: ":8080"
+helm:
+  repositories:
+    - name: argo
+      url: https://argoproj.github.io/argo-helm
+    - name: bitnami
+      url: https://charts.bitnami.com/bitnami
+    # OCI repos are supported when chartRef is an oci:// URL.
+    # For classic repo/chart refs, configure a normal index.yaml Helm repository above.

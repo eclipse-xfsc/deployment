@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bind9
+spec:
+  serviceName: bind9
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bind9
+  template:
+    metadata:
+      labels:
+        app: bind9
+    spec:
+      initContainers:
+        - name: render
+          image: busybox
+          command:
+            - sh
+            - -ec
+            - |
+              cp -LR /cm/. /cfg/
+
+              test -f /cfg/named.conf
+
+              TSIG="$(cat /secret/{{ .Values.tsig.key }})"
+              TSIG_ESCAPED="$(printf '%s' "$TSIG" | sed 's/[\/&]/\\&/g')"
+
+              sed -i "s#__TSIG__#$TSIG_ESCAPED#g" /cfg/named.conf
+
+              echo "Rendered files:"
+              ls -la /cfg
+          volumeMounts:
+            - name: cm
+              mountPath: /cm
+              readOnly: true
+            - name: cfg
+              mountPath: /cfg
+            - name: secret
+              mountPath: /secret
+              readOnly: true
+
+      containers:
+        - name: bind9
+          image: "{{ .Values.bind9.image.repository }}:{{ .Values.bind9.image.tag }}"
+          command:
+            - named
+          args:
+            - -g
+            - -c
+            - /etc/bind/named.conf
+          ports:
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+          readinessProbe:
+            tcpSocket:
+              port: 53
+          livenessProbe:
+            tcpSocket:
+              port: 53
+          volumeMounts:
+            - name: cfg
+              mountPath: /etc/bind
+
+      volumes:
+        - name: cm
+          configMap:
+            name: bind9-config
+
+        - name: cfg
+          emptyDir: {}
+
+        - name: secret
+          secret:
+            secretName: {{ .Values.tsig.existingSecret }}

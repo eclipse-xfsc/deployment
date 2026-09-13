@@ -1,0 +1,32 @@
+name: Docker and Helm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+  
+jobs:
+  dockerbuild-init-container:
+    uses: eclipse-xfsc/dev-ops/.github/workflows/dockerbuild.yml@main
+    secrets: inherit
+    with: 
+      dockerfile: "XFSC/secret-init-container/deployment/docker/Dockerfile"
+      harbor_config: "XFSC/secret-init-container/deployment/harbor.config"
+  helm-init-container:
+    uses: eclipse-xfsc/dev-ops/.github/workflows/helm.yml@main
+    secrets: inherit
+    with: 
+      buildContext:  "XFSC/secret-init-container/deployment/helm"
+      harbor_config: "XFSC/secret-init-container/deployment/harbor.config"
+  dockerbuild-offering:
+    uses: eclipse-xfsc/dev-ops/.github/workflows/dockerbuild.yml@main
+    secrets: inherit
+    with: 
+      dockerfile: "XFSC/offering/deployment/docker/Dockerfile"
+      harbor_config: "XFSC/offering/deployment/harbor.config"
+  helm-offering:
+    uses: eclipse-xfsc/dev-ops/.github/workflows/helm.yml@main
+    secrets: inherit
+    with: 
+      buildContext:  "XFSC/offering/deployment/helm"
+      harbor_config: "XFSC/offering/deployment/harbor.config"

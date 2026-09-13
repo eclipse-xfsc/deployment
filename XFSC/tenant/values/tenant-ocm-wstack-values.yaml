@@ -1,0 +1,180 @@
+nameOverride: ""
+fullnameOverride: ""
+
+tenant:
+  id: demo-tenant
+  groupid: ocm-wstack
+
+  namespace: ocm-wstack
+  group: demo-tenant
+  
+  # Empty -> derived from tenant.id by lowercasing and replacing '_' with '-'.
+  subdomain: ""
+  domain: domain.com
+  # Every route receives the same complete X-* header set.
+  key: eckey
+  type: StatusList2021
+
+certificate:
+  enabled: true
+  secretName: ""
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+    group: cert-manager.io
+  duration: ""
+  renewBefore: ""
+  privateKey:
+    algorithm: RSA
+    size: 4096
+
+listenerSet:
+  annotations: {}
+  listenerName: https
+  port: 443
+  allowedRoutes:
+    namespaces:
+      from: Same
+
+httpRoute:
+  annotations: {}
+
+openbao:
+  enabled: true
+  address: http://openbao.security.svc.cluster.local:8200
+  image:
+    repository: openbao/openbao
+    tag: "2.4.4"
+    pullPolicy: IfNotPresent
+  auth:
+    mount: kubernetes
+    role: xfsc-ocm-wstack-resource-provisioner
+  serviceAccount:
+    create: true
+    name: "ocm-wstack-resource-provisioner"
+    annotations: {}
+  transit:
+    # Empty -> tenant.id
+    mountPath: "ocm-wstack/demo-tenant"
+    keyType: ecdsa-p256
+    additionalKeys: []
+  job:
+    annotations: {}
+    backoffLimit: 3
+
+# Routing rules:
+# - path matching is always Exact
+# - /api/<path> automatically rewrites to /v1/tenants/<tenant.id>/<path>
+# - targetPath overrides the automatic rewrite for special routes
+# - routes without /api/ and without targetPath are forwarded unchanged
+# - every route always gets X-NAMESPACE, X-DID, X-KEY, X-GROUP,
+#   X-HOST, X-TYPE and X-ORIGIN.
+routes:
+  - name: credential-issuance
+    path: /api/credential
+    backend:
+      name: issuance-service
+      port: 8080
+
+  - name: credential-issuance-nonce
+    path: /api/nonce
+    backend:
+      name: issuance-service
+      port: 8080
+
+  - name: credential-offering
+    path: /api/offering
+    backend:
+      name: credential-retrieval-service
+      port: 8080
+
+  - name: vctschema
+    pathType: PathPrefix
+    path: /api/schema
+    targetPath: /api/schema
+    backend:
+      name: dummycontentsigner
+      port: 8080
+
+  - name: offering-create
+    method: POST
+    path: /test/offering/create
+    targetPath: /api/offering/create
+    backend:
+      name: offering-dummy-credential-offering-bootstrap
+      port: 8080
+
+  - name: credential-verification
+    path: /api/presentation
+    backend:
+      name: credential-verification-service
+      port: 8080
+
+  - name: didcomm
+    path: /api/didcomm
+    targetPath: /
+    backend:
+      name: didcomm-connector
+      port: 9090
+
+  - name: openid-configuration
+    path: /.well-known/openid-configuration
+    backend:
+      name: pre-authorization-bridge-service
+      port: 8080
+
+  - name: oauth-authorization-server
+    path: /.well-known/oauth-authorization-server
+    backend:
+      name: pre-authorization-bridge-service
+      port: 8080
+
+  - name: pre-authorization-token
+    method: POST
+    path: /api/auth/token
+    targetPath: /token
+    backend:
+      name: pre-authorization-bridge-service
+      port: 8080
+
+  - name: openid-credential-issuer
+    path: /.well-known/openid-credential-issuer
+    targetPathTemplate: /v1/tenants/{tenant}/.well-known/openid-credential-issuer
+    backend:
+      name: well-known-service
+      port: 8080
+
+  - name: status-list
+    path: /api/status
+    pathType: PathPrefix
+    backend:
+      name: status-list-service
+      port: 8080
+
+  - name: did-document
+    path: /.well-known/did.json
+    targetPath: /v1/did/document
+    backend:
+      name: signer
+      port: 8080
+
+  - name: did-list
+    path: /.well-known/did/list
+    targetPath: /v1/did/list
+    backend:
+      name: signer
+      port: 8080
+  
+  - name: did-configuration
+    path: /.well-known/did-configuration.json
+    targetPath: /v1/did/configuration
+    backend:
+      name: signer
+      port: 8080
+
+  - name: jwks
+    path: /.well-known/jwks.json
+    targetPath: /v1/jwks
+    backend:
+      name: signer
+      port: 8080

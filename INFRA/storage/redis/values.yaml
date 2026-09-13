@@ -1,0 +1,99 @@
+nameOverride: ""
+fullnameOverride: ""
+global: 
+  storageClass: 
+openbao:
+  address: http://openbao.security.svc.cluster.local:8200
+  authPath: kubernetes
+  role: xfsc-infrastructure-resource-provisioner
+  kvMount: infrastructure/system
+
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+
+  secretStore:
+    enabled: true
+    name: openbao
+
+openbaoInit:
+  enabled: true
+
+  image:
+    repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
+    tag: latest
+    pullPolicy: Always
+
+  # Empty means redis/<release-name>
+  secretPath: ""
+
+  values:
+    password: '$RANDOM_64'
+
+externalSecret:
+  enabled: true
+  apiVersion: external-secrets.io/v1
+  refreshInterval: 15m
+
+  target:
+    # Empty means <release-name>-root-auth
+    name: ""
+    creationPolicy: Owner
+    deletionPolicy: Retain
+
+redis:
+  enabled: true
+
+  mode: standalone # standalone | cluster
+  port: 6379
+
+  cluster:
+    # Number of leader nodes. The operator creates the same number of followers.
+    nodes: 3
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: ""
+
+  image:
+    repository: quay.io/opstree/redis
+    tag: v8.6.2
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+  podSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.77.0
+
+resourceProvider:
+  enabled: true
+  name: "redis"
+  scope: Cluster
+  description: Redis connection provided by this OpsTree-managed Redis instance.
+
+  allow:
+    namespaces: []
+
+  tls: "false"

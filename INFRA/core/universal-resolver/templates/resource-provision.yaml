@@ -1,0 +1,17 @@
+apiVersion: resources.xfsc.io/v1alpha1
+kind: ResourceProvider
+metadata:
+  name: did-resolver
+spec:
+  type: did-resolver
+  scope: {{ .Values.resourceProvider.scope | quote }}
+  description: {{ .Values.resourceProvider.description | quote }}
+
+{{- with .Values.resourceProvider.allow.namespaces }}
+  allow:
+    namespaces:
+{{ toYaml . | indent 6 }}
+{{- end }}
+  outputs:
+    env:
+     DID_RESOLVER: {{ printf "http://%s.%s.svc.cluster.local" (include "universal-resolver.serviceName" .) .Release.Namespace | quote }}

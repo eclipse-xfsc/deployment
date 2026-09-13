@@ -1,0 +1,57 @@
+redis-operator:
+  replicaCount: 1
+
+  image:
+    repository: quay.io/opstree/redis-operator
+    tag: v0.25.0
+    pullPolicy: IfNotPresent
+
+  imagePullSecrets: []
+
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+
+  rbac:
+    create: true
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  webhook:
+    enabled: false
+
+  certmanager:
+    enabled: false
+
+wrapper:
+  networkPolicy:
+    enabled: false

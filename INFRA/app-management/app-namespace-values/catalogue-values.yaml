@@ -1,0 +1,28 @@
+targetNamespace:
+  create: true
+  name: catalogue
+  labels:
+    xsfc.io/zone: catalogue
+
+openbao:
+  storeMountPath: catalogue/system
+  storeSecretPrefix: ""
+  resourceProvisioner:
+    engineMountPrefix: catalogue
+    serviceAccount:
+      create: true
+      name: catalogue-resource-provisioner
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 0
+      explicitMaxTTL: 0
+
+clusterSecretStore:
+  enabled: true
+  name: catalogue-openbao
+  allowedNamespaces: []
+
+secretStore:
+  enabled: true
+  name: openbao

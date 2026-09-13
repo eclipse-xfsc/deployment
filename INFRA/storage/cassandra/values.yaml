@@ -1,0 +1,80 @@
+global: 
+  storageClass: 
+image:
+  registry: docker.io
+  repository: library/cassandra
+  tag: "5.0.5"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+cluster:
+  name: xfsc-infrastructure
+  datacenter: dc1
+  rack: rack1
+  numTokens: 16
+  heap:
+    max: 6G
+    new: 1200M
+
+persistence:
+  enabled: true
+  size: 20Gi
+  storageClass: ""
+
+resources:
+  requests:
+    memory: 8Gi
+  limits:
+    memory: 12Gi
+
+openbao:
+  address: http://openbao.security.svc.cluster.local:8200
+  authPath: kubernetes
+  role: xfsc-infrastructure-resource-provisioner
+  kvMount: infrastructure/system
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+  secretStore:
+    enabled: true
+    name: openbao
+
+openbaoInit:
+  enabled: true
+  image:
+    repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
+    tag: latest
+    pullPolicy: Always
+  secretPath: ""
+  values:
+    username: cassandra
+    password: '$RANDOM_64'
+
+externalSecret:
+  enabled: true
+  apiVersion: external-secrets.io/v1
+  refreshInterval: 15m
+  target:
+    name: ""
+    creationPolicy: Owner
+    deletionPolicy: Retain
+
+passwordBootstrap:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: library/cassandra
+    tag: "5.0.5"
+    pullPolicy: IfNotPresent
+
+resourceProvider:
+  enabled: true
+  name: "cassandra"
+  scope: Cluster
+  description: Cassandra connection provided by this internal StatefulSet cluster.
+  allow:
+    namespaces: []
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2

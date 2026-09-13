@@ -28,7 +28,7 @@ didcomm-connector:
     port: 9090
 
   ingress:
-    enabled: true
+    enabled: false
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/use-regex: "true" 

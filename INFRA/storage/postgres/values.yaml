@@ -1,0 +1,92 @@
+nameOverride: ""
+fullnameOverride: ""
+global: 
+  storageClass: 
+
+openbao:
+  address: http://openbao.security.svc.cluster.local:8200
+  authPath: kubernetes
+  role: xfsc-infrastructure-resource-provisioner
+  kvMount: infrastructure/system
+  serviceAccount:
+    name: infrastructure-resource-provisioner
+  secretStore:
+    enabled: true
+    name: openbao
+  clusterSecretStore:
+    name: infrastructure-openbao
+openbaoInit:
+  enabled: true
+  image:
+    repository: node-654e3bca7fbeeed18f81d7c7.de-west-1.xaas.plus.cloud/dev-ops/secret-init-container
+    tag: "latest"
+    pullPolicy: Always
+  secretPath: ""
+  values:
+    username: postgres
+    password: $RANDOM
+
+openbaoSync:
+  values:
+    ca.crt:
+      secretKeyRef:
+        name: postgres-ca
+        key: ca.crt
+    tls.crt:
+      secretKeyRef:
+        name: postgres-server
+        key: tls.crt
+
+
+externalSecret:
+  enabled: true
+  apiVersion: external-secrets.io/v1
+  refreshInterval: 15m
+  target:
+    name: ""
+    creationPolicy: Owner
+    deletionPolicy: Retain
+
+cluster:
+  enabled: true
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.10-202606221003-system-bookworm
+  instances: 1
+  storage:
+    size: 8Gi
+    storageClass: ""
+  walStorage:
+    enabled: false
+    size: 2Gi
+    storageClass: ""
+  enableSuperuserAccess: true
+  bootstrap:
+    initdb:
+      dataChecksums: true
+      encoding: UTF8
+      localeCType: C
+      localeCollate: C
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: 256MB
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  monitoring:
+    enablePodMonitor: false
+  affinity:
+    topologyKey: kubernetes.io/hostname
+
+resourceProvider:
+  enabled: true
+  name: "postgres"
+  scope: Cluster
+  description: PostgreSQL connection provided by this CloudNativePG cluster.
+  allow:
+    namespaces: []
+  sslMode: require
+  serviceSuffix: rw

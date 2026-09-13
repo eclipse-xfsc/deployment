@@ -1,0 +1,30 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: ListenerSet
+metadata:
+  name: {{ include "xfsc-tenant-gateway.fullname" . }}
+  labels:
+    {{- include "xfsc-tenant-gateway.labels" . | nindent 4 }}
+  {{- with .Values.listenerSet.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: envoy-gateway
+    namespace: infrastructure
+  listeners:
+    - name: {{ .Values.listenerSet.listenerName | default "https" | quote }}
+      hostname: {{ include "xfsc-tenant-gateway.hostname" . | quote }}
+      protocol: HTTPS
+      port: {{ .Values.listenerSet.port | default 443 }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: {{ include "xfsc-tenant-gateway.tlsSecretName" . }}
+      allowedRoutes:
+        namespaces:
+          from: {{ .Values.listenerSet.allowedRoutes.namespaces.from | default "Same" }}

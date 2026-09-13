@@ -1,0 +1,112 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-openbao-rules
+  namespace: {{ .Values.serviceMonitor.namespace | default .Release.Namespace }}
+  labels:
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: openbao.rules
+      rules:
+        - alert: OpenBaoDown
+          expr: up{job=~".*openbao.*"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "OpenBao target is down"
+            description: "Prometheus cannot scrape OpenBao for more than 2 minutes."
+
+        - alert: OpenBaoSealed
+          expr: vault_core_unsealed == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "OpenBao is sealed"
+            description: "OpenBao instance is sealed and cannot serve secrets."
+
+        - alert: OpenBaoStandbyOnly
+          expr: sum(vault_core_active) == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "No active OpenBao node"
+            description: "No OpenBao node reports itself as active."
+
+        - alert: OpenBaoTooManyActiveNodes
+          expr: sum(vault_core_active) > 1
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Multiple active OpenBao nodes"
+            description: "More than one OpenBao node reports active state."
+
+        - alert: OpenBaoHighRequestFailureRate
+          expr: |
+            (
+              sum(rate(vault_core_handle_request_count{status=~"5.."}[5m]))
+              /
+              sum(rate(vault_core_handle_request_count[5m]))
+            ) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High OpenBao request failure rate"
+            description: "More than 5% of OpenBao requests are failing."
+
+        - alert: OpenBaoHighRequestLatency
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum(rate(vault_core_handle_request_duration_seconds_bucket[5m])) by (le)
+            ) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High OpenBao request latency"
+            description: "p95 OpenBao request latency is above 1 second."
+
+        - alert: OpenBaoLeadershipChange
+          expr: increase(vault_core_leadership_lost_count[10m]) > 0
+          for: 0m
+          labels:
+            severity: warning
+          annotations:
+            summary: "OpenBao leadership changed"
+            description: "OpenBao leadership was lost within the last 10 minutes."
+
+        - alert: OpenBaoTokenCreationSpike
+          expr: |
+            sum(rate(vault_token_create_count[5m])) > 50
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High OpenBao token creation rate"
+            description: "OpenBao is creating more than 50 tokens per second."
+
+        - alert: OpenBaoAuditLogFailure
+          expr: increase(vault_audit_log_request_failure[5m]) > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "OpenBao audit logging failure"
+            description: "OpenBao failed to write audit logs."
+
+        - alert: OpenBaoLeaseExpirationBacklog
+          expr: vault_expire_num_leases > 10000
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High OpenBao lease count"
+            description: "OpenBao has a large number of active leases."

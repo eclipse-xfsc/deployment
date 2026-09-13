@@ -1,0 +1,29 @@
+targetNamespace:
+  create: true
+  name: orce
+  labels:
+    xsfc.io/zone: orce
+
+openbao:
+  storeMountPath: orce/system
+  storeSecretPrefix: ""
+  resourceProvisioner:
+    engineMountPrefix: orce-wstack
+    serviceAccount:
+      create: true
+      name: orce-resource-provisioner
+    tokenTTL: 15m
+    tokenMaxTTL: 1h
+    serviceToken:
+      period: 0
+      explicitMaxTTL: 0
+
+
+clusterSecretStore:
+  enabled: true
+  name: orce-openbao
+  allowedNamespaces: []
+
+secretStore:
+  enabled: true
+  name: openbao

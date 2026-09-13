@@ -1,0 +1,28 @@
+# templates/servicemonitor.yaml
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-openbao
+  namespace: {{ .Values.serviceMonitor.namespace | default .Release.Namespace }}
+  labels:
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openbao
+
+  endpoints:
+    - port: {{ .Values.serviceMonitor.port | default "http" }}
+      path: /v1/sys/metrics
+      interval: {{ .Values.serviceMonitor.interval | default "30s" }}
+      params:
+        format:
+          - prometheus
+{{- end }}

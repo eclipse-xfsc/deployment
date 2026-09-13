@@ -1,0 +1,6 @@
+apiVersion: v2
+name: xfsc-redis
+description: Redis standalone managed by OpsTree Redis Operator with OpenBao, ESO and XFSC ResourceProvider
+type: application
+version: 0.1.0
+appVersion: "8.6.2"

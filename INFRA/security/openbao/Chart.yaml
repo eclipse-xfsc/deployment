@@ -1,0 +1,10 @@
+apiVersion: v2
+name: openbao-wrapper
+description: OpenBao wrapper chart with selectable auto-unseal backends
+type: application
+version: 1.0.0
+
+dependencies:
+  - name: openbao
+    version: 0.28.3
+    repository: https://openbao.github.io/openbao-helm

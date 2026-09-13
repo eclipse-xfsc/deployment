@@ -1,0 +1,14 @@
+{{- if .Values.resourceClaim.enabled }}
+apiVersion: resources.xfsc.io/v1alpha1
+kind: ResourceClaim
+metadata:
+  name: {{ include "credential-offering-bootstrap.fullname" . }}-nats
+spec:
+  type: nats
+  providerRef:
+    name: {{ .Values.resourceClaim.provider | quote }}
+  secretRef:
+    name: {{ default (printf "%s-nats" (include "credential-offering-bootstrap.fullname" .)) .Values.resourceClaim.secretName | quote }}
+  parameters:
+{{ toYaml .Values.resourceClaim.parameters | indent 4 }}
+{{- end }}

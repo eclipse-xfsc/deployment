@@ -1,0 +1,13 @@
+cert-manager:
+  crds:
+    enabled: true
+
+  prometheus:
+    enabled: true
+
+  config:
+    enableGatewayAPI: true
+
+  ingressShim:
+    defaultIssuerKind: ClusterIssuer
+    defaultIssuerName: letsencrypt

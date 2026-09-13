@@ -1,0 +1,24 @@
+{{- if .Values.resourceProvider.enabled }}
+apiVersion: resources.xfsc.io/v1alpha1
+kind: ResourceProvider
+metadata:
+  name: {{ default (printf "%s-s3" (include "minio.name" .)) .Values.resourceProvider.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: s3
+  scope: {{ .Values.resourceProvider.scope | quote }}
+  description: {{ .Values.resourceProvider.description | quote }}
+{{- with .Values.resourceProvider.allow.namespaces }}
+  allow:
+    namespaces:
+{{ toYaml . | indent 6 }}
+{{- end }}
+  adminSecretRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ include "minio.configSecret" . }}
+  outputs:
+    env:
+      S3_ENDPOINT: {{ printf "https://minio.%s.svc.cluster.local" .Release.Namespace | quote }}
+      S3_REGION: {{ .Values.resourceProvider.region | quote }}
+      S3_PATH_STYLE: {{ .Values.resourceProvider.pathStyle | quote }}
+{{- end }}

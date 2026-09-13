@@ -1,0 +1,48 @@
+gatewayClass:
+  name: envoy
+
+gateway:
+  name: envoy-gateway
+  namespace: infrastructure
+  http:
+    port: 80
+  # Needed so cert-manager's HTTP-01 solver routes from tenant namespaces
+  # can attach to the shared HTTP listener.
+  allowedRoutes:
+    namespaces:
+      from: All
+  # Required for tenant ListenerSets to attach later.
+  allowedListeners:
+    namespaces:
+      from: All
+
+envoyProxy:
+  name: envoy
+  service:
+    type: LoadBalancer
+    annotations:
+      load-balancer.hetzner.cloud/network-zone: eu-central
+      load-balancer.hetzner.cloud/use-private-ip: "true"
+      load-balancer.hetzner.cloud/protocol: tcp
+      load-balancer.hetzner.cloud/health-check-protocol: tcp
+      load-balancer.hetzner.cloud/uses-proxyprotocol: "false"
+      load-balancer.hetzner.cloud/disable-private-ingress: "true"
+      # Alternative:
+      # load-balancer.hetzner.cloud/location: nbg1
+
+envoy-gateway:
+  enabled: true
+  deployment:
+    replicas: 1
+  config:
+    envoyGateway:
+      logging:
+        level:
+          default: info
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

@@ -1,0 +1,43 @@
+{{- if and .Values.redis.enabled (eq .Values.redis.mode "standalone") }}
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: Redis
+metadata:
+  name: {{ include "redis.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  kubernetesConfig:
+    image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+    imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+    redisSecret:
+      name: {{ include "redis.authSecret" . }}
+      key: password
+    service:
+      serviceType: {{ .Values.redis.service.type }}
+    resources:
+{{ toYaml .Values.redis.resources | indent 6 }}
+
+  podSecurityContext:
+{{ toYaml .Values.redis.podSecurityContext | indent 4 }}
+
+{{- if .Values.redis.persistence.enabled }}
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+{{- $storageClass := .Values.redis.persistence.storageClass | default .Values.global.storageClass }}
+{{- if $storageClass }}
+        storageClassName: {{ $storageClass | quote }}
+{{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.persistence.size | quote }}
+{{- end }}
+
+  redisExporter:
+    enabled: {{ .Values.redis.redisExporter.enabled }}
+    image: {{ required "redis.redisExporter.image is required by the OpsTree Redis CRD" .Values.redis.redisExporter.image | quote }}
+{{- end }}
