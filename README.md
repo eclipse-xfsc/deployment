@@ -2,6 +2,9 @@
 
 The deployment setup is orchestrated by ORCE and finally executed/operated by [argoCD Applicationsets](https://argo-cd.readthedocs.io/en/latest/user-guide/application-set/). Each applicationset deploys a layer of applications sorted by context. 
 
+Each Script prepares a different step of the cluster. Start with basic-cluster-init.sh to setup a basic cluster including network, storage and logging/monitoring. After that use additional stacks e.g. ocm, cataglogue or ocm-wstack. 
+
+
 # ORCE Integration
 
 To integrate the cluster bootstrap better in the orchestration engine, an [installer](./XFSC/orce-clusteradmin/) provides an rest api for easier usage with kubernetes clusters. The ORCE can then decide if some features of the products are installed or not. 
