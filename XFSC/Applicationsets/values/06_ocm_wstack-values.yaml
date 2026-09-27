@@ -1,4 +1,4 @@
-tag: oidvci10
+tag: main
 path: "OCM W-Stack/*"
 name: ocm-wstack
 namespace: ocm-wstack
