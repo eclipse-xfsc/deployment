@@ -5,5 +5,5 @@ name: credential-retrieval-service
 version: 1.0.6
 dependencies:
   - name: credential-retrieval-service
-    version: 1.1.7-alpha.helm
+    version: 1.1.7-beta.helm
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
