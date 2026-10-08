@@ -14,4 +14,4 @@ spec:
 {{- end }}
   outputs:
     env:
-     DID_RESOLVER: {{ printf "http://%s-service.%s.svc.cluster.local" (include "universal-resolver.serviceName" .) .Release.Namespace | quote }}
+     DID_RESOLVER: {{ printf "http://%s-service.%s.svc.cluster.local:8080" (include "universal-resolver.serviceName" .) .Release.Namespace | quote }}
