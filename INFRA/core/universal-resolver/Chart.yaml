@@ -2,7 +2,7 @@ apiVersion: v2
 appVersion: v1.0.0
 description: Universal Resolver
 name: universal-resolver
-version: 1.0.5
+version: 1.0.6
 dependencies:
   - name: universal-resolver
     version: 0.1.8
