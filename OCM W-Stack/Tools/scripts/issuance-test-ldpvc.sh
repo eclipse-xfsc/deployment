@@ -15,7 +15,7 @@ curl -sS \
   "${OFFERING_URL}" \
   -H "Content-Type: application/json" \
   -d '{
-    "tenant_id" : "demo_tenant",
+    "tenant_id" : "demo-tenant",
     "identifier": "DeveloperCredential",
     "payload": {
       "given_name": "Ada",
@@ -45,6 +45,7 @@ PY
 echo
 echo "Credential Offer:"
 echo "$ENCODED_OFFER" | jq .
+read
 
 PRE_AUTH_CODE="$(
 echo "$ENCODED_OFFER" |
