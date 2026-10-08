@@ -2,8 +2,8 @@ apiVersion: v2
 appVersion: v1.0.0
 description: Universal Resolver
 name: universal-resolver
-version: 1.0.4
+version: 1.0.5
 dependencies:
   - name: universal-resolver
-    version: 0.1.7-latest
+    version: 0.1.8
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/dev-ops
