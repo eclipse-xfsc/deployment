@@ -5,7 +5,7 @@ credential-retrieval-service:
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
     name: credential-retrieval-service
-    tag: "1.1.7-gamma"
+    tag: "1.1.7-theta"
     pullPolicy: Always
 
   podAnnotations: 
