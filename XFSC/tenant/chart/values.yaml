@@ -10,6 +10,8 @@ tenant:
   key: eckey
   group: default
   type: StatusList2021
+  region: EU
+  country: DE
 
 certificate:
   enabled: true
