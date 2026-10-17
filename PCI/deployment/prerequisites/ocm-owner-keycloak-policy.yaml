@@ -1,0 +1,38 @@
+# OPTIONAL OCM OWNER POLICY for external OIDC broker HTTPS egress.
+# G0 already generates the PCI identity/mail rules dynamically; do not apply
+# this broader example just to enable PCI login or Mailpit.
+# ESB 12.3.9 identity.yaml permits only OCM/Envoy ingress and DB/DNS egress.
+# Replace xfsc-orce-pci-orce if the PCI namespace differs.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ocm-keycloak-pci-integration
+  namespace: ocm-wstack
+spec:
+  podSelector:
+    matchLabels: {app: ocm-ui-keycloak}
+  policyTypes: [Ingress, Egress]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: xfsc-orce-pci-orce}
+    ports: [{protocol: TCP, port: 8080}]
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: xfsc-orce-pci-orce}
+      podSelector:
+        matchLabels: {app.kubernetes.io/name: fap-pci-mailpit}
+    ports: [{protocol: TCP, port: 1025}]
+  - to:
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: xfsc-orce-pci-orce}
+      podSelector:
+        matchLabels: {app.kubernetes.io/name: fap-pci-smtp-relay}
+    ports: [{protocol: TCP, port: 587}]
+  # HTTPS egress is needed for an external OIDC broker. A standard NetworkPolicy
+  # cannot select Microsoft DNS names; use the OCM owner's Cilium FQDN policy
+  # instead if required. Keycloak still validates HTTPS and issuer signatures.
+  - to:
+    - ipBlock: {cidr: 0.0.0.0/0, except: [169.254.0.0/16, 127.0.0.0/8]}
+    ports: [{protocol: TCP, port: 443}]

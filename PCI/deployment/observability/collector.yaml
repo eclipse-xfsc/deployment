@@ -1,0 +1,23 @@
+# Merge into the existing OTel Collector after selecting its Jaeger TLS endpoint.
+# Contains no body/credential logging exporter and no extra workload.
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 128
+  batch: {}
+exporters:
+  otlp/jaeger:
+    endpoint: jaeger-collector.observability.svc.cluster.local:4317
+    tls:
+      ca_file: /trust/ca.crt
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp/jaeger]

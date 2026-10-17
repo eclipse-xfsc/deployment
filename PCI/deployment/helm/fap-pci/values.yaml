@@ -1,0 +1,5 @@
+# G0 generates this snapshot from the same validated manifests it applies.
+# Do not place this populated values file in Git: it contains runtime Secrets.
+# Shared namespaces, GatewayClass, Envoy, OCM, ORCE and one-shot Jobs are excluded.
+objects: []
+allowedNamespaces: []

@@ -1,0 +1,7 @@
+apiVersion: v2
+name: fap-pci-participant
+version: 0.5.0-rc.12
+appVersion: 0.5.0-rc.12
+description: Single-replica participant repository with Goa and mutually authenticated gRPC
+type: application
+kubeVersion: '>=1.33.0-0 <1.37.0-0'

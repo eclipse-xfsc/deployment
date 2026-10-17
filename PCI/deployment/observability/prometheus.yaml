@@ -1,0 +1,10 @@
+# Merge into the existing Prometheus configuration; do not deploy a second one.
+scrape_configs:
+- job_name: fap-pci
+  scheme: https
+  metrics_path: /pci-orce/metrics
+  authorization:
+    type: Bearer
+    credentials_file: /etc/prometheus/secrets/pci-internal-token
+  static_configs:
+  - targets: [pci.example.com]

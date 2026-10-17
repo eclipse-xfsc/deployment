@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0
+# Rendered by ArgoCD after the client approves the repository and cluster.
+# No automatic sync, prune, cascade finalizer, Secret bytes or cluster resources.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pci-participant-REPLACE_TENANT_SUFFIX
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: fap-pci-reference
+spec:
+  project: REPLACE_APPROVED_PROJECT
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pci-participant-REPLACE_TENANT_SUFFIX
+  source:
+    repoURL: https://github.com/eclipse-xfsc/deployment.git
+    targetRevision: REPLACE_APPROVED_COMMIT_SHA
+    path: PCI/deployment/helm/participant
+    helm:
+      releaseName: pci-participant
+      # Replace this entire values block with the reviewed nonsecret values.
+      # The image must be built/tested and pinned to its actual digest.
+      values: |
+        image: REPLACE_IMAGE_AT_SHA256_DIGEST
+        tenantId: REPLACE_TENANT_UUID
+        issuer: https://REPLACE_IDP_HOST/realms/REPLACE_REALM
+        audience: participant-data
+        scopes: credential:issue
+        pciClientDns: pci-REPLACE_TENANT_UUID.internal
+        pciNamespace: REPLACE_PCI_NAMESPACE
+        tlsSecret: participant-tls
+        dataSecret: participant-data
+        trustRevision: REPLACE_SECRET_REVISION_SHA256
+        source:
+          url: https://REPLACE_SOURCE_HOST/participant-test/v1/records
+          tokenSecret: participant-source
+        crypto:
+          namespace: ocm-wstack
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - FailOnSharedResource=true

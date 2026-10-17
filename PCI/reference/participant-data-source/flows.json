@@ -1,0 +1,72 @@
+[
+  {
+    "id": "pci-test-source-v1",
+    "type": "tab",
+    "label": "PCI participant test records",
+    "disabled": false,
+    "info": "Synthetic record source for the Go/Goa participant repository. This flow does not replace OCM signing, issuance, identity or status services. Configure PCI_TEST_SOURCE_TOKEN and PCI_TEST_SOURCE_RECORDS through runtime Secrets."
+  },
+  {
+    "id": "pci-test-source-notes",
+    "type": "comment",
+    "z": "pci-test-source-v1",
+    "name": "Synthetic records — participant-owned test fixture",
+    "info": "Import into the separate Internet-reachable datasource ORCE. POST <ORCE base>/participant-test/v1/records uses server-to-server bearer authentication. No debug nodes or token/claim logging.",
+    "x": 330,
+    "y": 60,
+    "wires": []
+  },
+  {
+    "id": "pci-test-source-http",
+    "type": "http in",
+    "z": "pci-test-source-v1",
+    "name": "Authenticated record lookup",
+    "url": "/participant-test/v1/records",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 180,
+    "y": 140,
+    "wires": [
+      [
+        "pci-test-source-records"
+      ]
+    ]
+  },
+  {
+    "id": "pci-test-source-records",
+    "type": "function",
+    "z": "pci-test-source-v1",
+    "name": "Tenant/configuration/subject record lookup",
+    "func": "// SPDX-License-Identifier: Apache-2.0\n// Node-RED Function node. Synthetic participant records only.\n// The Go/Goa repository authenticates the principal before calling this endpoint.\nfunction respond(status, body) {\n  msg.statusCode = status;\n  msg.headers = { \"content-type\": \"application/json\", \"cache-control\": \"no-store\", \"x-content-type-options\": \"nosniff\" };\n  msg.payload = body;\n  return msg;\n}\n\nconst expected = String(env.get(\"PCI_TEST_SOURCE_TOKEN\") || \"\");\nif (expected.length < 32) return respond(503, { code: \"TEST_SOURCE_NOT_CONFIGURED\" });\nconst headers = msg.req?.headers || {};\nconst supplied = String(headers.authorization || \"\");\nconst receivedHash = crypto.createHash(\"sha256\").update(supplied).digest();\nconst expectedHash = crypto.createHash(\"sha256\").update(\"Bearer \" + expected).digest();\nif (!crypto.timingSafeEqual(receivedHash, expectedHash)) return respond(401, { code: \"TEST_SOURCE_UNAUTHORIZED\" });\nif (!/^application\\/json(?:;|$)/i.test(String(headers[\"content-type\"] || \"\"))) return respond(415, { code: \"TEST_SOURCE_JSON_REQUIRED\" });\n\nconst input = msg.payload;\nif (!input || Array.isArray(input) || typeof input !== \"object\" || Object.keys(input).sort().join(\",\") !== \"configurationId,subject,tenantId\") return respond(400, { code: \"TEST_SOURCE_INVALID_REQUEST\" });\nfor (const name of [\"tenantId\", \"configurationId\", \"subject\"]) {\n  if (typeof input[name] !== \"string\" || !input[name] || input[name].length > 256 || /[\\x00-\\x1f]/.test(input[name])) return respond(400, { code: \"TEST_SOURCE_INVALID_SCOPE\" });\n}\n\nlet records;\ntry {\n  const encoded = String(env.get(\"PCI_TEST_SOURCE_RECORDS\") || \"\");\n  if (encoded.length > 262144) throw new Error();\n  records = JSON.parse(encoded);\n} catch { return respond(503, { code: \"TEST_SOURCE_RECORDS_INVALID\" }); }\n\nlet claims = records;\nfor (const key of [input.tenantId, input.configurationId, input.subject]) {\n  if (!claims || Array.isArray(claims) || typeof claims !== \"object\" || !Object.hasOwn(claims, key)) return respond(404, { code: \"TEST_SOURCE_RECORD_NOT_FOUND\" });\n  claims = claims[key];\n}\nif (!claims || Array.isArray(claims) || typeof claims !== \"object\" || Object.keys(claims).length > 100 || Object.values(claims).some(value => ![\"string\", \"number\", \"boolean\"].includes(typeof value)) || Buffer.byteLength(JSON.stringify(claims)) > 32768) return respond(503, { code: \"TEST_SOURCE_RECORDS_INVALID\" });\n\nreturn respond(200, { tenantId: input.tenantId, configurationId: input.configurationId, subject: input.subject, claims });\n",
+    "outputs": 1,
+    "timeout": "5",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [
+      {
+        "var": "crypto",
+        "module": "crypto"
+      }
+    ],
+    "x": 470,
+    "y": 140,
+    "wires": [
+      [
+        "pci-test-source-response"
+      ]
+    ]
+  },
+  {
+    "id": "pci-test-source-response",
+    "type": "http response",
+    "z": "pci-test-source-v1",
+    "name": "No-store JSON response",
+    "statusCode": "",
+    "headers": {},
+    "x": 770,
+    "y": 140,
+    "wires": []
+  }
+]

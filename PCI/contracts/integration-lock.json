@@ -1,0 +1,38 @@
+{
+  "release": "0.5.0-rc.12",
+  "integrationReady": false,
+  "runtimeWired": true,
+  "baseline": "OCM ESB 12.3.9",
+  "ocmArchiveSha256": "b7407ebfe8d4fc7920f30eb89ac703a133a89ba9c96da609f0234e0a4c773391",
+  "sourceManifest": "source-manifest.json",
+  "contracts": [
+    {
+      "name": "OCM offer/callback, Well-Known, TSA and status",
+      "status": "CURRENT_ESB_CONTRACT_IMPLEMENTED_NATIVE_ACCEPTANCE_PENDING",
+      "implementation": "backend/sr2/native.js",
+      "validation": "Local request/response and issuance-status regressions; native images/builds and wallet acceptance NOT_RUN"
+    },
+    {
+      "name": "Participant v1",
+      "status": "IMPLEMENTED_BUILD_UNVERIFIED",
+      "definition": "participant.proto",
+      "implementation": "reference/participant-data-repository",
+      "validation": "Node HTTP/2 mTLS loopback PASS; Go generation/build NOT RUN locally"
+    },
+    {
+      "name": "OID4VCI Draft 13 / 1.0",
+      "status": "SERIALIZERS_IMPLEMENTED",
+      "validation": "profile fixtures PASS; native conformance NOT RUN"
+    },
+    {
+      "name": "OID4VP Draft 13 / 1.0",
+      "status": "JWT_PROFILES_IMPLEMENTED",
+      "implementation": "backend/sr2/presentation.js",
+      "validation": "Local holder crypto/profile/privacy tests; native software-wallet and PCM acceptance NOT_RUN",
+      "formats": [
+        "jwt_vc_json"
+      ]
+    }
+  ],
+  "compatibilityAssessment": "ocm-12.3.9-assessment.json"
+}

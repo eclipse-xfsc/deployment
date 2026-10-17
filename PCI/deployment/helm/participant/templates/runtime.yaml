@@ -1,0 +1,99 @@
+{{- if not (or .Values.pciNamespace .Values.ingressCidrs) }}
+{{- fail "Set pciNamespace or explicit PCI egress ingressCidrs" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: {{ .Release.Name }}}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector: {matchLabels: {app.kubernetes.io/instance: {{ .Release.Name }}}}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/instance: {{ .Release.Name }}}
+      annotations:
+        fap-pci.xfsc.org/trust-revision: {{ .Values.trustRevision | default "operator-managed" | quote }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 65532, runAsGroup: 65532, fsGroup: 65532, seccompProfile: {type: RuntimeDefault}}
+      containers:
+      - name: participant
+        image: {{ required "image is required" .Values.image | quote }}
+        securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+        ports: [{name: grpc, containerPort: 9443}]
+        readinessProbe: {tcpSocket: {port: grpc}, periodSeconds: 5}
+        livenessProbe: {tcpSocket: {port: grpc}, periodSeconds: 15}
+        resources: {{ toJson .Values.resources }}
+        env:
+        - {name: PARTICIPANT_TENANT_ID, value: {{ required "tenantId is required" .Values.tenantId | quote }}}
+        - {name: PARTICIPANT_JWT_ISSUER, value: {{ required "issuer is required" .Values.issuer | quote }}}
+        - {name: PARTICIPANT_JWT_AUDIENCE, value: {{ .Values.audience | quote }}}
+        - {name: PARTICIPANT_JWT_SCOPES, value: {{ .Values.scopes | quote }}}
+        - {name: PCI_CLIENT_DNS, value: {{ required "pciClientDns is required" .Values.pciClientDns | quote }}}
+        - {name: PARTICIPANT_TLS_CERT, value: /tls/tls.crt}
+        - {name: PARTICIPANT_TLS_KEY, value: /tls/tls.key}
+        - {name: PARTICIPANT_TLS_CA, value: /tls/ca.crt}
+        - {name: PARTICIPANT_JWKS_FILE, value: /data/jwks.json}
+        - {name: CRYPTO_NAMESPACE, value: {{ required "crypto.namespace is required" .Values.crypto.namespace | quote }}}
+        {{- if .Values.source.url }}
+        - {name: PARTICIPANT_SOURCE_URL, value: {{ .Values.source.url | quote }}}
+        - {name: PARTICIPANT_SOURCE_TOKEN_FILE, value: /source/token}
+        {{- else }}
+        - {name: PARTICIPANT_DATA_FILE, value: /data/records.json}
+        {{- end }}
+        {{- if .Values.crypto.endpoint }}
+        - {name: CRYPTO_GRPC_ENDPOINT, value: {{ .Values.crypto.endpoint | quote }}}
+        - {name: CRYPTO_TLS_SERVER_NAME, value: {{ required "crypto.serverName is required" .Values.crypto.serverName | quote }}}
+        - {name: CRYPTO_TLS_CERT, value: /crypto/tls.crt}
+        - {name: CRYPTO_TLS_KEY, value: /crypto/tls.key}
+        - {name: CRYPTO_TLS_CA, value: /crypto/ca.crt}
+        {{- end }}
+
+        volumeMounts:
+
+        - {name: tls, mountPath: /tls, readOnly: true}
+        - {name: data, mountPath: /data, readOnly: true}
+        {{- if .Values.source.url }}
+        - {name: source, mountPath: /source, readOnly: true}
+        {{- end }}
+        {{- if .Values.crypto.endpoint }}
+        - {name: crypto, mountPath: /crypto, readOnly: true}
+        {{- end }}
+      volumes:
+
+      - name: tls
+        secret: {secretName: {{ required "tlsSecret is required" .Values.tlsSecret | quote }}, defaultMode: 0440}
+      - name: data
+        secret: {secretName: {{ required "dataSecret is required" .Values.dataSecret | quote }}, defaultMode: 0440}
+      {{- if .Values.source.url }}
+      - name: source
+        secret: {secretName: {{ required "source.tokenSecret is required" .Values.source.tokenSecret | quote }}, defaultMode: 0440}
+      {{- end }}
+      {{- if .Values.crypto.endpoint }}
+      - name: crypto
+        secret: {secretName: {{ required "crypto.tlsSecret is required" .Values.crypto.tlsSecret | quote }}, defaultMode: 0440}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: {{ .Release.Name }}}
+spec:
+  selector: {app.kubernetes.io/instance: {{ .Release.Name }}}
+  ports: [{name: grpc, port: 9443, targetPort: grpc}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: {{ .Release.Name }}}
+spec:
+  podSelector: {matchLabels: {app.kubernetes.io/instance: {{ .Release.Name }}}}
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    {{- if .Values.pciNamespace }}
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: {{ .Values.pciNamespace | quote }}}
+    {{- end }}
+    {{- range .Values.ingressCidrs }}
+    - ipBlock: {cidr: {{ . | quote }}}
+    {{- end }}
+    ports: [{protocol: TCP, port: 9443}]

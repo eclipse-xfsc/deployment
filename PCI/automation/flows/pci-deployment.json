@@ -1,0 +1,124 @@
+[
+  {
+    "id": "pci-deployment-automation",
+    "type": "tab",
+    "label": "PCI Deployment Automation",
+    "disabled": false,
+    "info": "Runs a mounted PCI release through scripts/lifecycle.py. Set PCI_RELEASE_ROOT and PCI_DEPLOY_CONFIG in this operator ORCE. No HTTP trigger. Structured result is available in flow context pci.deployment."
+  },
+  {
+    "id": "pci-deployment-deploy",
+    "type": "inject",
+    "z": "pci-deployment-automation",
+    "name": "deploy",
+    "props": [
+      {
+        "p": "operation",
+        "v": "deploy",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "x": 160,
+    "y": 100,
+    "wires": [
+      [
+        "pci-deployment-runner"
+      ]
+    ]
+  },
+  {
+    "id": "pci-deployment-upgrade",
+    "type": "inject",
+    "z": "pci-deployment-automation",
+    "name": "upgrade",
+    "props": [
+      {
+        "p": "operation",
+        "v": "upgrade",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "x": 160,
+    "y": 170,
+    "wires": [
+      [
+        "pci-deployment-runner"
+      ]
+    ]
+  },
+  {
+    "id": "pci-deployment-uninstall",
+    "type": "inject",
+    "z": "pci-deployment-automation",
+    "name": "uninstall",
+    "props": [
+      {
+        "p": "operation",
+        "v": "uninstall",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "topic": "",
+    "x": 160,
+    "y": 240,
+    "wires": [
+      [
+        "pci-deployment-runner"
+      ]
+    ]
+  },
+  {
+    "id": "pci-deployment-runner",
+    "type": "function",
+    "z": "pci-deployment-automation",
+    "name": "PCI release lifecycle",
+    "func": "// Imported into an operator's deployment ORCE, not the PCI application runtime.\n// Only an enum comes from the message. Executable/configuration paths come from\n// administrator-managed environment variables, never HTTP input or msg fields.\nconst operation=String(msg.operation||'');\nif(!['deploy','upgrade','uninstall'].includes(operation)){\n const result={event:'pci.automation.result',status:'failed',code:'PCI-AUTOMATION-OPERATION'};\n flow.set('pci.deployment',result);node.send({payload:result});return;\n}\nif(node.pciBusy){node.send({payload:{event:'pci.automation.result',status:'failed',code:'PCI-AUTOMATION-BUSY'}});return;}\nconst root=env.get('PCI_RELEASE_ROOT'),config=env.get('PCI_DEPLOY_CONFIG');\nif(!root?.startsWith('/')||!config?.startsWith('/')){const result={event:'pci.automation.result',status:'failed',code:'PCI-AUTOMATION-CONFIG'};flow.set('pci.deployment',result);node.send({payload:result});return;}\nnode.pciBusy=true;node.status({fill:'blue',shape:'dot',text:operation});\nconst child=childProcess.spawn('python3',[path.join(root,'scripts/lifecycle.py'),operation,'--config',config],{cwd:root,stdio:['ignore','pipe','ignore']});\nlet buffer='',result=null;\nchild.stdout.on('data',chunk=>{\n buffer+=chunk.toString('utf8');if(buffer.length>65536){child.kill();return;}\n let end;while((end=buffer.indexOf('\\n'))>=0){const line=buffer.slice(0,end);buffer=buffer.slice(end+1);try{\n const event=JSON.parse(line);if(!['pci.automation.step','pci.automation.result'].includes(event.event))continue;\n const safe={};for(const key of ['event','runId','operation','version','status','step','code','elapsedMs','namespace','deployment','detail','nextStep','exitCode'])if(['string','number'].includes(typeof event[key]))safe[key]=event[key];\n flow.set('pci.deployment',safe);node.send({payload:safe});if(event.event==='pci.automation.result')result=safe;\n }catch{}}\n});\nfunction finished(){node.pciBusy=false;node.status({fill:result?.status==='complete'?'green':'red',shape:'dot',text:result?.status||'failed'});if(!result){result={event:'pci.automation.result',status:'failed',code:'PCI-AUTOMATION-RUNNER'};flow.set('pci.deployment',result);node.send({payload:result});}node.done();}\nchild.once('error',()=>{});child.once('close',finished);return;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [
+      {
+        "var": "childProcess",
+        "module": "child_process"
+      },
+      {
+        "var": "path",
+        "module": "path"
+      }
+    ],
+    "x": 430,
+    "y": 170,
+    "wires": [
+      [
+        "pci-deployment-status"
+      ]
+    ]
+  },
+  {
+    "id": "pci-deployment-status",
+    "type": "debug",
+    "z": "pci-deployment-automation",
+    "name": "Safe deployment result",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 690,
+    "y": 170,
+    "wires": []
+  }
+]

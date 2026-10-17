@@ -1,0 +1,15 @@
+# ArgoCD handoff
+
+[participant-application.example.yaml](../../deployment/argocd/participant-application.example.yaml) targets the supplied participant chart. Fill the approved project, repository, immutable source commit, existing participant namespace and nonsecret chart values. It deliberately contains no Secret bytes. The repository path must match the layout approved by the project lead.
+
+The participant owner must provision the namespace, server certificate/trust Secret, public JWKS/data Secret, source-token Secret and optional Core client Secret described in [participant setup](../testing/participant-test.md). Configure PCI's named client-trust Secret/RBAC and its exact participant host/private-IP allowlist. These are operator inputs, not resources that this Application reads from Git. Pin the built participant image digest and refresh `trustRevision` whenever startup trust/JWKS/source credentials change.
+
+Use **one deployment owner** for these chart resources. The direct Helm helper and ArgoCD must not reconcile the same installation concurrently. For an existing Helm deployment, the platform owner must review a migration plan and preserve namespace, service address, Secrets and certificates before transferring ownership. The example does not perform that migration.
+
+The chart uses `app.kubernetes.io/instance` selectors tied to the release name. Configure ArgoCD's annotation-based resource tracking before using a different Application name, so ArgoCD does not overwrite those selector labels. The unique Application name includes the tenant suffix; the chart release and internal service remain `pci-participant`. Keep the controller's AppProject restricted to the approved source repository, participant namespace, Deployment, Service and NetworkPolicy.
+
+Automatic sync, prune, namespace creation and cascading Application deletion are absent. The approved release process performs initial synchronization and subsequent reviewed revision updates. An operator can enable additional lifecycle behavior only after defining ownership and data-retention policy. Shared OCM, the PCI ORCE runtime, Secrets and retained PVCs are outside this Application.
+
+Do not commit G0's populated fap-pci Helm snapshot: it contains runtime Secrets. PCI flow/UI installation remains the documented [operator ORCE lifecycle](automation.md), which preserves flow revision and file ownership. This handoff provides ArgoCD integration for the mandatory separately deployed participant backend.
+
+This source package does not create a repository, Application, image or live ArgoCD sync. Validate chart rendering, admission, tracking, health and rollback in the approved cluster before recording acceptance. Field semantics follow the [official Application specification](https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/); platform-specific AppProject permissions and tracking settings remain owner configuration.

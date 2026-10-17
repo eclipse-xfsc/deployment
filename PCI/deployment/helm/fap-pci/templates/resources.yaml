@@ -1,0 +1,10 @@
+{{- range .Values.objects }}
+{{- if and .metadata.namespace (not (has .metadata.namespace $.Values.allowedNamespaces)) }}
+{{- fail "PCI object outside approved namespaces" }}
+{{- end }}
+{{- if or (eq .kind "Namespace") (eq .kind "GatewayClass") (eq .kind "CustomResourceDefinition") (eq .kind "Job") (eq .kind "Pod") }}
+{{- fail "Shared infrastructure and one-shot jobs are not owned by the PCI chart" }}
+{{- end }}
+---
+{{ toYaml . }}
+{{- end }}

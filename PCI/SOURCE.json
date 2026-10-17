@@ -1,0 +1,131 @@
+{
+  "sourceRepository": "https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance",
+  "sourceCommit": "3fef8e3048f3803b8aecbd99f582a3c4c05295b0",
+  "runtimeVersion": "0.5.0-rc.12",
+  "destination": "eclipse-xfsc/deployment/PCI/",
+  "requirements": [
+    "FR-PCI-51",
+    "FR-PCI-74",
+    "FR-PCI-85",
+    "FR-PCI-92"
+  ],
+  "adaptations": {
+    "scripts/upgrade-artifacts.sh": [
+      "Verify this deployment distribution instead of the full application source tree.",
+      "Describe the deployment-only distribution in the upgrade receipt."
+    ],
+    "scripts/install-with-retries.py": [
+      "Allow the supplied rc.12 runtime version in the existing bounded-retry installer.",
+      "Update the version-gate diagnostic."
+    ],
+    "automation/stage1/install.sh": [
+      "Do not suggest building application source inside the deployment-only distribution."
+    ],
+    "dist/ground-zero.sh": [
+      "Align ground-zero version stamps with VERSION and the supplied rc.12 runtime artifacts."
+    ],
+    "deployment/argocd/participant-application.example.yaml": [
+      "Point the Application example at its destination repository.",
+      "Use the chart path from the deployment repository root."
+    ],
+    "docs/operations/automation.md": [
+      "Resolve omitted source/documentation links to the pinned PCI source revision.",
+      "Use the deployment distribution on the operator host.",
+      "Resolve the operator release root to the new PCI directory."
+    ],
+    "docs/operations/deployment.md": [
+      "Resolve omitted source/documentation links to the pinned PCI source revision."
+    ],
+    "docs/testing/participant-test.md": [
+      "Resolve omitted source/documentation links to the pinned PCI source revision.",
+      "Remove installation-specific identity from the deployment guide.",
+      "Require the target tenant identity as an operator input.",
+      "Keep image build instructions in the application repository context.",
+      "Use the supplied release version in the image-build example."
+    ],
+    "docs/operations/argocd.md": [
+      "Link to the relocated local ArgoCD Application example."
+    ],
+    "docs/operations/runbook.md": [
+      "Resource changes do not require an omitted application build tree."
+    ],
+    "docs/operations/identity.md": [
+      "Run application acceptance assets in their source repository."
+    ]
+  },
+  "newFiles": [
+    "README.md",
+    ".gitignore",
+    "SOURCE.json",
+    "deployment-sha256.txt",
+    "docs/operations/neutral-configuration.md"
+  ],
+  "upstreamFiles": {
+    "LICENSE.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "NOTICE.md": "af095a860ea5f8f52d4ada942e9ce558a543222d3493a858d2f23bde5cd2c92e",
+    "THIRD_PARTY_NOTICES.md": "82ba88c6d24f1f0c7a892ad764b91c613e31c48e19d69dbec5e1cc6fbb88ba2c",
+    "VERSION": "489c693a4b8b2060ecf49ca1e0ba3cf61c59bfc67e4e0e56276ef5ef9df5d17e",
+    "automation/flows/lifecycle.js": "9d4a3508492d0f1eaefd64dd80110ae96dfe8d8a567bca882bf1693f22ca39d4",
+    "automation/flows/pci-deployment.json": "21f15510fb265160d1d9191cfd8e63f90f7912637217fc9d352aae83c1f69d26",
+    "automation/lifecycle.example.json": "5d5eb49017dd8f7f40f6be38640cfda1f04f7d84d94f59faa6f9c41029236c1e",
+    "automation/stage1/artifacts.mjs": "a91099356d3968a260e980e362b9f0a5a30e760312bdd85f3e32d4172b2b4030",
+    "automation/stage1/check-tenant-removal.mjs": "ae4d50c4214c32a61f40ac7641b4f59bb25e84a11106e389fcc82875d0d4bdcb",
+    "automation/stage1/helper-cleanup.py": "389e5891404aec056d160c9a01f21fba04e01de5fe339efecf0ca5fcb377ae4a",
+    "automation/stage1/install.sh": "c8ad0ee2f25ec6181238c71bd3f60fb073a920c19eae91359872a0b3e22dad3c",
+    "automation/stage1/merge-flows.mjs": "6243519c0e917bd84cd56814f97aa5c5653a5d6e6533c85129b2963d8bf07490",
+    "automation/stage1/restore-runtime.mjs": "84ccbe4371ea674d7c08caff07fcbd6c4a3569cbb0d2a3d30763347628039271",
+    "contracts/envoy-release.json": "4e64e4010dd3470c2f733d6d3a8ab96dac80e6b3ba506ff360080162a582b8b3",
+    "contracts/integration-lock.json": "596b10f76138d1e0366e36d9e1922e31d9cafc56b7dc3204c87c8bf464af6fa8",
+    "contracts/ocm-12.3.9-assessment.json": "a13faebb778ef0d181cf4da9967f78e653264d152f2b4b66b0680f0695e13fdc",
+    "deployment/argocd/participant-application.example.yaml": "8e62d3b3ee22d26736869acb733c40b0da52823bde3f0618d907ff5b6abe8a97",
+    "deployment/helm/fap-pci/Chart.yaml": "de0214f5d86950ddd05bf0681045b64234ddcd1ef08d7c0c6565403a448cc4cb",
+    "deployment/helm/fap-pci/templates/resources.yaml": "904eb118dbf9e225a116df2f166ab130bb2e2b667185a8f766e7f5bdcb5921cc",
+    "deployment/helm/fap-pci/values.schema.json": "17618cdc280bcbcaadca52466c5fbe9dd71fb724e7bbdc6620397f01d967b20a",
+    "deployment/helm/fap-pci/values.yaml": "b6f1a86590128f573c36d6024ed60426bf99512a0838a557c0c4676781f018a4",
+    "deployment/helm/observability/Chart.yaml": "3303e657c24576d8c58a4cd44ce1efeec6d7e90ac10af92dbc44f8f57bec9b76",
+    "deployment/helm/observability/templates/runtime.yaml": "98877963664e04bbf419a4559932a28e86acb2265b354f033f83cc0563d1d13b",
+    "deployment/helm/observability/values.yaml": "92624b5ac84ea7360cc455310b7932eb0d380981860916065e3ac7d23e928c26",
+    "deployment/helm/participant/Chart.yaml": "9a10d49244e88faf61fb57d0761c7b58ee573c04c67749d16a23c2a344ecbc4d",
+    "deployment/helm/participant/templates/runtime.yaml": "6b34ac86b18e276ae2e092df0504716990e3e50820370a9a50df67f25f92bcf4",
+    "deployment/helm/participant/values.yaml": "32fbc6b443c19aedcec4c68ecf5bdca89394878d541d865d516e6de3087916e2",
+    "deployment/observability/collector.yaml": "31c22fd805c7e5b7c54b5e7201c783a488a82b9665d6925e1e0e55faf3b6979f",
+    "deployment/observability/prometheus.yaml": "0b1e95bdb18370cc5172502ec5cef551f6910d055f95c2fe80e99feb09e941ec",
+    "deployment/prerequisites/all-hop-tls/README.md": "745d049b14ae11b6b62a3ae57ed00ab70bcfc4b4623de23a3b9de50fc67ebe85",
+    "deployment/prerequisites/all-hop-tls/mesh.yaml": "0d743ee8ad4bb70743860db4408570a71d6308eb783e257af36c3665d34bbe9a",
+    "deployment/prerequisites/ocm-owner-keycloak-policy.yaml": "21dd58b54a158119481532112f7d14096e5e5a5c75b37b8f6573a44eeb2b1cb0",
+    "dist/fap-pci-flow.json": "036d18769f0e7ec742514e218b797279cc8755d03ef92f1847d4b6a49a1b31e3",
+    "dist/ground-zero.sh": "b975aaab95d46b681899ec210cbd5199c047cbea1f8907c4267d0c96840fc21e",
+    "dist/ui/THIRD_PARTY_LICENSES.txt": "9b11e73114749d0c6ee4f124dbeb5eb5f228e3ae9827d22b9689c6f90c494d84",
+    "dist/ui/facis-logo.svg": "b687fac556aabac7f59a0659a8862d6a8a830da9a0b36387b7ffdf7a8f2b3206",
+    "dist/ui/index.css": "af9b5415dd75f6a7e262ac51cce30ecfe7ceb3d79174407c0f53e29a8b3a35cf",
+    "dist/ui/index.html": "37ca2ac47c66c4c5757046cb7bc7c5b0b3ddfebc7849b37b6dbb34ea4911461f",
+    "dist/ui/index.js": "b9c50de19c862e33f63f4acee40bf0c26333cdeedd27ee969b1dbe26cabd1f2e",
+    "dist/ui/vue.global.prod.js": "b72394052eef1eeda1752db3758ce1be6f88016903f22e5241cc732ea307478e",
+    "docs/operations/argocd.md": "79f6530343e95807cf33df808d645277b00fa222ca985ec9d0f8b8b5aae7f213",
+    "docs/operations/automation.md": "62ab9e8d050871b6f0b7f30913542e1a54d0bf052e78b90d6a028805c4507503",
+    "docs/operations/deployment.md": "23d4bbe6ca53936fe307b43d2f86d9b3d88528df5d0b4a46046d744b0aa83e45",
+    "docs/operations/identity.md": "0417800b2eac880ac32d1ef7d0c60830f8294b44094e3d28d48ab2bb78f78224",
+    "docs/operations/observability.md": "b813629c598b8bffa90f8192f60a67e3238971a7dbe9504a3ea2ba035f5157c3",
+    "docs/operations/runbook.md": "cea108548397818f1794d4707272aae65662f43dc27757a0d9887285d17b15d9",
+    "docs/operations/transport.md": "3bf7cfd404c3a007740c0c6ec7b33cf56df5580ab1034b6046ae7675935498c0",
+    "docs/testing/participant-test.md": "f5893777f95e6293864a22ec1a70008988772da98b86c7631909616ded12f373",
+    "reference/participant-data-source/flows.json": "be7e91388fd2a66e5dc9081f1d575939e5455839086eabcbbb4c403c130895e2",
+    "reference/participant-data-source/records.example.json": "edadecce749a65d844ba5bce1c6b63c4253bb3c3317c7a1ebe112dbd471a2486",
+    "scripts/configure-entra.py": "792faa7ca2b7fd199de05bd01a3e891cd6cba5dc0499c7430a0f98833b9cb26e",
+    "scripts/configure-test-source.py": "543ced65d485e11f11298bb7b4430412581f8ea0be98aaed03077d6965a82d74",
+    "scripts/deploy-observability.py": "fcb1974090e52557c8c2f5d99cae416b0f6c15d6861016c0c84250ad5a324244",
+    "scripts/deploy-participant.py": "ca627977896d5e6e7929290b933f96ed45114e4e532a0f9b80615bfb08c4da01",
+    "scripts/deploy-test-source.py": "a1915ca9afb2c925cebd4954c5cfab06998f03b535c2c53e2cd9f3cd27ab3c7b",
+    "scripts/deploy.sh": "216fe51be5d00a955f974e02c322c7f5b16fee8f3fb8b746efa60f966dd29bbb",
+    "scripts/import-legacy-baseline.py": "8f4a1877f1742c6de2f1605f6709c7dc9ca9230e2cb4bcc9117623008c96a836",
+    "scripts/install-with-retries.py": "92871762f5e63078b2203c7fec2e6f802791fb577ca1657c2702f6bb599f3688",
+    "scripts/lifecycle.py": "e9fdf4f017d2100512f14789840019c41f363b17aaf965fea396fca0d783e668",
+    "scripts/participant-secret.sh": "35f4349204941d2ae9d79dcb8f5603ac555a7dc96ff091ad8d520cc47922cd35",
+    "scripts/preflight.sh": "3992b89ca1002732e2cb6eef5dd1cfa7bb1819f7f2015e983e4e6ba09f71a77c",
+    "scripts/reconcile-participant-ownership.py": "1d7f79f84069b34f68ebe754aedcc9b1457d0c605dde81b6f193aeef01f96751",
+    "scripts/runtime_ownership.py": "fde68b42a137daf93909e14534a0ef1435804d1ce5b10b04946c6933b2922e2c",
+    "scripts/uninstall.sh": "fa558dca7c9b9d5a5f0d1ab4908d4ec5f688c61958d704b4a9f2efac6c678a76",
+    "scripts/upgrade-artifacts.sh": "e54cff0518568a49a3bc01057689a6982867c82cafea39f9b741f428b2cb2094",
+    "tools/prepare-all-hop-tls.py": "b7cbeacdab1640f5471ac20f5516237e2174da3a3c1ccdf90a00c1392154ddcc"
+  }
+}

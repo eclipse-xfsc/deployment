@@ -1,0 +1,59 @@
+{
+  "release": "0.5.0-rc.12",
+  "baseline": "OCM ESB 12.3.9",
+  "reviewedAt": "2026-10-09",
+  "provenance": "Supplied ESB archive contents and its embedded upstream assessment; current upstream repository file bytes and published image contents were not independently retrieved in this environment.",
+  "archiveSha256": "b7407ebfe8d4fc7920f30eb89ac703a133a89ba9c96da609f0234e0a4c773391",
+  "reviewedInputs": {
+    "package.json": "1ebf1891f95f876bcd58563ae04eaf8c1d22c285b59f299e31f9d56d289bd8d2",
+    "upstream-lock.json": "229fc0c68bbce94e372adc988047a4660edc6a779f32bbb7f8a67c74486a0f8b",
+    "docs/REPAIR-12.3.8.md": "0361be3e3d8b3ede6b61a4c444b2a9b6e3a4ad702ad86f8f31592be0ac952104",
+    "CHANGELOG.md": "2b32fb5b01784e5296f0ffbea8f05128c5aec9f8e40c5c943fcaf8dd08337732",
+    "runtime/lib/adapters.cjs": "fb1a4ed5c17603cc646e718e86aa708fcf321e138c7d55fb73cfb2ab910ca3fb"
+  },
+  "changes": [
+    {
+      "component": "Crypto Provider",
+      "image": "2.3.7",
+      "sourceRevisionReportedByESB": "0d15633b2a5267a41a22f1baaabc74852d68a0ef",
+      "contract": "POST /v1/credential/verify: base64 credential, disclosureFrame: [], x-format only; no scope headers. Boolean valid verdict; proof verification does not include LDP revocation.",
+      "pciImplementation": [
+        "backend/sr2/native.js",
+        "backend/sr2/issuance.js",
+        "backend/sr2/presentation.js"
+      ],
+      "checks": [
+        "test/tests/integration/rc6-native-contract.test.mjs",
+        "test/tests/integration/presentation.test.mjs"
+      ]
+    },
+    {
+      "component": "SD-JWT",
+      "image": "1.2.12",
+      "sourceRevisionReportedByESB": "adda53f661f34a9aa4b352ce1a237eb034d7beee",
+      "contract": "Native fixes for StatusList HTTP media type, response nesting, resolver path and DID fragments; PCI continues independent scoped native status verification."
+    },
+    {
+      "component": "Credential Retrieval",
+      "image": "1.1.7-alpha",
+      "sourceRevisionReportedByESB": "3dcd9e81cf27d94fb22d341f6ac6f06f829e04da",
+      "contract": "Pinned fix/lpdvc branch delegates proof checking to configured signer; ESB supplies SIGNER_URL."
+    },
+    {
+      "component": "Universal Resolver wrapper",
+      "image": "1.0.7",
+      "contract": "No PCI endpoint change found in supplied ESB adapter."
+    },
+    {
+      "component": "Deployment and Argo",
+      "sourceRevisionReportedByESB": "5d09c7f1012d1e9bb792fda226da478ffcca27a0",
+      "contract": "12.3.9 reruns existing identity/authorization repair with bounded retries; PCI retains explicit namespace/service discovery and does not mutate OCM application images."
+    }
+  ],
+  "unchangedDependencies": [
+    "Issuer, NATS event and callback contracts retained from previous reviewed source manifest unless explicitly superseded above.",
+    "Well-Known empty-catalogue fix and native payload-privacy acceptance remain owner prerequisites."
+  ],
+  "integrationReady": false,
+  "liveCompatibility": "NOT_RUN"
+}

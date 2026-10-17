@@ -1,0 +1,21 @@
+image: "" # Required immutable image reference, built by the participant CI job.
+tenantId: ""
+issuer: ""
+audience: participant-data
+scopes: credential:issue
+pciClientDns: ""
+tlsSecret: "" # tls.crt, tls.key, ca.crt (trusted PCI client CA)
+dataSecret: "" # records.json and jwks.json; participant-owned, never stored in PCI
+pciNamespace: "" # Same-cluster PCI namespace; otherwise use ingressCidrs.
+ingressCidrs: []
+source:
+  url: "" # HTTPS URL of the separately imported ORCE record flow.
+  tokenSecret: "" # Secret key: token. Used only for server-to-server lookup.
+crypto:
+  namespace: ocm-wstack # Tenant UUID is always the group.
+  endpoint: "" # TLS gRPC Crypto Provider Core endpoint for participant-signed mode.
+  serverName: ""
+  tlsSecret: ""
+resources:
+  requests: {cpu: 25m, memory: 64Mi}
+  limits: {cpu: 500m, memory: 256Mi}

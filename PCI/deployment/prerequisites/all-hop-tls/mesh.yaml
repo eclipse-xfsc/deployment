@@ -1,0 +1,9 @@
+# Apply through the existing mesh owner's version-pinned Istio installer.
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  meshConfig:
+    meshMTLS:
+      minProtocolVersion: TLSV1_3
+    defaultConfig:
+      holdApplicationUntilProxyStarts: true

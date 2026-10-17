@@ -1,0 +1,11 @@
+{
+  "REPLACE_TENANT_UUID": {
+    "REPLACE_CONFIGURATION_UUID": {
+      "REPLACE_PARTICIPANT_TOKEN_SUB": {
+        "name": "Alex Example",
+        "employeeId": "TEST-001",
+        "department": "Engineering"
+      }
+    }
+  }
+}

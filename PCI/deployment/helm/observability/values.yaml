@@ -1,0 +1,14 @@
+serverName: "" # Service DNS included in the TLS certificate.
+tlsSecret: fap-pci-observability-tls
+metricsSecret: fap-pci-runtime
+metricsSecretKey: PCI_INTERNAL_SERVICE_TOKEN
+pciHost: ""
+pciBasePath: /pci-orce
+orceSelector: {app: xfsc-orce}
+images:
+  jaeger: jaegertracing/jaeger:2.22.0
+  collector: otel/opentelemetry-collector-contrib:0.162.0
+  prometheus: prom/prometheus:v3.15.0
+# Short diagnostic retention; no new database, PVC or public ingress.
+maxTraces: 5000
+metricsRetention: 6h

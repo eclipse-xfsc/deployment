@@ -1,0 +1,16 @@
+{
+  "reviewedAt": "2026-10-05",
+  "release": "v1.9.2",
+  "publishedAt": "2026-09-28T17:14:42Z",
+  "releaseMetadata": "https://api.github.com/repos/envoyproxy/gateway/releases/tags/v1.9.2",
+  "manifest": "https://github.com/envoyproxy/gateway/releases/download/v1.9.2/install.yaml",
+  "assetId": 595955209,
+  "size": 3999768,
+  "sha256": "0412a72907e57ff9b73c56a7bf6df5190bf0f6e4f8bb4bba34e38630bbab5778",
+  "digestSource": "Official GitHub release asset digest; G0 verifies downloaded bytes before applying",
+  "proxyImage": "docker.io/envoyproxy/envoy:distroless-v1.39.2",
+  "proxyImageDigest": null,
+  "securityGuidance": "https://gateway.envoyproxy.io/news/releases/notes/v1.9.2/",
+  "kubernetesMinorRange": [33, 36],
+  "clusterAdmissionAndRuntime": "NOT_RUN"
+}
