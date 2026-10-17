@@ -84,7 +84,7 @@ policy:
     frontendTlsSecretName: cert-manager-tls
 
   memoryStorage:
-    policiesRepo: https://gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/deployment.git
+    policiesRepo: https://github.com/eclipse-xfsc/rego-policies.git
     policiesRepoVar: POLICY_REPOSITORY_CLONE_URL
     policiesFolder: Policies
     policiesFolderVar: POLICY_REPO_FOLDER

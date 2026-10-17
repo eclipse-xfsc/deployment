@@ -2,7 +2,7 @@ apiVersion: v1
 appVersion: v1.0.0
 description: Policy Service
 name: policy-service
-version: 1.0.0
+version: 1.0.1
 dependencies:
   - name: policy
     version: 1.0.0-helm

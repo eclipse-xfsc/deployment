@@ -82,5 +82,14 @@ The core layer consits basic tools which are required for operating the xfsc sta
 
 ## Tenant Management
 
+TBD
+
 # Application Layer
 
+OCM W-Stack Basic Applications
+
+Hetzner: 
+
+```
+./ocm-wstack-init.sh --profile hetzner --domain dnszone --email email --dnstoken $DNS_TOKEN   
+``` 
