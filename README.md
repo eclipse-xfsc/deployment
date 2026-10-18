@@ -91,5 +91,11 @@ OCM W-Stack Basic Applications
 Hetzner: 
 
 ```
-./ocm-wstack-init.sh --profile hetzner --domain dnszone --email email --dnstoken $DNS_TOKEN   
+./ocm-wstack-init.sh --profile hetzner --domain DOMAIN --email email --dnstoken $DNS_TOKEN   
 ``` 
+
+Install Tenant
+
+```
+helm install demotenant xfsc/tenant/chart -f xfsc/tenant/values/tenant-ocm-wstack-values.yaml --set-string tenant.domain=DOMAIN -n ocm-wstack
+```

@@ -61,12 +61,6 @@ spec:
                 value: {{ required "tenant.issuerkid is required" $.Values.tenant.key | quote }}
               - name: X-KEY
                 value: {{ required "tenant.key is required" $.Values.tenant.key | quote }}
-              - name: X-TENANTID
-                value: {{ required "tenant.key is required" $.Values.tenant.id | quote }} 
-              - name: X-COUNTRY
-                value: {{ required "tenant.key is required" $.Values.tenant.country | quote }} 
-              - name: X-REGION
-                value: {{ required "tenant.key is required" $.Values.tenant.region | quote }} 
               - name: X-GROUP
                 value: {{ required "tenant.group is required and must not be empty" $.Values.tenant.group | quote }}
               - name: X-GROUPID
