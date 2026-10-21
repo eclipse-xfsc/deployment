@@ -1,7 +1,7 @@
 apiVersion: v2
 name: credential-verification-service
 description: A Helm chart for deploying a credential verfication service
-version: 0.1.0
+version: 0.1.1
 dependencies:
   - name: credential-verification-service
     version: 1.2.0-alpha.helm
