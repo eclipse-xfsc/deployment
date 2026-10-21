@@ -83,6 +83,34 @@ tenantRegistration:
     failedJobsHistoryLimit: 3
     annotations: {}
 
+ocm_verifier:
+  # OID4VP: Wallet ruft das signierte Request Object ab.
+  - name: verifier-request-object
+    enabled: true
+    path: /api/verifier/presentation/proof/
+    pathType: PathPrefix
+    targetPathTemplate: /v1/tenants/{tenant}/presentation/proof/
+    method: GET
+    backend:
+      name: credential-verification-service
+      port: 8080
+  # OID4VP: Wallet sendet die Präsentation (direct_post).
+  - name: verifier-direct-post
+    enabled: true
+    path: /api/verifier/presentation/proof/
+    pathType: PathPrefix
+    targetPathTemplate: /v1/tenants/{tenant}/presentation/proof/
+    method: POST
+    backend:
+      name: credential-verification-service
+      port: 8080
+  - name: didcomm
+    path: /api/didcomm
+    targetPath: /
+    backend:
+      name: didcomm-connector
+      port: 9090
+
 # Routing rules:
 # - path matching is always Exact
 # - /api/<path> automatically rewrites to /v1/tenants/<tenant.id>/<path>
@@ -90,7 +118,7 @@ tenantRegistration:
 # - routes without /api/ and without targetPath are forwarded unchanged
 # - every route always gets X-NAMESPACE, X-DID, X-KEY, X-GROUP,
 #   X-HOST, X-TYPE and X-ORIGIN.
-routes:
+ocm_issuer:
   - name: credential-issuance
     path: /api/issuance/credential
     backend:
@@ -115,13 +143,6 @@ routes:
     backend:
       name: credential-verification-service
       port: 8080
-
-  - name: didcomm
-    path: /api/didcomm
-    targetPath: /
-    backend:
-      name: didcomm-connector
-      port: 9090
 
   - name: openid-configuration
     path: /.well-known/openid-configuration

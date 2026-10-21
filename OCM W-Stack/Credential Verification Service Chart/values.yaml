@@ -4,7 +4,7 @@ credential-verification-service:
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
     name: credential-verification-service
-    tag: "main"
+    tag: "1.2.0-alpha"
     pullPolicy: Always
   podAnnotations: {}
   ingress:
@@ -43,37 +43,21 @@ credential-verification-service:
   config:
     serverMode: production
     disableTLS: false
-    cassandra:
-      Key: cassandra-password
-      Name: cassandra
-      cassandraHosts: cassandra.NAMESPACE.svc.cluster.local
-      cassandraUser: cassandra
     signing:
       Name:  signing
-      Key:   signing-key
+      Key:   eckey
     servingPort: 8080
     country: DE
     region: EU
-    didResolver: http://universal-resolver-service.NAMESPACE.svc.cluster.local:8080
     externalPresentation:
       enabled: true
       authorizeEndpoint: credential-verification-service.NAMESPACE.svc.cluster.local:8080/v1/tenants/tenant_space/presentation/
       requestObjectPolicy:
       clientIdPolicy:
       clientUrlSchema: https
-    signerService:
-      presentationVerifyUrl: http://signer.NAMESPACE.svc.cluster.local:8080/v1/presentation/verify
-      presentationSignUrl: http://signer.NAMESPACE.svc.cluster.local:8080/v1/presentation/proof
-      signerTopic: signer-topic
     topics:
       authorization: presentation.authorisation
       authorizationReply: presentation.authorisation.reply
       proofNotify: presentation.proof.notify
       presentationRequest: request
       storageRequest: storage
-    messaging:
-      protocol: nats
-      nats:
-        url: nats.NAMESPACE.svc.cluster.local:4222
-        queueGroup: credential-verification-service
-        timeoutInSec: 10
