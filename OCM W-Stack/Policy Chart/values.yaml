@@ -6,7 +6,7 @@ policy:
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa
     name: policy
-    tag: "1.1.1"
+    tag: "1.1.2"
     sha: ""
     pullPolicy: IfNotPresent
 
