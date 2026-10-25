@@ -6,26 +6,11 @@ credential-verification-service:
     name: credential-verification-service
     tag: "1.2.0-alpha"
     pullPolicy: Always
-  podAnnotations: {}
-  ingress:
-    enabled: false
-    annotations:
-      nginx.ingress.kubernetes.io/configuration-snippet: |
-        proxy_set_header X-DID did:web:cloud-wallet.DOMAIN;
-        proxy_set_header X-NAMESPACE tenant_space;
-        proxy_set_header X-KEY eckey;
-      nginx.org/client-max-body-size: 2K
-      nginx.ingress.kubernetes.io/rewrite-target: /v1/tenants/tenant_space/presentation/$2
-    hosts:
-      - host: cloud-wallet.DOMAIN
-        paths:
-          - path: /api/presentation(/|$)(.*)
-            port: 8080
-            pathType: ImplementationSpecific
-    tls:
-      - secretName: xfsc-wildcard
-        hosts:
-          - cloud-wallet.DOMAIN
+
+
+  podAnnotations: 
+    inject.xfsc.io/enabled: "true"
+
   resources:
     requests:
       cpu: 25m
