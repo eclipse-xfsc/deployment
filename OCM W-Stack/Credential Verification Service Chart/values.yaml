@@ -1,4 +1,5 @@
 credential-verification-service:
+  revisionHistoryLimit: 3
   replicaCount: 1
   name: credential-verification-service
   image:
