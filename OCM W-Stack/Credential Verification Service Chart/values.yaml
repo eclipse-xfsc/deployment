@@ -5,7 +5,7 @@ credential-verification-service:
   image:
     repository: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack
     name: credential-verification-service
-    tag: "1.2.2-alpha"
+    tag: "1.3.0-alpha"
     pullPolicy: Always
 
 
@@ -27,6 +27,9 @@ credential-verification-service:
       host: ""
       port: 8080
   config:
+    presentationPolicy:
+      url: "http://presentation-policy-service:8080"
+      timeoutSeconds: 10
     serverMode: production
     disableTLS: false
     signing:
@@ -37,9 +40,7 @@ credential-verification-service:
     region: EU
     externalPresentation:
       enabled: true
-      authorizeEndpoint: credential-verification-service.NAMESPACE.svc.cluster.local:8080/v1/tenants/tenant_space/presentation/
-      requestObjectPolicy:
-      clientIdPolicy:
+      authorizeEndpoint: /wallet/authorize
       clientUrlSchema: https
     topics:
       authorization: presentation.authorisation
