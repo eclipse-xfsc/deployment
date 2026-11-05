@@ -1,8 +1,8 @@
 apiVersion: v2
 name: credential-verification-service
 description: A Helm chart for deploying a the tsa cache service
-version: 0.1.24
+version: 0.1.25
 dependencies:
   - name: cache
-    version: 1.1.4-alpha.helm
+    version: 1.1.5-alpha.helm
     repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa
