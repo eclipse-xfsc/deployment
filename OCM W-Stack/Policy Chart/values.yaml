@@ -86,7 +86,7 @@ policy:
   memoryStorage:
     policiesRepo: https://github.com/eclipse-xfsc/rego-policies.git
     policiesRepoVar: POLICY_REPOSITORY_CLONE_URL
-    policiesFolder: Policies
+    policiesFolder: example
     policiesFolderVar: POLICY_REPO_FOLDER
 
   istio:
