@@ -1,6 +1,6 @@
 # Deployment and upgrade
 
-The packaged runtime is [`ecofacis/fap-pci:1.0.0`](https://hub.docker.com/r/ecofacis/fap-pci). Read the [container guide](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/5820e28adeecf731301a455df505a7a509a7689f/docs/operations/container-image.md) for its ORCE base, embedded `/data`, digest capture and persistent-volume initialization. The steps below describe source/G0 installation and artifact upgrades.
+The packaged runtime is [`ecofacis/fap-pci:1.0.0`](https://hub.docker.com/r/ecofacis/fap-pci). Read the [container guide](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/9dadba418006ca1825f3a5cffe4a193a81a01e5a/docs/operations/container-image.md) for its ORCE base, embedded `/data`, digest capture and persistent-volume initialization. The steps below describe source/G0 installation and artifact upgrades.
 
 Domains, mailbox addresses, private file paths, contexts and StorageClasses in this guide are examples. Supply target deployment values as described in [neutral configuration](neutral-configuration.md).
 
@@ -51,7 +51,7 @@ StorageClass names are cluster-specific; the current IONOS cluster uses `ionos-c
 
 G0 reuses the selected Envoy 1.9 controller and validates its GatewayClass. A new installation uses v1.9.2 with the official release asset SHA-256. Its PCI-only EnvoyProxy pins v1.39.2, one replica and bounded resources, following the upstream TLS security fix. An existing shared controller and other Gateways require their owner's upgrade review. Recheck PCI Gateway/xDS acceptance after the proxy rollout. PCI owns its own Gateway, not OCM's Gateway. A second public IP is permitted. G0 creates no duplicate Keycloak, NATS or signer. Mailpit mode scales the unused SMTP relay to zero; production SMTP mode scales Mailpit to zero unless explicitly exposed.
 
-`scripts/deploy.sh` also installs the private [telemetry instances](observability.md) required by FR-55/56/57. For the exact current-cluster command and one-shot flow/UI upload see [historical rc.4 upgrade](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/5820e28adeecf731301a455df505a7a509a7689f/docs/operations/upgrade-0.5.0-rc.4.md).
+`scripts/deploy.sh` also installs the private [telemetry instances](observability.md) required by FR-55/56/57. For the exact current-cluster command and one-shot flow/UI upload see [historical rc.4 upgrade](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/9dadba418006ca1825f3a5cffe4a193a81a01e5a/docs/operations/upgrade-0.5.0-rc.4.md).
 
 ## Import and verify
 
@@ -70,9 +70,11 @@ built by the `Images` workflow from the tagged source: the mandated ORCE image
 dependencies and a first-start seeding under `/opt/fap-pci`
 (`deployment/image/Dockerfile`). The image carries no captured runtime state. The
 participant service image is built from `reference/participant-data-repository/
-Dockerfile` by the same workflow. Both are published to the Harbor project of
-`harbor.config` on every merge to `main` and every release candidate tag; the release
-notes and the deployment record name the image digests.
+Dockerfile` by the same workflow. The tested image archives are published to `ecofacis/fap-pci` and
+`ecofacis/fap-pci-participant` on Docker Hub. Main publishes immutable commit tags;
+release candidates publish their exact version tags. All three Helm packages and
+publication receipts are attached to the committer-created GitHub release.
+The release notes and deployment record name the image digests.
 
 The ORCE deployment stays the one prepared by G0: the same ConfigMap, Secrets, service
 account, `/data` claim and Gateway routes. What changes is the image of the ORCE

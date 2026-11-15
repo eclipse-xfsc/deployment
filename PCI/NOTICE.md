@@ -49,7 +49,7 @@ Development dependency, used by the build and the source checks only and not par
 
 The participant service under `reference/participant-data-repository/` declares its
 Go dependencies in its `go.mod` and `go.sum` (Goa 3.28.0, MIT; Eclipse XFSC Crypto
-Provider Core 2.3.0, Apache-2.0; `lestrrat-go/jwx` 2.1.6, MIT; gRPC 1.81.1,
+Provider Core 2.3.0, Apache-2.0; `lestrrat-go/jwx` 2.1.6, MIT; gRPC 1.83.2,
 Apache-2.0; protobuf 1.36.11, BSD-3-Clause; `piprate/json-gold` 0.8.0, Apache-2.0).
 The deployed test suite declares its Python dependencies in `test/bdd/requirements.txt`
 and `test/bdd/constraints.txt` (XFSC BDD Executor, Playwright, Pillow and their

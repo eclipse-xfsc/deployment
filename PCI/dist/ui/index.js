@@ -133,7 +133,7 @@ function uiUrl(host, basePath = "") {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
+;
 function inferBasePathFromUiLocation(pathname) {
   const value = String(pathname || "");
   const match = /^(.*)\/ui(?:\/.*)?$/.exec(value);
@@ -198,7 +198,7 @@ async function sha256UrlSafe(value) {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
+;
 const store = reactive({
   session: null,
   step: null,
@@ -238,7 +238,7 @@ const store = reactive({
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
+;
 function normalizeUiError(error) {
   return {
     category: error?.category || (error?.status >= 502 ? 'integration': 'system'),
@@ -420,9 +420,9 @@ function applyPciTheme(element, branding) {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
-
-
+;
+;
+;
 const bridgePending = new Map();
 let bridgeClient, bridgeGrant, bridgeBootstrap, bridgeStarted = false, bridgeWasReady = false;
 let bridgeReadyWaiters = [], bridgeGeneration = 0, bridgeConnectedSocket = null;
@@ -589,7 +589,7 @@ const bridgePing = () => sendCommand('', {}, 'ping');
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
+;
 const UiFeedback = {
   props: ['error'],
   emits: ['dismiss', 'recover'],
@@ -686,10 +686,10 @@ const UiField = {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
-
-
-
+;
+;
+;
+;
 async function request(path, options = {}) {
   // Only the cookie/redirect lifecycle uses HTTP. Application reads and writes
   // travel through the authenticated UIBUILDER contract.
@@ -741,9 +741,9 @@ const api = {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
-
-
+;
+;
+;
 const PREFIX = "fap-pci-oidc";
 async function beginLogin(native = false) {
   const config = await api.authConfig();
@@ -878,7 +878,7 @@ const PCI_QR_ALIGNMENT = [
 
 
 // ---- src/qr.js ----
-
+;
 // QR byte-mode encoder, error correction L, versions 1–40. No network or
 // browser storage. Tables and placement conventions credit in vendor notice.
 function pciQrMatrix(text, forcedMask = null) {
@@ -1155,7 +1155,7 @@ function newPciConfigurationForm() {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
+;
 /** Per-component state. Secret inputs stay in memory and are not persisted here. */
 function createPciIssuerState({ ref, props, runtime, window }) {
   const query = ref('');
@@ -1487,7 +1487,7 @@ function createPciIdentityActions(state, dependencies) {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
+;
 /** Configurations operations with explicit state and I/O dependencies. */
 function createPciConfigurationActions(state, dependencies) {
   const { selected, versions, configForm, preview, configs, notice, restoreVersion } = state;
@@ -1665,7 +1665,7 @@ function createPciFlowActions(state, dependencies) {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
+;
 /** Tenant operations with explicit state and I/O dependencies. */
 function createPciTenantActions(state, dependencies) {
   const { metadata, branding, settings, notice, metadataForm, authServers, publication } = state;
@@ -1718,7 +1718,7 @@ function createPciTenantActions(state, dependencies) {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
+;
 /** Connectors operations with explicit state and I/O dependencies. */
 function createPciConnectorActions(state, dependencies) {
   const { connector, connectorForm, connectors, notice } = state;
@@ -2028,6 +2028,7 @@ function createPciJourneyActions(state, dependencies) {
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
 /** Refresh operations with explicit state and I/O dependencies. */
+;
 function createPciRefreshActions(state, dependencies) {
   const {
     cap,
@@ -2050,23 +2051,84 @@ function createPciRefreshActions(state, dependencies) {
     settingsForm,
     publication,
     preview,
-    notice,
-    selected,
-    configForm,
-    selectedFlow,
-    flowForm,
-    identity,
-    identityForm,
-    connector
+    notice
   } = state;
-  const { run, call, loadIdentity, api, props, clone, restoreJourney, rememberWorkspace, recovery, sections } = dependencies;
+  const {
+    run,
+    call,
+    loadIdentity,
+    api,
+    props,
+    clone,
+    restoreJourney,
+    rememberWorkspace,
+    recovery,
+    sections,
+    runtime,
+    window
+  } = dependencies;
+  const defaults = createPciIssuerState({ ref: value => ({ value }), props, runtime, window });
+  const issuerFields = [
+    'configs',
+    'flows',
+    'assets',
+    'selected',
+    'configForm',
+    'selectedFlow',
+    'flowForm',
+    'history',
+    'versions',
+    'preview',
+    'query',
+    'configState',
+    'historyConfig',
+    'restoreVersion',
+    'search',
+    'nextCursor'
+  ];
+  const administratorFields = [
+    'members',
+    'assignments',
+    'identity',
+    'identityRedirect',
+    'identityForm',
+    'metadata',
+    'metadataForm',
+    'authServers',
+    'branding',
+    'brandingForm',
+    'settings',
+    'settingsForm',
+    'publication',
+    'connector',
+    'connectorForm',
+    'grant',
+    'grantConfig',
+    'keyName',
+    'keyType',
+    'settingsTab'
+  ];
+  function resetFields(names) {
+    for (const name of names) state[name].value = clone(defaults[name].value);
+  }
+  function clearRevokedPrivileges() {
+    if (!cap.value.issuer) resetFields(issuerFields);
+    if (!cap.value.tenantAdmin) resetFields(administratorFields);
+    if (!cap.value.issuer && !cap.value.tenantAdmin) {
+      resetFields(['uploadRole', 'uploadScope']);
+    }
+  }
   async function refresh() {
     await run(async() => {
       cap.value = await call('/issuer-capabilities');
+      clearRevokedPrivileges();
       if (!loaded.value) {
-        if (tab.value !== 'presentation' && !recovery?.tab) tab.value = cap.value.issuer ? 'configurations': 'request';
+        if (tab.value !== 'presentation' && !recovery?.tab) {
+          tab.value = cap.value.issuer ? 'configurations': 'request';
+        }
         loaded.value = true;
-      } if (!sections.value.some(s => s.id === tab.value)) tab.value = 'request';
+      }
+      if (!sections.value.some(section => section.id === tab.value)) tab.value = 'request';
       connectors.value = cap.value.connectors || [];
       eligible.value = (await call('/eligible-configurations')).items;
       presentationConfigurations.value = (await call('/presentation-configurations')).items;
@@ -2074,14 +2136,6 @@ function createPciRefreshActions(state, dependencies) {
         configs.value = (await call('/credential-configurations')).items;
         flows.value = (await call('/flows')).items;
         assets.value = (await call('/assets')).items;
-      } else {
-        configs.value = [];
-        flows.value = [];
-        assets.value = [];
-        selected.value = null;
-        configForm.value = null;
-        selectedFlow.value = null;
-        flowForm.value = null;
       }
       if (cap.value.tenantAdmin) {
         await loadIdentity();
@@ -2098,16 +2152,6 @@ function createPciRefreshActions(state, dependencies) {
         settings.value = (await call('/issuer-settings')).item;
         if (settings.value) settingsForm.value = clone(settings.value.draft);
         publication.value = await call('/publication');
-      } else {
-        members.value = [];
-        assignments.value = [];
-        identity.value = null;
-        identityForm.value.clientSecret = '';
-        metadata.value = null;
-        branding.value = null;
-        settings.value = null;
-        publication.value = null;
-        connector.value = null;
       }
       await restoreJourney();
     });
@@ -2170,21 +2214,21 @@ function createPciOperationRunner(state, normalizeError, recoverInput) {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
 /**
  * Compose issuer features. Browser, transport and Vue APIs are supplied explicitly.
  * A caller can replace those boundaries in tests without changing domain modules.
@@ -3312,15 +3356,15 @@ const pciDelegationPanelTemplate = `
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
-
-
-
-
-
-
-
-
+;
+;
+;
+;
+;
+;
+;
+;
+;
 // Workspace shell; independent feature panels are composed without extra runtime requests.
 const pciIssuerTemplate = `
 <section class="sr2-console" aria-label="Credential issuance workspace">
@@ -3430,15 +3474,15 @@ const pciIssuerTemplate = `
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
-
-
-
-
-
-
-
-
+;
+;
+;
+;
+;
+;
+;
+;
+;
 // Component lifecycle only. Feature state and operations live in src/issuer/.
 const Sr2Console = {
   components: { UiFeedback, UiField },
@@ -3466,16 +3510,16 @@ const Sr2Console = {
 //
 // Prepared with AI-assisted tools and reviewed by the author.
 // Assisted-by: AI
-
-
-
-
-
-
-
-
-
-
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
 const App = {
   components: { Sr2Console, UiFeedback, UiProgress, UiField },
   setup() {
@@ -3690,371 +3734,171 @@ const App = {
       loadMembers,
     };
   },
-  template: `
-<div class="app-shell">
-  <a class="skip-link" href="#main" @click.prevent="focusMain">Skip to main content</a>
-  <header class="topbar">
-    <a class="brand" :href="runtime.uiPath" aria-label="FACIS FAP PCI home">
-      <img class="brand-logo" :src="runtime.uiPath+'facis-logo.svg'" width="106" height="40" alt="FACIS">
-      <span>
-        <strong>FAP PCI</strong>
-        <small>Principal Credential Issuance</small>
-      </span>
-    </a>
-    <nav aria-label="Primary">
-      <a v-if="!isTenantHost" href="#/register">Registration</a>
-      <a v-if="!isTenantHost" href="#/provider">Provider review</a>
-      <button v-if="!store.session" class="link-button" @click="login">Sign in</button>
-      <button v-else class="link-button" @click="logout">Sign out</button>
-    </nav>
-  </header>
-  <main id="main" tabindex="-1">
-    <ui-feedback
-      class="global-error"
-      :error="store.errors.global"
-      @dismiss="store.errors.global=null"
-      @recover="recoverWorkspace"
-    />
-    <p v-if="!store.live.connected" class="connection-status" role="status">Connecting to your workspace…</p>
-    <ui-progress />
-    <section v-if="verification.state !== 'idle'" class="center-card card" aria-live="polite">
-      <span class="status-icon" :class="verification.state">{{ verification.state === 'working' ? '...' : verification.state === 'success' ? 'OK' : '!' }}</span>
-      <p class="eyebrow">EMAIL VERIFICATION</p>
-      <h1>
-        {{ verification.state === 'success' ? 'Registration verified' : verification.state === 'failed' ? 'Verification failed' : 'Checking link' }}
-      </h1>
-      <p>{{ verification.message }}</p>
-      <a class="button-link secondary" :href="runtime.uiPath">Return to registration</a>
-    </section>
-    <section
-      v-else-if="isTenantHost"
-      class="tenant-landing"
-      :class="{'tenant-workspace':store.session && store.tenant.state==='active'}"
-      :style="tenantTheme"
-    >
-      <div class="tenant-welcome" v-if="!store.session || store.tenant.state!=='active'">
-        <div class="tenant-guidance">
-          <p class="eyebrow">PARTICIPANT PORTAL</p>
-          <img
-            v-if="store.tenant.branding?.logoAssetId"
-            class="tenant-logo"
-            :src="runtime.basePath+'/api/v1/public/assets/'+store.tenant.branding.logoAssetId"
-            alt="Organization logo"
-          >
-          <h1>{{ store.tenant.branding?.title || store.tenant.organizationName }}</h1>
-          <p class="lead">{{store.tenant.branding?.description || 'Sign in to manage or request organization credentials.'}}</p>
-        </div>
-        <div class="tenant-summary card dark-card">
-          <span class="badge" :class="'badge-' + store.tenant?.state">{{ store.tenant?.state }}</span>
-          <code>{{ store.tenant?.primaryDomain }}</code>
-          <p v-if="!store.session">Authentication is required before participant or principal functions are available.</p>
-          <button v-if="!store.session" @click="login">Sign in to your organization</button>
-          <button v-if="!store.session" class="secondary" @click="login(true)">Tenant administrator sign in</button>
-          <div v-else class="profile-box">
-            <strong>{{ store.session.displayName || store.session.username }}</strong>
-            <span>{{ store.session.email }}</span>
-            <div class="role-list">
-              <span v-for="role in store.session.roles" :key="role" class="badge">{{ role }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <sr2-console
-        v-if="store.session && store.tenant.state==='active'"
-        :tenant="store.tenant"
-        :session="store.session"
-      >
-        <template #members>
-          <section v-if="isTenantAdmin" class="card member-admin">
-            <h2>Tenant members</h2>
-            <p>Invite organization members, then grant issuer access below.</p>
-            <form class="member-form" @submit.prevent="inviteMember">
-              <input aria-label="Username" v-model="invite.username" required placeholder="Username" />
-              <input aria-label="Email" v-model="invite.email" required type="email" placeholder="Email" />
-              <input aria-label="First name" v-model="invite.firstName" required placeholder="First name" />
-              <input aria-label="Last name" v-model="invite.lastName" required placeholder="Last name" />
-              <select aria-label="Member role" v-model="invite.role">
-                <option value="principal">Principal</option>
-                <option value="issuer_admin">Issuer administrator</option>
-                <option value="participant_tenant_admin">Tenant administrator</option>
-              </select>
-              <button :disabled="store.busy">Invite</button>
-            </form>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Email</th>
-                    <th>Roles</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="member in members" :key="member.subject">
-                    <td>{{ member.username }}</td>
-                    <td>{{ member.email }}</td>
-                    <td>{{ member.roles.join(', ') }}</td>
-                    <td>{{ member.enabled ? 'Enabled' : 'Disabled' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </template>
-      </sr2-console>
-      <footer v-if="store.tenant.branding?.footer" class="tenant-footer preserve-lines">{{store.tenant.branding.footer}}</footer>
-    </section>
-    <section v-else-if="isProvider" class="console-page">
-      <aside class="provider-guidance">
-        <p class="eyebrow">PROVIDER WORKSPACE</p>
-        <h2>Participant organizations</h2>
-        <p>Review applications, then follow each organization’s setup.</p>
-        <nav aria-label="Provider tasks">
-          <button
-            class="secondary"
-            :aria-pressed="providerTab==='applications'"
-            @click="providerTab='applications'"
-          >Applications</button>
-          <button class="secondary" :aria-pressed="providerTab==='tenants'" @click="providerTab='tenants'">Tenant availability</button>
-        </nav>
-      </aside>
-      <div class="provider-content">
-        <div class="console-header">
-          <div>
-            <p class="eyebrow">PROVIDER ADMINISTRATION</p>
-            <h1>{{providerTab==='applications'?'Registration review queue':'Tenant availability'}}</h1>
-            <p>Review verified applications and manage participant organizations.</p>
-          </div>
-          <div class="auth-panel">
-            <template v-if="!store.session">
-              <button @click="login">Sign in to your organization</button>
-            </template>
-            <template v-else>
-              <strong>{{ store.session.displayName || store.session.username }}</strong>
-              <span>{{ store.session.roles.join(', ') }}</span>
-              <button class="secondary" @click="loadProvider">Refresh</button>
-            </template>
-          </div>
-        </div>
-        <div v-if="store.session && !isProviderAdmin" class="error">Your Keycloak account does not have the provider_admin role.</div>
-        <template v-if="isProviderAdmin">
-          <section class="stats">
-            <div class="stat orange">
-              <strong>{{ pending.length }}</strong>
-              <span>Pending approval</span>
-            </div>
-            <div class="stat">
-              <strong>{{ registrations.filter(x => x.state === 'approved').length }}</strong>
-              <span>Approved</span>
-            </div>
-            <div class="stat purple">
-              <strong>{{ registrations.filter(x => x.state === 'rejected').length }}</strong>
-              <span>Rejected</span>
-            </div>
-            <div class="stat green">
-              <strong>{{ tenants.filter(x => x.state === 'active').length }}</strong>
-              <span>Active tenants</span>
-            </div>
-          </section>
-          <section v-if="providerTab==='applications'" class="card table-card">
-            <div class="section-title">
-              <div>
-                <h2>Applications</h2>
-                <p>Email verification remains distinct from provider approval.</p>
-              </div>
-              <button class="secondary compact" @click="loadProvider">Refresh</button>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Organization</th>
-                    <th>Requested host</th>
-                    <th>Contact</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="item in registrations" :key="item.registrationId">
-                    <td>
-                      <strong>{{ item.organizationName }}</strong>
-                      <small>{{ item.organizationIdentifier }}</small>
-                    </td>
-                    <td>
-                      <code>{{ item.requestedDomain }}</code>
-                    </td>
-                    <td>
-                      {{ item.contactName }}
-                      <small>{{ item.contactEmail }}</small>
-                    </td>
-                    <td>
-                      <span class="badge" :class="'badge-' + item.state.replace('_','-')">{{ item.state }}</span>
-                    </td>
-                    <td>
-                      <div v-if="item.state === 'pending_approval'" class="actions">
-                        <button class="compact" @click="decide(item, 'approve')">Approve</button>
-                        <button class="compact danger" @click="decide(item, 'reject')">Reject</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr v-if="!registrations.length">
-                    <td colspan="5" class="empty">No registrations.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-          <section v-if="providerTab==='tenants'" class="card table-card">
-            <div class="section-title">
-              <div>
-                <h2>Tenant reconciliation</h2>
-                <p>Track organization setup and availability.</p>
-              </div>
-            </div>
-            <div class="tenant-grid">
-              <article v-for="tenant in tenants" :key="tenant.tenantId" class="tenant-card">
-                <div class="tenant-card-head">
-                  <h3>{{ tenant.organizationName }}</h3>
-                  <span class="badge" :class="'badge-' + tenant.state">{{ tenant.state }}</span>
-                </div>
-                <code>{{ tenant.primaryDomain }}</code>
-                <p>Generation {{ tenant.observedGeneration }} / {{ tenant.desiredGeneration }}</p>
-                <ul>
-                  <li v-for="condition in tenant.conditions" :key="condition.type">
-                    <span>{{ condition.type }}</span>
-                    <strong>{{ condition.status }}</strong>
-                  </li>
-                </ul>
-                <div class="actions">
-                  <button
-                    v-if="tenant.state==='active'"
-                    class="secondary"
-                    @click="lifecycleTenant(tenant,'suspended')"
-                  >Suspend</button>
-                  <button v-if="tenant.state==='suspended'" @click="lifecycleTenant(tenant,'provisioning')">Resume</button>
-                  <button
-                    v-if="!['deleted','deleting'].includes(tenant.state)"
-                    class="danger"
-                    @click="lifecycleTenant(tenant,'deleting')"
-                  >Delete tenant</button>
-                </div>
-              </article>
-            </div>
-          </section>
-        </template>
-      </div>
-    </section>
-    <section v-else class="page-grid">
-      <div class="hero-panel">
-        <p class="eyebrow">TENANT FOUNDATION</p>
-        <h1>Register a participant organization</h1>
-        <p class="lead">
-          Submit organization details. Verify your email and submit your organization for provider review.
-          We’ll prepare your workspace after approval.
-        </p>
-        <ol class="steps">
-          <li>
-            <span>1</span>
-            Submit
-          </li>
-          <li>
-            <span>2</span>
-            Verify email
-          </li>
-          <li>
-            <span>3</span>
-            Provider review
-          </li>
-          <li>
-            <span>4</span>
-            Provision
-          </li>
-        </ol>
-      </div>
-      <div class="card form-card">
-        <div v-if="submission" class="success">
-          <span class="status-icon success">OK</span>
-          <h2>Registration received</h2>
-          <p>A single-use verification link was sent through the configured SMTP service.</p>
-          <dl>
-            <div>
-              <dt>Requested host</dt>
-              <dd>{{ submission.requestedDomain }}</dd>
-            </div>
-            <div>
-              <dt>Email delivery</dt>
-              <dd>{{ submission.emailDeliveryStatus }}</dd>
-            </div>
-          </dl>
-          <button class="secondary" @click="submission = null">Register another</button>
-        </div>
-        <form v-else @submit.prevent="submitRegistration">
-          <h2>Organization registration</h2>
-          <ui-field
-            label="Organization identifier"
-            name="organizationIdentifier"
-            v-model="form.organizationIdentifier"
-            :error="store.errors.global?.fields?.organizationIdentifier"
-            required
-            placeholder="urn:example:alpha"
-          />
-          <ui-field
-            label="Organization name"
-            name="organizationName"
-            v-model="form.organizationName"
-            :error="store.errors.global?.fields?.organizationName"
-            required
-            placeholder="Alpha GmbH"
-          />
-          <div class="two-column">
-            <ui-field
-              label="Contact name"
-              name="contactName"
-              v-model="form.contactName"
-              :error="store.errors.global?.fields?.contactName"
-              required
-              placeholder="Alex Admin"
-            />
-            <ui-field
-              label="Contact email"
-              name="contactEmail"
-              v-model="form.contactEmail"
-              :error="store.errors.global?.fields?.contactEmail"
-              required
-              placeholder="admin@alpha.example"
-              type="email"
-            />
-          </div>
-          <ui-field
-            label="Tenant slug"
-            name="requestedSlug"
-            v-model="form.requestedSlug"
-            :error="store.errors.global?.fields?.requestedSlug"
-            required
-            pattern="[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?"
-            placeholder="alpha"
-          >
-            <small>
-              Creates {{ form.requestedSlug || '{slug}' }}-{{ config?.hostnameTemplate?.split('-').slice(1).join('-') || 'pci.example.com' }}
-            </small>
-          </ui-field>
-          <label class="consent">
-            <input required type="checkbox" />
-            <span>I confirm the information may be processed for tenant onboarding and provider review.</span>
-          </label>
-          <button :disabled="store.busy">{{ store.busy ? 'Submitting...' : 'Submit registration' }}</button>
-        </form>
-      </div>
-    </section>
-  </main>
-  <footer>
-    <span>FACIS.FAP_PCI</span>
-    <span>Credential workspace · 0.5.0-rc.16</span>
-  </footer>
-</div>
-`
+  template: [
+    "\n<div class=\"app-shell\">\n  <a class=\"skip-link\" href=\"#main\" @click.prevent=\"focusMain\">Skip",
+    " to main content</a>\n  <header class=\"topbar\">\n    <a class=\"brand\" :href=\"runtime.uiPath\" ari",
+    "a-label=\"FACIS FAP PCI home\">\n      <img class=\"brand-logo\" :src=\"runtime.uiPath+'facis-logo.svg",
+    "'\" width=\"106\" height=\"40\" alt=\"FACIS\">\n      <span>\n        <strong>FAP PCI</strong>\n      ",
+    "  <small>Principal Credential Issuance</small>\n      </span>\n    </a>\n    <nav aria-label=\"Primary",
+    "\">\n      <a v-if=\"!isTenantHost\" href=\"#/register\">Registration</a>\n      <a v-if=\"!isTenantHo",
+    "st\" href=\"#/provider\">Provider review</a>\n      <button v-if=\"!store.session\" class=\"link-butto",
+    "n\" @click=\"login\">Sign in</button>\n      <button v-else class=\"link-button\" @click=\"logout\">Si",
+    "gn out</button>\n    </nav>\n  </header>\n  <main id=\"main\" tabindex=\"-1\">\n    <ui-feedback\n    ",
+    "  class=\"global-error\"\n      :error=\"store.errors.global\"\n      @dismiss=\"store.errors.global=n",
+    "ull\"\n      @recover=\"recoverWorkspace\"\n    />\n    <p v-if=\"!store.live.connected\" class=\"conn",
+    "ection-status\" role=\"status\">Connecting to your workspace…</p>\n    <ui-progress />\n    <section v",
+    "-if=\"verification.state !== 'idle'\" class=\"center-card card\" aria-live=\"polite\">\n      <span cl",
+    "ass=\"status-icon\" :class=\"verification.state\">{{ verification.state === 'working' ? '...' : verifi",
+    "cation.state === 'success' ? 'OK' : '!' }}</span>\n      <p class=\"eyebrow\">EMAIL VERIFICATION</p>\n",
+    "      <h1>\n        {{ verification.state === 'success' ? 'Registration verified' : verification.state",
+    " === 'failed' ? 'Verification failed' : 'Checking link' }}\n      </h1>\n      <p>{{ verification.mess",
+    "age }}</p>\n      <a class=\"button-link secondary\" :href=\"runtime.uiPath\">Return to registration</",
+    "a>\n    </section>\n    <section\n      v-else-if=\"isTenantHost\"\n      class=\"tenant-landing\"\n  ",
+    "    :class=\"{'tenant-workspace':store.session && store.tenant.state==='active'}\"\n      :style=\"ten",
+    "antTheme\"\n    >\n      <div class=\"tenant-welcome\" v-if=\"!store.session || store.tenant.state!=='",
+    "active'\">\n        <div class=\"tenant-guidance\">\n          <p class=\"eyebrow\">PARTICIPANT PORTAL",
+    "</p>\n          <img\n            v-if=\"store.tenant.branding?.logoAssetId\"\n            class=\"ten",
+    "ant-logo\"\n            :src=\"runtime.basePath+'/api/v1/public/assets/'+store.tenant.branding.logoAss",
+    "etId\"\n            alt=\"Organization logo\"\n          >\n          <h1>{{ store.tenant.branding?.ti",
+    "tle || store.tenant.organizationName }}</h1>\n          <p class=\"lead\">{{store.tenant.branding?.des",
+    "cription || 'Sign in to manage or request organization credentials.'}}</p>\n        </div>\n        <d",
+    "iv class=\"tenant-summary card dark-card\">\n          <span class=\"badge\" :class=\"'badge-' + store",
+    ".tenant?.state\">{{ store.tenant?.state }}</span>\n          <code>{{ store.tenant?.primaryDomain }}</",
+    "code>\n          <p v-if=\"!store.session\">Authentication is required before participant or principal",
+    " functions are available.</p>\n          <button v-if=\"!store.session\" @click=\"login\">Sign in to y",
+    "our organization</button>\n          <button v-if=\"!store.session\" class=\"secondary\" @click=\"logi",
+    "n(true)\">Tenant administrator sign in</button>\n          <div v-else class=\"profile-box\">\n       ",
+    "     <strong>{{ store.session.displayName || store.session.username }}</strong>\n            <span>{{ ",
+    "store.session.email }}</span>\n            <div class=\"role-list\">\n              <span v-for=\"role",
+    " in store.session.roles\" :key=\"role\" class=\"badge\">{{ role }}</span>\n            </div>\n       ",
+    "   </div>\n        </div>\n      </div>\n      <sr2-console\n        v-if=\"store.session && store.ten",
+    "ant.state==='active'\"\n        :tenant=\"store.tenant\"\n        :session=\"store.session\"\n      >",
+    "\n        <template #members>\n          <section v-if=\"isTenantAdmin\" class=\"card member-admin\">",
+    "\n            <h2>Tenant members</h2>\n            <p>Invite organization members, then grant issuer a",
+    "ccess below.</p>\n            <form class=\"member-form\" @submit.prevent=\"inviteMember\">\n         ",
+    "     <input aria-label=\"Username\" v-model=\"invite.username\" required placeholder=\"Username\" />\n",
+    "              <input aria-label=\"Email\" v-model=\"invite.email\" required type=\"email\" placeholder",
+    "=\"Email\" />\n              <input aria-label=\"First name\" v-model=\"invite.firstName\" required pl",
+    "aceholder=\"First name\" />\n              <input aria-label=\"Last name\" v-model=\"invite.lastName\"",
+    " required placeholder=\"Last name\" />\n              <select aria-label=\"Member role\" v-model=\"inv",
+    "ite.role\">\n                <option value=\"principal\">Principal</option>\n                <option v",
+    "alue=\"issuer_admin\">Issuer administrator</option>\n                <option value=\"participant_tenan",
+    "t_admin\">Tenant administrator</option>\n              </select>\n              <button :disabled=\"st",
+    "ore.busy\">Invite</button>\n            </form>\n            <div class=\"table-wrap\">\n             ",
+    " <table>\n                <thead>\n                  <tr>\n                    <th>User</th>\n        ",
+    "            <th>Email</th>\n                    <th>Roles</th>\n                    <th>Status</th>\n ",
+    "                 </tr>\n                </thead>\n                <tbody>\n                  <tr v-for",
+    "=\"member in members\" :key=\"member.subject\">\n                    <td>{{ member.username }}</td>\n ",
+    "                   <td>{{ member.email }}</td>\n                    <td>{{ member.roles.join(', ') }}<",
+    "/td>\n                    <td>{{ member.enabled ? 'Enabled' : 'Disabled' }}</td>\n                  </",
+    "tr>\n                </tbody>\n              </table>\n            </div>\n          </section>\n     ",
+    "   </template>\n      </sr2-console>\n      <footer v-if=\"store.tenant.branding?.footer\" class=\"ten",
+    "ant-footer preserve-lines\">{{store.tenant.branding.footer}}</footer>\n    </section>\n    <section v-",
+    "else-if=\"isProvider\" class=\"console-page\">\n      <aside class=\"provider-guidance\">\n        <p ",
+    "class=\"eyebrow\">PROVIDER WORKSPACE</p>\n        <h2>Participant organizations</h2>\n        <p>Revie",
+    "w applications, then follow each organization’s setup.</p>\n        <nav aria-label=\"Provider tasks\"",
+    ">\n          <button\n            class=\"secondary\"\n            :aria-pressed=\"providerTab==='appl",
+    "ications'\"\n            @click=\"providerTab='applications'\"\n          >Applications</button>\n    ",
+    "      <button class=\"secondary\" :aria-pressed=\"providerTab==='tenants'\" @click=\"providerTab='tena",
+    "nts'\">Tenant availability</button>\n        </nav>\n      </aside>\n      <div class=\"provider-conte",
+    "nt\">\n        <div class=\"console-header\">\n          <div>\n            <p class=\"eyebrow\">PROVI",
+    "DER ADMINISTRATION</p>\n            <h1>{{providerTab==='applications'?'Registration review queue':'Te",
+    "nant availability'}}</h1>\n            <p>Review verified applications and manage participant organiza",
+    "tions.</p>\n          </div>\n          <div class=\"auth-panel\">\n            <template v-if=\"!stor",
+    "e.session\">\n              <button @click=\"login\">Sign in to your organization</button>\n          ",
+    "  </template>\n            <template v-else>\n              <strong>{{ store.session.displayName || st",
+    "ore.session.username }}</strong>\n              <span>{{ store.session.roles.join(', ') }}</span>\n   ",
+    "           <button class=\"secondary\" @click=\"loadProvider\">Refresh</button>\n            </templat",
+    "e>\n          </div>\n        </div>\n        <div v-if=\"store.session && !isProviderAdmin\" class=\"",
+    "error\">Your Keycloak account does not have the provider_admin role.</div>\n        <template v-if=\"i",
+    "sProviderAdmin\">\n          <section class=\"stats\">\n            <div class=\"stat orange\">\n     ",
+    "         <strong>{{ pending.length }}</strong>\n              <span>Pending approval</span>\n         ",
+    "   </div>\n            <div class=\"stat\">\n              <strong>{{ registrations.filter(x => x.stat",
+    "e === 'approved').length }}</strong>\n              <span>Approved</span>\n            </div>\n       ",
+    "     <div class=\"stat purple\">\n              <strong>{{ registrations.filter(x => x.state === 'reje",
+    "cted').length }}</strong>\n              <span>Rejected</span>\n            </div>\n            <div c",
+    "lass=\"stat green\">\n              <strong>{{ tenants.filter(x => x.state === 'active').length }}</st",
+    "rong>\n              <span>Active tenants</span>\n            </div>\n          </section>\n          ",
+    "<section v-if=\"providerTab==='applications'\" class=\"card table-card\">\n            <div class=\"se",
+    "ction-title\">\n              <div>\n                <h2>Applications</h2>\n                <p>Email v",
+    "erification remains distinct from provider approval.</p>\n              </div>\n              <button ",
+    "class=\"secondary compact\" @click=\"loadProvider\">Refresh</button>\n            </div>\n            ",
+    "<div class=\"table-wrap\">\n              <table>\n                <thead>\n                  <tr>\n  ",
+    "                  <th>Organization</th>\n                    <th>Requested host</th>\n                ",
+    "    <th>Contact</th>\n                    <th>Status</th>\n                    <th>Action</th>\n      ",
+    "            </tr>\n                </thead>\n                <tbody>\n                  <tr v-for=\"it",
+    "em in registrations\" :key=\"item.registrationId\">\n                    <td>\n                      <",
+    "strong>{{ item.organizationName }}</strong>\n                      <small>{{ item.organizationIdentifi",
+    "er }}</small>\n                    </td>\n                    <td>\n                      <code>{{ ite",
+    "m.requestedDomain }}</code>\n                    </td>\n                    <td>\n                    ",
+    "  {{ item.contactName }}\n                      <small>{{ item.contactEmail }}</small>\n              ",
+    "      </td>\n                    <td>\n                      <span class=\"badge\" :class=\"'badge-' +",
+    " item.state.replace('_','-')\">{{ item.state }}</span>\n                    </td>\n                   ",
+    " <td>\n                      <div v-if=\"item.state === 'pending_approval'\" class=\"actions\">\n     ",
+    "                   <button class=\"compact\" @click=\"decide(item, 'approve')\">Approve</button>\n    ",
+    "                    <button class=\"compact danger\" @click=\"decide(item, 'reject')\">Reject</button>",
+    "\n                      </div>\n                    </td>\n                  </tr>\n                  ",
+    "<tr v-if=\"!registrations.length\">\n                    <td colspan=\"5\" class=\"empty\">No registra",
+    "tions.</td>\n                  </tr>\n                </tbody>\n              </table>\n            </",
+    "div>\n          </section>\n          <section v-if=\"providerTab==='tenants'\" class=\"card table-car",
+    "d\">\n            <div class=\"section-title\">\n              <div>\n                <h2>Tenant recon",
+    "ciliation</h2>\n                <p>Track organization setup and availability.</p>\n              </div",
+    ">\n            </div>\n            <div class=\"tenant-grid\">\n              <article v-for=\"tenant ",
+    "in tenants\" :key=\"tenant.tenantId\" class=\"tenant-card\">\n                <div class=\"tenant-card",
+    "-head\">\n                  <h3>{{ tenant.organizationName }}</h3>\n                  <span class=\"ba",
+    "dge\" :class=\"'badge-' + tenant.state\">{{ tenant.state }}</span>\n                </div>\n          ",
+    "      <code>{{ tenant.primaryDomain }}</code>\n                <p>Generation {{ tenant.observedGenerat",
+    "ion }} / {{ tenant.desiredGeneration }}</p>\n                <ul>\n                  <li v-for=\"condi",
+    "tion in tenant.conditions\" :key=\"condition.type\">\n                    <span>{{ condition.type }}</",
+    "span>\n                    <strong>{{ condition.status }}</strong>\n                  </li>\n         ",
+    "       </ul>\n                <div class=\"actions\">\n                  <button\n                    ",
+    "v-if=\"tenant.state==='active'\"\n                    class=\"secondary\"\n                    @click=",
+    "\"lifecycleTenant(tenant,'suspended')\"\n                  >Suspend</button>\n                  <butto",
+    "n v-if=\"tenant.state==='suspended'\" @click=\"lifecycleTenant(tenant,'provisioning')\">Resume</button",
+    ">\n                  <button\n                    v-if=\"!['deleted','deleting'].includes(tenant.state",
+    ")\"\n                    class=\"danger\"\n                    @click=\"lifecycleTenant(tenant,'deleti",
+    "ng')\"\n                  >Delete tenant</button>\n                </div>\n              </article>\n ",
+    "           </div>\n          </section>\n        </template>\n      </div>\n    </section>\n    <secti",
+    "on v-else class=\"page-grid\">\n      <div class=\"hero-panel\">\n        <p class=\"eyebrow\">TENANT ",
+    "FOUNDATION</p>\n        <h1>Register a participant organization</h1>\n        <p class=\"lead\">\n    ",
+    "      Submit organization details. Verify your email and submit your organization for provider review.",
+    "\n          We’ll prepare your workspace after approval.\n        </p>\n        <ol class=\"steps\">\n",
+    "          <li>\n            <span>1</span>\n            Submit\n          </li>\n          <li>\n     ",
+    "       <span>2</span>\n            Verify email\n          </li>\n          <li>\n            <span>3<",
+    "/span>\n            Provider review\n          </li>\n          <li>\n            <span>4</span>\n    ",
+    "        Provision\n          </li>\n        </ol>\n      </div>\n      <div class=\"card form-card\">",
+    "\n        <div v-if=\"submission\" class=\"success\">\n          <span class=\"status-icon success\">O",
+    "K</span>\n          <h2>Registration received</h2>\n          <p>A single-use verification link was se",
+    "nt through the configured SMTP service.</p>\n          <dl>\n            <div>\n              <dt>Requ",
+    "ested host</dt>\n              <dd>{{ submission.requestedDomain }}</dd>\n            </div>\n        ",
+    "    <div>\n              <dt>Email delivery</dt>\n              <dd>{{ submission.emailDeliveryStatus ",
+    "}}</dd>\n            </div>\n          </dl>\n          <button class=\"secondary\" @click=\"submissio",
+    "n = null\">Register another</button>\n        </div>\n        <form v-else @submit.prevent=\"submitReg",
+    "istration\">\n          <h2>Organization registration</h2>\n          <ui-field\n            label=\"O",
+    "rganization identifier\"\n            name=\"organizationIdentifier\"\n            v-model=\"form.orga",
+    "nizationIdentifier\"\n            :error=\"store.errors.global?.fields?.organizationIdentifier\"\n    ",
+    "        required\n            placeholder=\"urn:example:alpha\"\n          />\n          <ui-field\n  ",
+    "          label=\"Organization name\"\n            name=\"organizationName\"\n            v-model=\"fo",
+    "rm.organizationName\"\n            :error=\"store.errors.global?.fields?.organizationName\"\n         ",
+    "   required\n            placeholder=\"Alpha GmbH\"\n          />\n          <div class=\"two-column\"",
+    ">\n            <ui-field\n              label=\"Contact name\"\n              name=\"contactName\"\n  ",
+    "            v-model=\"form.contactName\"\n              :error=\"store.errors.global?.fields?.contactN",
+    "ame\"\n              required\n              placeholder=\"Alex Admin\"\n            />\n            <",
+    "ui-field\n              label=\"Contact email\"\n              name=\"contactEmail\"\n              v-",
+    "model=\"form.contactEmail\"\n              :error=\"store.errors.global?.fields?.contactEmail\"\n     ",
+    "         required\n              placeholder=\"admin@alpha.example\"\n              type=\"email\"\n  ",
+    "          />\n          </div>\n          <ui-field\n            label=\"Tenant slug\"\n            na",
+    "me=\"requestedSlug\"\n            v-model=\"form.requestedSlug\"\n            :error=\"store.errors.gl",
+    "obal?.fields?.requestedSlug\"\n            required\n            pattern=\"[a-z0-9](?:[a-z0-9-]{0,38}[",
+    "a-z0-9])?\"\n            placeholder=\"alpha\"\n          >\n            <small>\n              Create",
+    "s {{ form.requestedSlug || '{slug}' }}-{{ config?.hostnameTemplate?.split('-').slice(1).join('-') || '",
+    "pci.example.com' }}\n            </small>\n          </ui-field>\n          <label class=\"consent\">",
+    "\n            <input required type=\"checkbox\" />\n            <span>I confirm the information may be",
+    " processed for tenant onboarding and provider review.</span>\n          </label>\n          <button :d",
+    "isabled=\"store.busy\">{{ store.busy ? 'Submitting...' : 'Submit registration' }}</button>\n        </",
+    "form>\n      </div>\n    </section>\n  </main>\n  <footer>\n    <span>FACIS.FAP_PCI</span>\n    <span>",
+    "Credential workspace · 0.5.0-rc.16</span>\n  </footer>\n</div>\n"
+  ].join('')
 };
 createApp(App).mount("#app");
 

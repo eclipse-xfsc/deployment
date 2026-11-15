@@ -19,7 +19,7 @@ This file lists direct third-party software intentionally used by the FACIS FAP 
 | Keycloak | existing OCM deployment | Apache-2.0 | PCI realm, OIDC and role source |
 | Goa | 3.28.0 | MIT | Participant service design/generation |
 | Crypto Provider Core | 2.3.0 | Apache-2.0 | Official participant signing gRPC client |
-| Go gRPC / protobuf | 1.81.1 / 1.36.11 | Apache-2.0 / BSD-3-Clause | Participant transport |
+| Go gRPC / protobuf | 1.83.2 / 1.36.11 | Apache-2.0 / BSD-3-Clause | Participant transport |
 | lestrrat-go/jwx | 2.1.6 | MIT | Participant JWT/JWK verification |
 | Jaeger | 2.22.0 | Apache-2.0 | Private PCI trace collection/query |
 | OTEL Collector contrib | 0.162.0 | Apache-2.0 | Trace and metric transport |

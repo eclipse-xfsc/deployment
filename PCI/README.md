@@ -2,7 +2,7 @@
 
 Deployment content of FACIS FAP Principal Credential Issuance (PCI) release
 `0.5.0-rc.16`, generated from source commit
-[`5820e28adeecf731301a455df505a7a509a7689f`](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/tree/5820e28adeecf731301a455df505a7a509a7689f) of the
+[`9dadba418006ca1825f3a5cffe4a193a81a01e5a`](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/tree/9dadba418006ca1825f3a5cffe4a193a81a01e5a) of the
 [PCI repository](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance) by `tools/export-deployment-package.mjs`.
 Application source, application tests, release records, specification documents
 and the application CI remain in the PCI repository. Do not edit the files of this
