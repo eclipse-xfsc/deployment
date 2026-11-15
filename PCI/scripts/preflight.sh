@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 LEANEA GmbH and others.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Read-only checks. Pass the namespace of the existing PCI ORCE deployment.
 set -euo pipefail
 NS="${1:?Usage: preflight.sh PCI_NAMESPACE [ORCE_DEPLOYMENT] [ORCE_CONTAINER]}"; DEPLOY="${2:-xfsc-orce}"; CONTAINER="${3:-orce}"

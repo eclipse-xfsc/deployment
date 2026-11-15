@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 LEANEA GmbH and others.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
 # SPDX-License-Identifier: Apache-2.0
+
 """Deploy the separate ORCE synthetic record source with verified Gateway backend TLS."""
 import argparse
 import hashlib
@@ -130,7 +137,7 @@ def main():
         p.add_argument('--'+name, required=True)
     p.add_argument('--namespace', default='xfsc-orce-pci-source')
     p.add_argument('--pci-namespace', default='xfsc-orce-pci-orce')
-    p.add_argument('--host', default='pci.facis.cloud')
+    p.add_argument('--host', default='pci.example.com')
     p.add_argument('--path-prefix', default='/participant-source')
     p.add_argument('--gateway-namespace', default='infrastructure')
     p.add_argument('--gateway', default='pci-gateway')

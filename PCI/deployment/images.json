@@ -1,0 +1,6 @@
+{
+  "$comment": "Images of this release, pinned by digest. Filled from the Images workflow run on the release candidate tag; null until then.",
+  "version": "0.5.0-rc.16",
+  "application": null,
+  "participant": null
+}

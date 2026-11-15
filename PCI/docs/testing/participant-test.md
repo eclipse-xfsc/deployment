@@ -28,7 +28,7 @@ Keep the editor separately authenticated. Use only synthetic employee values. Co
 }
 ```
 
-Create the configuration as a draft first to obtain its UUID. Use the actual tenant and configuration UUIDs from the intended installation. Configure records on the separate datasource ORCE (replace the three datasource deployment arguments):
+Create the configuration as a draft first to obtain its UUID. Use the actual tenant and configuration UUIDs of the intended installation. Configure records on the separate datasource ORCE (replace the three datasource deployment arguments):
 
 ```bash
 python3 scripts/configure-test-source.py \
@@ -44,7 +44,7 @@ This creates a random shared source token, writes a private mode-0600 token file
 
 ## 2. Build the required repository
 
-Build and test the participant image in a separate checkout of the [pinned PCI source](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/tree/3fef8e3048f3803b8aecbd99f582a3c4c05295b0), or use its participant CI/release jobs. The Go source and Dockerfile are deliberately absent from this deployment directory. Run the following commands from that separate source checkout:
+The participant CI job in run `38727256710` passed Go/Goa/protobuf generation, vet, race tests and the generated server build. Reproduce those checks for the selected source revision before packaging a participant image:
 
 ```bash
 bash reference/participant-data-repository/generate.sh
@@ -55,7 +55,7 @@ bash reference/participant-data-repository/generate.sh
   go build -tags=generated ./cmd/server
 )
 docker build -f reference/participant-data-repository/Dockerfile \
-  -t <approved-registry>/pci-participant:0.5.0-rc.12 .
+  -t <approved-registry>/pci-participant:<release version> .
 ```
 
 Publish the image only through the participant owner's approved registry process. Record its resulting `@sha256:...` digest and retain `go.sum`, generated source and test output as release evidence. The main PCI application still consists of imported ORCE flows and UI; this container is the service expressly required by the SRS. It was not built or published on your behalf.
@@ -90,7 +90,7 @@ The server loads a public JWKS snapshot at startup. Reapply the helper after IdP
 
 ## 5. Complete the real issuance
 
-Use the [acceptance order](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/3fef8e3048f3803b8aecbd99f582a3c4c05295b0/docs/testing/acceptance-walkthrough.md). Publish a journey, select it and the connector on the configuration, set `issuer` as the key reference, validate, publish locally, then publish metadata to OCM. Sign in as the intended principal whose `sub` has synthetic records. Complete the journey and scan the native offer using PCM when available.
+Use the [acceptance order](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/5820e28adeecf731301a455df505a7a509a7689f/docs/testing/acceptance-walkthrough.md). Publish a journey, select it and the connector on the configuration, set `issuer` as the key reference, validate, publish locally, then publish metadata to OCM. Sign in as the intended principal whose `sub` has synthetic records. Complete the journey and scan the native offer using PCM when available.
 
 An offer/QR is only the start of issuance. PASS requires the native callback, authenticated participant retrieval, OCM signing, wallet import, independent signature/status verification and history entry. Repeat with bad source token, absent record, wrong/expired client certificate, wrong JWT issuer/audience/scope/subject, timeout and cross-tenant requests. Preserve sanitized outcomes; do not attach access tokens, offers or credentials to shared logs.
 
@@ -103,4 +103,4 @@ ES256 JWS2020 through Core gRPC after offline URDNA2015 normalization. Claims
 are under `credentialSubject.pciClaims`; envelope terms retain W3C semantics.
 Build, race-test and verify against the actual native verifier before acceptance.
 
-Each helper namespace is exclusive to one tenant and registered with Kubernetes UID and owner identities. Re-running the helper enrolls an existing rc.3 short-name namespace. Tenant deletion waits for namespace termination, thereby removing its Helm record, workload and Secrets. Named cleanup grants are then removed. A foreign owner or replacement UID blocks deletion. Uninstall also restores journaled runtime overrides and removes owned telemetry trust; see the [legacy baseline limitation](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/3fef8e3048f3803b8aecbd99f582a3c4c05295b0/docs/operations/upgrade-0.5.0-rc.5.md).
+Each helper namespace is exclusive to one tenant and registered with Kubernetes UID and owner identities. Re-running the helper enrolls an existing rc.3 short-name namespace. Tenant deletion waits for namespace termination, thereby removing its Helm record, workload and Secrets. Named cleanup grants are then removed. A foreign owner or replacement UID blocks deletion. Uninstall also restores journaled runtime overrides and removes owned telemetry trust; see the [legacy baseline limitation](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/5820e28adeecf731301a455df505a7a509a7689f/docs/operations/upgrade-0.5.0-rc.5.md).

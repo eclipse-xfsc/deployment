@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 LEANEA GmbH and others.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Artifact-only upgrade of an already prepared PCI runtime. No Python required.
 set -Eeuo pipefail
 umask 077
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# A source checkout carries docs/release/source-sha256.txt; the deployment package
+# (PCI/ in eclipse-xfsc/deployment) carries deployment-sha256.txt instead.
+pci_manifest(){ if [[ -f "$ROOT/deployment-sha256.txt" ]]; then echo deployment-sha256.txt; else echo docs/release/source-sha256.txt; fi; }
 CONFIG="${PCI_LIFECYCLE_CONFIG:-$HOME/fap-pci/deployment-private/pci-rc6-lifecycle.json}"
 NOTES="${PCI_TEST_NOTES:-$HOME/fap-pci/deployment-test-notes}"
 GATEWAY_IP=""; API_IP=""
@@ -19,7 +30,7 @@ done
 for binary in jq curl kubectl node sha256sum; do command -v "$binary" >/dev/null || { echo "Missing $binary" >&2; exit 1; }; done
 [[ -f "$CONFIG" ]] || { echo "Missing private configuration: $CONFIG" >&2; exit 1; }
 VERSION="$(cat "$ROOT/VERSION")"
-(cd "$ROOT" && sha256sum --quiet -c deployment-sha256.txt)
+(cd "$ROOT" && sha256sum --quiet -c "$(pci_manifest)")
 option() {
   jq -er --arg option "$1" '.g0Args as $args | [$args | to_entries[] | select(.value==$option) | .key] as $indexes | if ($indexes|length)==1 then $args[$indexes[0]+1] | select(type=="string" and length>0) else error("Expected one operator option: "+$option) end' "$CONFIG"
 }
@@ -82,7 +93,7 @@ Release: $VERSION
 Upstream source corrections: backend/sr2/native.js decodes the Crypto 2.3.7 single-key endpoint's JWK array and selects a unique key by configured name/DID and JWT algorithm, including RSA algorithm variants. Independent credential signature and binding verification remain mandatory. Previous discovery, public JWKS, VM, catalogue and authentication fixes are retained.
 Installer: automation/stage1/install.sh uses Bash/jq with existing Node flow merger, without Python. Reads receive bounded retries. Flow POST is attempted once; ambiguous failure stops for review.
 Operation: artifact-only upgrade. Existing tenant records, participant image, infrastructure and operator configuration are retained. Original release files are preserved in their previous directory.
-Deployment package: PCI/ in eclipse-xfsc/deployment; application source remains in the PCI repository.
+Release: a source checkout of the PCI repository, or PCI/ in eclipse-xfsc/deployment; changes go through the normal review process of the repository concerned.
 Started: $(date -u +%FT%TZ)
 NOTE
 export PCI_ORCE_CURL_CONFIG="$TMP/editor.curl"
@@ -93,7 +104,7 @@ else
   printf 'Artifact upgrade failed; review log and live flow revision before retrying.\n' >> "$NOTES/$VERSION-source-fix-record.md"
   exit 1
 fi
-(cd "$ROOT" && sha256sum --quiet -c deployment-sha256.txt)
+(cd "$ROOT" && sha256sum --quiet -c "$(pci_manifest)")
 "${CURL[@]}" --fail-with-body --retry 3 --retry-delay 3 --retry-max-time 60 "$EDITOR/healthz" > "$TMP/health.json"
 jq -e --arg version "$VERSION" '.status=="ok" and .version==$version' "$TMP/health.json" > /dev/null || { echo 'Runtime version verification failed' >&2; exit 1; }
 "${CURL[@]}" --fail-with-body --retry 3 --retry-delay 3 --retry-max-time 60 "$EDITOR/readyz" > "$TMP/ready.json"

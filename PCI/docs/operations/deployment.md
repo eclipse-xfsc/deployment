@@ -1,5 +1,7 @@
 # Deployment and upgrade
 
+The packaged runtime is [`ecofacis/fap-pci:1.0.0`](https://hub.docker.com/r/ecofacis/fap-pci). Read the [container guide](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/5820e28adeecf731301a455df505a7a509a7689f/docs/operations/container-image.md) for its ORCE base, embedded `/data`, digest capture and persistent-volume initialization. The steps below describe source/G0 installation and artifact upgrades.
+
 Domains, mailbox addresses, private file paths, contexts and StorageClasses in this guide are examples. Supply target deployment values as described in [neutral configuration](neutral-configuration.md).
 
 PCI uses one active ORCE replica. PostgreSQL stores configuration and safe history; live access tokens, wallet offers and proof nonces stay in process memory. A restart invalidates pending offers and requires affected users to sign in again. Do not enable HPA or multiple ORCE replicas without a reviewed privacy-preserving coordination design.
@@ -49,7 +51,7 @@ StorageClass names are cluster-specific; the current IONOS cluster uses `ionos-c
 
 G0 reuses the selected Envoy 1.9 controller and validates its GatewayClass. A new installation uses v1.9.2 with the official release asset SHA-256. Its PCI-only EnvoyProxy pins v1.39.2, one replica and bounded resources, following the upstream TLS security fix. An existing shared controller and other Gateways require their owner's upgrade review. Recheck PCI Gateway/xDS acceptance after the proxy rollout. PCI owns its own Gateway, not OCM's Gateway. A second public IP is permitted. G0 creates no duplicate Keycloak, NATS or signer. Mailpit mode scales the unused SMTP relay to zero; production SMTP mode scales Mailpit to zero unless explicitly exposed.
 
-`scripts/deploy.sh` also installs the private [telemetry instances](observability.md) required by FR-55/56/57. For the exact current-cluster command and one-shot flow/UI upload see [historical rc.4 upgrade](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/3fef8e3048f3803b8aecbd99f582a3c4c05295b0/docs/operations/upgrade-0.5.0-rc.4.md).
+`scripts/deploy.sh` also installs the private [telemetry instances](observability.md) required by FR-55/56/57. For the exact current-cluster command and one-shot flow/UI upload see [historical rc.4 upgrade](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/5820e28adeecf731301a455df505a7a509a7689f/docs/operations/upgrade-0.5.0-rc.4.md).
 
 ## Import and verify
 
@@ -58,6 +60,48 @@ For a disposable development cluster, this procedure requires no backup. For ret
 Import **the new** `dist/fap-pci-flow.json` and replace the existing PCI nodes using their stable IDs. Copy all `dist/ui/*` into `/data/uibuilder/ui/src/`. Earlier uploaded 0.4.1 flow/UI files do not contain these native adapters. Use the editor's modified-flows deployment; do not restart ORCE just to import files. The optional `automation/stage1/install.sh` performs the established merge workflow—read its `--help` and provide the correct editor authorization.
 
 Check `/pci-orce/readyz`, `/pci-orce/api/v1/platform/status`, the provider UI and tenant routes. Readiness includes the native NATS subscription; G0's final `Ready` means prerequisite setup, not successful wallet issuance.
+
+## Deploying the application image
+
+From release candidate rc.16 the PCI release is delivered as an application image
+built by the `Images` workflow from the tagged source: the mandated ORCE image
+`ecofacis/xfsc-orce:2.0.15`, referenced by the digest recorded in
+`deployment/image/base-image.lock`, with the PCI flow, the UI assets, the production
+dependencies and a first-start seeding under `/opt/fap-pci`
+(`deployment/image/Dockerfile`). The image carries no captured runtime state. The
+participant service image is built from `reference/participant-data-repository/
+Dockerfile` by the same workflow. Both are published to the Harbor project of
+`harbor.config` on every merge to `main` and every release candidate tag; the release
+notes and the deployment record name the image digests.
+
+The ORCE deployment stays the one prepared by G0: the same ConfigMap, Secrets, service
+account, `/data` claim and Gateway routes. What changes is the image of the ORCE
+container, set by digest in the deployment repository (`eclipse-xfsc/deployment`) or,
+for a QA namespace, directly on the Deployment:
+
+```bash
+kubectl -n xfsc-orce-pci-orce set image deploy/xfsc-orce \
+  orce=<registry>/<project>/fap-pci@sha256:<digest of the release candidate>
+kubectl -n xfsc-orce-pci-orce rollout status deploy/xfsc-orce --timeout=10m
+```
+
+On start the image's entry point runs `seed-data.mjs` before the ORCE entry point: when
+`/data/fap-pci/install/image-release.json` does not name this release, it copies the
+production dependencies into `/data/node_modules`, installs `node-red-contrib-uibuilder`
+at the recorded version if it is missing or at another version, merges the PCI flow
+into the flow file with the rules of the hot installer (PCI tabs replaced, other flows
+kept, id collisions refuse the start), replaces the PCI files under
+`/data/uibuilder/ui/src`, and writes the ownership record and the release marker. A
+start with the same release does nothing. A new, empty `/data` volume therefore
+receives exactly the release of the image; an existing volume is upgraded in place.
+The seeding writes one JSON log line (`pci.image.seed`) that the deployment record
+quotes.
+
+Take the backup of `docs/operations/backup-rollback.md` before replacing the image of
+an existing installation, and use the rollback section of that page if the new image
+does not become ready. `automation/stage1/install.sh` (hot import through the Admin
+API) remains available for an instance that is not deployed from the image; do not
+mix the two on one instance within one release.
 
 ## Additional runtime settings
 

@@ -12,6 +12,7 @@ This file lists direct third-party software intentionally used by the FACIS FAP 
 | `jsonwebtoken` | 9.0.2 | MIT | OIDC ID-token verification |
 | `jwks-rsa` | 3.2.0 | MIT | Keycloak JWKS retrieval/cache |
 | `yaml` | 2.9.1 | ISC | Parsing the pinned Envoy install manifest |
+| acorn | 8.15.0 (development dependency) | MIT | JavaScript parser used by the build and review tools only; not part of `dist/` or of any image |
 | Envoy Gateway / Envoy | 1.9.2 / 1.39.2 for fresh PCI bootstrap | Apache-2.0 | PCI Gateway; existing shared controller remains owner-managed |
 | PostgreSQL | operator-selected supported release | PostgreSQL License | Managed PCI state store when managed mode is selected |
 | Mailpit | operator-selected supported release | MIT | Review/development SMTP capture when Mailpit mode is selected |
