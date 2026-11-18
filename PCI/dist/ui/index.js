@@ -146,7 +146,7 @@ const runtime = {
   uiPath: uiPath(inferredBasePath),
   apiBasePath: withBasePath("/api/v1", inferredBasePath),
   configured: false,
-  version: "0.5.0-rc.16",
+  version: "0.5.0-rc.17",
 };
 function applyPublicConfiguration(configuration) {
   const configuredBasePath = normalizeBasePath(configuration && configuration.orceBasePath !== undefined ? configuration.orceBasePath: "");
@@ -3897,7 +3897,7 @@ const App = {
     " processed for tenant onboarding and provider review.</span>\n          </label>\n          <button :d",
     "isabled=\"store.busy\">{{ store.busy ? 'Submitting...' : 'Submit registration' }}</button>\n        </",
     "form>\n      </div>\n    </section>\n  </main>\n  <footer>\n    <span>FACIS.FAP_PCI</span>\n    <span>",
-    "Credential workspace · 0.5.0-rc.16</span>\n  </footer>\n</div>\n"
+    "Credential workspace · 0.5.0-rc.17</span>\n  </footer>\n</div>\n"
   ].join('')
 };
 createApp(App).mount("#app");

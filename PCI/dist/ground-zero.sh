@@ -9,7 +9,7 @@
 
 set -Eeuo pipefail
 
-VERSION="0.5.0-rc.16"
+VERSION="0.5.0-rc.17"
 ENVOY_VERSION="v1.9.2"
 ENVOY_URL="https://github.com/envoyproxy/gateway/releases/download/${ENVOY_VERSION}/install.yaml"
 ENVOY_SHA256="0412a72907e57ff9b73c56a7bf6df5190bf0f6e4f8bb4bba34e38630bbab5778"
@@ -20,7 +20,7 @@ UIBUILDER_VERSION="7.5.0"
 
 usage() {
   cat <<'USAGE'
-FACIS FAP PCI ground-zero 0.5.0-rc.16
+FACIS FAP PCI ground-zero 0.5.0-rc.17
 
 Prepares the complete PCI cluster/runtime baseline before flow/UI import.
 It never imports the flow or copies UI assets. OCM W-Stack must already exist
@@ -1127,7 +1127,7 @@ else
   CONFIG_HASH="$(printf '%s\0' "$VERSION" "$CONFIG_DATA_JSON" "$RUNTIME_DATA_JSON" "$DATA_CLAIM" "$ORCE_CONTAINER" "$ORCE_RESOURCES" "${PCI_NATIVE_TLS_SECRET:-}"|sha256sum|awk '{print $1}')"
   unset CONFIG_DATA_JSON RUNTIME_DATA_JSON
 fi
-if ! $DRY_RUN;then DEPLOY_JSON="$("${K[@]}" -n "$ORCE_NS" get deploy "$ORCE_DEPLOYMENT" -o json)";CURRENT_HASH="$(jq -r '.spec.template.metadata.annotations["fap-pci.xfsc.org/config-hash"]//""'<<<"$DEPLOY_JSON")";if [[ "$CURRENT_HASH" != "$CONFIG_HASH" || "$(jq -r ' .spec.strategy.type//""'<<<"$DEPLOY_JSON")" != Recreate ]];then PATCH="$(jq -c --arg c "$ORCE_CONTAINER" --arg v "$DATA_VOLUME" --arg claim "$DATA_CLAIM" --arg h "$CONFIG_HASH" --argjson resources "$ORCE_RESOURCES" --argjson gid "$GID_NOW" --arg nativeTls "${PCI_NATIVE_TLS_SECRET:-}" '.spec.template.spec as $s|($s.containers|map(if .name==$c then .resources=$resources|.volumeMounts=((.volumeMounts//[])|map(select(.mountPath!="/data" and .name!="fap-pci-secrets" and .name!="fap-pci-native-tls"))+[{name:$v,mountPath:"/data"},{name:"fap-pci-secrets",mountPath:"/var/run/fap-pci-secrets",readOnly:true}]+(if $nativeTls!="" then [{name:"fap-pci-native-tls",mountPath:"/var/run/fap-pci-native-tls",readOnly:true}] else [] end))|.envFrom=((.envFrom//[])|map(select((.configMapRef.name//"")!="fap-pci-config" and (.secretRef.name//"")!="fap-pci-runtime"))+[{configMapRef:{name:"fap-pci-config"}},{secretRef:{name:"fap-pci-runtime"}}]) else . end)) as $containers|($s.volumes//[]|map(select(.name!=$v and .name!="fap-pci-secrets" and .name!="fap-pci-native-tls"))+[{name:$v,persistentVolumeClaim:{claimName:$claim}},{name:"fap-pci-secrets",secret:{secretName:"fap-pci-runtime",defaultMode:288,items:[{key:"PCI_KEYCLOAK_ADMIN_PASSWORD",path:"PCI_KEYCLOAK_ADMIN_PASSWORD"}]}}]+(if $nativeTls!="" then [{name:"fap-pci-native-tls",secret:{secretName:$nativeTls,defaultMode:288}}] else [] end)) as $volumes|{spec:{strategy:{type:"Recreate",rollingUpdate:null},template:{metadata:{annotations:{"fap-pci.xfsc.org/version":"0.5.0-rc.16","fap-pci.xfsc.org/config-hash":$h}},spec:{securityContext:(($s.securityContext//{})|.fsGroup=(.fsGroup//$gid)),serviceAccountName:"fap-pci-orce",automountServiceAccountToken:true,containers:$containers,volumes:$volumes}}}}'<<<"$DEPLOY_JSON")";"${K[@]}" -n "$ORCE_NS" patch deploy "$ORCE_DEPLOYMENT" --type=merge -p "$PATCH";"${K[@]}" -n "$ORCE_NS" rollout status deploy/"$ORCE_DEPLOYMENT" --timeout=10m;else log "ORCE already prepared; no rollout";fi;fi
+if ! $DRY_RUN;then DEPLOY_JSON="$("${K[@]}" -n "$ORCE_NS" get deploy "$ORCE_DEPLOYMENT" -o json)";CURRENT_HASH="$(jq -r '.spec.template.metadata.annotations["fap-pci.xfsc.org/config-hash"]//""'<<<"$DEPLOY_JSON")";if [[ "$CURRENT_HASH" != "$CONFIG_HASH" || "$(jq -r ' .spec.strategy.type//""'<<<"$DEPLOY_JSON")" != Recreate ]];then PATCH="$(jq -c --arg c "$ORCE_CONTAINER" --arg v "$DATA_VOLUME" --arg claim "$DATA_CLAIM" --arg h "$CONFIG_HASH" --argjson resources "$ORCE_RESOURCES" --argjson gid "$GID_NOW" --arg nativeTls "${PCI_NATIVE_TLS_SECRET:-}" '.spec.template.spec as $s|($s.containers|map(if .name==$c then .resources=$resources|.volumeMounts=((.volumeMounts//[])|map(select(.mountPath!="/data" and .name!="fap-pci-secrets" and .name!="fap-pci-native-tls"))+[{name:$v,mountPath:"/data"},{name:"fap-pci-secrets",mountPath:"/var/run/fap-pci-secrets",readOnly:true}]+(if $nativeTls!="" then [{name:"fap-pci-native-tls",mountPath:"/var/run/fap-pci-native-tls",readOnly:true}] else [] end))|.envFrom=((.envFrom//[])|map(select((.configMapRef.name//"")!="fap-pci-config" and (.secretRef.name//"")!="fap-pci-runtime"))+[{configMapRef:{name:"fap-pci-config"}},{secretRef:{name:"fap-pci-runtime"}}]) else . end)) as $containers|($s.volumes//[]|map(select(.name!=$v and .name!="fap-pci-secrets" and .name!="fap-pci-native-tls"))+[{name:$v,persistentVolumeClaim:{claimName:$claim}},{name:"fap-pci-secrets",secret:{secretName:"fap-pci-runtime",defaultMode:288,items:[{key:"PCI_KEYCLOAK_ADMIN_PASSWORD",path:"PCI_KEYCLOAK_ADMIN_PASSWORD"}]}}]+(if $nativeTls!="" then [{name:"fap-pci-native-tls",secret:{secretName:$nativeTls,defaultMode:288}}] else [] end)) as $volumes|{spec:{strategy:{type:"Recreate",rollingUpdate:null},template:{metadata:{annotations:{"fap-pci.xfsc.org/version":"0.5.0-rc.17","fap-pci.xfsc.org/config-hash":$h}},spec:{securityContext:(($s.securityContext//{})|.fsGroup=(.fsGroup//$gid)),serviceAccountName:"fap-pci-orce",automountServiceAccountToken:true,containers:$containers,volumes:$volumes}}}}'<<<"$DEPLOY_JSON")";"${K[@]}" -n "$ORCE_NS" patch deploy "$ORCE_DEPLOYMENT" --type=merge -p "$PATCH";"${K[@]}" -n "$ORCE_NS" rollout status deploy/"$ORCE_DEPLOYMENT" --timeout=10m;else log "ORCE already prepared; no rollout";fi;fi
 
 # Migrate the old PVC-backed admin password only after the new mount is usable.
 if ! $DRY_RUN;then
@@ -1142,8 +1142,8 @@ apiVersion: v2
 name: fap-pci
 description: PCI prerequisites generated by ground-zero for an existing ORCE runtime
 type: application
-version: 0.5.0-rc.16
-appVersion: 0.5.0-rc.16
+version: 0.5.0-rc.17
+appVersion: 0.5.0-rc.17
 kubeVersion: '>=1.33.0-0 <1.37.0-0'
 CHART
   cat > "$TMP_DIR/chart/templates/resources.yaml" <<'TEMPLATE'
@@ -1180,4 +1180,4 @@ PYMANIFEST
 fi
 
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/fap-pci";CREDENTIAL_FILE="";if ! $DRY_RUN && [[ "${PCI_EXPORT_BOOTSTRAP_CREDENTIALS:-false}" == true ]];then mkdir -p "$STATE_DIR";chmod 700 "$STATE_DIR";CREDENTIAL_FILE="$STATE_DIR/${ORCE_NS}-${ORCE_DEPLOYMENT}.env";umask 077;printf 'PCI_BOOTSTRAP_PROVIDER_USERNAME=%s\nPCI_BOOTSTRAP_PROVIDER_PASSWORD=%s\nPCI_INTERNAL_SERVICE_TOKEN=%s\n' "$PROVIDER_USERNAME" "$PROVIDER_PASSWORD" "$INTERNAL_TOKEN">"$CREDENTIAL_FILE";chmod 600 "$CREDENTIAL_FILE";fi
-jq -nc --arg status "$($DRY_RUN&&echo Planned||echo Ready)" --arg ui "https://${MAIN_HOST}${ORCE_BASE_PATH}/ui/" --arg editor "https://${MAIN_HOST}${ORCE_EDITOR_PATH}/" --arg mailpit "https://${MAILPIT_HOST}/" --arg gateway "$GW_ADDR" --arg credentials "$CREDENTIAL_FILE" '{status:$status,version:"0.5.0-rc.16",ocmModified:true,ocmChanges:["PCI Keycloak realm configuration","Dedicated Keycloak integration NetworkPolicy when isolated"],gatewayAddress:$gateway,mainUi:$ui,orceEditor:$editor,mailpitUi:$mailpit,credentialsFile:(if $credentials=="" then null else $credentials end),credentialsSecret:"fap-pci-runtime",artifactContract:["dist/fap-pci-flow.json","dist/ground-zero.sh","dist/ui/"],next:["Import dist/fap-pci-flow.json without restarting ORCE.","Copy dist/ui/* into /data/uibuilder/ui/src/ without restarting ORCE."]}'
+jq -nc --arg status "$($DRY_RUN&&echo Planned||echo Ready)" --arg ui "https://${MAIN_HOST}${ORCE_BASE_PATH}/ui/" --arg editor "https://${MAIN_HOST}${ORCE_EDITOR_PATH}/" --arg mailpit "https://${MAILPIT_HOST}/" --arg gateway "$GW_ADDR" --arg credentials "$CREDENTIAL_FILE" '{status:$status,version:"0.5.0-rc.17",ocmModified:true,ocmChanges:["PCI Keycloak realm configuration","Dedicated Keycloak integration NetworkPolicy when isolated"],gatewayAddress:$gateway,mainUi:$ui,orceEditor:$editor,mailpitUi:$mailpit,credentialsFile:(if $credentials=="" then null else $credentials end),credentialsSecret:"fap-pci-runtime",artifactContract:["dist/fap-pci-flow.json","dist/ground-zero.sh","dist/ui/"],next:["Import dist/fap-pci-flow.json without restarting ORCE.","Copy dist/ui/* into /data/uibuilder/ui/src/ without restarting ORCE."]}'
