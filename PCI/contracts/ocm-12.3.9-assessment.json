@@ -1,5 +1,5 @@
 {
-  "release": "0.5.0-rc.12",
+  "release": "0.5.0-rc.16",
   "baseline": "OCM ESB 12.3.9",
   "reviewedAt": "2026-10-09",
   "provenance": "Supplied ESB archive contents and its embedded upstream assessment; current upstream repository file bytes and published image contents were not independently retrieved in this environment.",

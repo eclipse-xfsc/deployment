@@ -6,7 +6,7 @@ Domains, mailbox addresses, private file paths, contexts and StorageClasses in t
 
 ## Operator configuration
 
-Install Python 3, Bash, kubectl, Helm, jq, curl, OpenSSL, Node.js and this PCI deployment directory on the operator host. Mount the approved kubeconfig, certificate/key and editor password as private files. In an operator pod use Kubernetes Secret volumes. `PCI_RELEASE_ROOT` is the absolute path to eclipse-xfsc/deployment/PCI; `PCI_DEPLOY_CONFIG` is an absolute private JSON file. The Function node needs `child_process` and `path`, as declared by its imported library entries. Limit editor access to deployment operators.
+Install Python 3, Bash, kubectl, Helm, jq, curl, OpenSSL, Node.js and the release source on the operator host. Mount the approved kubeconfig, certificate/key and editor password as private files. In an operator pod use Kubernetes Secret volumes. `PCI_RELEASE_ROOT` is the absolute extracted repository path; `PCI_DEPLOY_CONFIG` is an absolute private JSON file. The Function node needs `child_process` and `path`, as declared by its imported library entries. Limit editor access to deployment operators.
 
 Create this file outside the source tree with mode 0600; replace paths and the complete G0 argument list for the target cluster:
 
@@ -66,4 +66,4 @@ For a disposable deployment, set `allowUninstall` to true. With active tenants, 
 python3 scripts/lifecycle.py uninstall --config /private/pci-lifecycle.json
 ```
 
-The migrated ORCE PVC, PostgreSQL PVC and backups are retained. Uninstall is not a data-erasure operation. Existing shared OCM deployments and the operator ORCE are outside its ownership. Run lifecycle acceptance in a dedicated test environment before operating the production instance. See [completion tests](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/3fef8e3048f3803b8aecbd99f582a3c4c05295b0/docs/testing/completion.md).
+The migrated ORCE PVC, PostgreSQL PVC and backups are retained. Uninstall is not a data-erasure operation. Existing shared OCM deployments and the operator ORCE are outside its ownership. Run lifecycle acceptance in a dedicated test environment before operating the production instance. See [completion tests](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/30eb5e77252c449ab0310dd5499970f9711dfcd8/docs/testing/completion.md).

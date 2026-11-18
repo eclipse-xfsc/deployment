@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 LEANEA GmbH and others.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
 # SPDX-License-Identifier: Apache-2.0
+
 """Import explicit trusted pre-helper values into the rc.5 CAS restore journal.
 Input: {deploymentUID, namespace, deployment, container, env, volumeMounts,
 volumes}. Each field is a map of helper-owned name -> {before, applied}; null

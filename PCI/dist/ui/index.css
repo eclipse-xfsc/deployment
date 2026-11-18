@@ -37,12 +37,14 @@ input,select,textarea {width:100%; min-width:0; max-width:100%; min-height:44px;
 input:focus,select:focus,textarea:focus {border-color:var(--color-focus); box-shadow:0 0 0 3px rgba(59,130,246,.10)}
 input[type=checkbox] {width:18px; height:18px; min-height:0; flex-shrink:0; accent-color:var(--color-primary)}
 input[type=file] {white-space:normal}
+.theme-colors {display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:var(--space-3)}
+input[type=color] {padding:var(--space-1); cursor:pointer}
 textarea {min-height:88px; resize:vertical}
 [aria-invalid=true] {border-color:var(--color-danger-action)}
 .field-error {color:var(--color-danger-text)!important; font-size:var(--font-help)}
 .skip-link {position:fixed; left:var(--space-4); top:-80px; z-index:100; background:var(--color-surface); padding:var(--space-3)}
 .skip-link:focus {top:var(--space-4)}
-.app-shell {width:100%; max-width:1200px; min-height:700px; margin:max(0px,calc((100vh - 764px)/2)) auto; display:grid; grid-template-rows:auto 1fr auto; background:var(--color-surface); border-radius:var(--radius-shell); overflow:hidden; box-shadow:var(--shadow-soft)}
+.app-shell {width:100%; max-width:var(--shell-width,1200px); min-height:700px; margin:max(0px,calc((100vh - 764px)/2)) auto; display:grid; grid-template-rows:auto 1fr auto; background:var(--color-surface); border-radius:var(--radius-shell); overflow:hidden; box-shadow:var(--shadow-soft)}
 .topbar {min-height:72px; padding:var(--space-4) var(--space-5); border-bottom:1px solid var(--color-border); display:flex; align-items:center; justify-content:space-between; gap:var(--space-4)}
 .brand {display:flex; align-items:center; gap:var(--space-3); color:var(--color-text); text-decoration:none}
 .brand-logo {display:block; width:106px; height:40px; object-fit:contain; flex-shrink:0}

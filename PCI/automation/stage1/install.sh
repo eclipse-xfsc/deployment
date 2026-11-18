@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 LEANEA GmbH and others.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 set -Eeuo pipefail
 umask 077
 
@@ -48,7 +56,7 @@ CURL=(curl -fsS --connect-timeout 10 --max-time 30);$INSECURE&&CURL+=(-k)
 kread(){ local attempt; for attempt in 1 2 3; do if "${K[@]}" "$@"; then return 0; fi; [[ "$attempt" == 3 ]] && return 1; sleep 3; done; }
 curl_read(){ "${CURL[@]}" --retry 3 --retry-delay 3 --retry-max-time 60 --retry-all-errors "$@"; }
 
-[[ -f "$ROOT/dist/fap-pci-flow.json" && -d "$ROOT/dist/ui" ]]||{ echo "deployment dist/ artifacts are missing; restore this PCI package or obtain a complete release from the PCI source repository" >&2;exit 1; }
+[[ -f "$ROOT/dist/fap-pci-flow.json" && -d "$ROOT/dist/ui" ]]||{ echo "dist/ artifacts are missing: build them with npm ci && npm run build in the PCI source repository, or restore the complete release or deployment package" >&2;exit 1; }
 DEPLOY_JSON="$(kread -n "$ORCE_NS" get deploy "$ORCE_DEPLOYMENT" -o json)"
 [[ -n "$ORCE_CONTAINER" ]]||ORCE_CONTAINER="$(jq -r '.spec.template.spec.containers[0].name' <<<"$DEPLOY_JSON")"
 MAIN_HOST="$(kread -n "$ORCE_NS" get configmap fap-pci-config -o jsonpath='{.data.PCI_MAIN_HOST}')"

@@ -1,6 +1,6 @@
 # ArgoCD handoff
 
-[participant-application.example.yaml](../../deployment/argocd/participant-application.example.yaml) targets the supplied participant chart. Fill the approved project, repository, immutable source commit, existing participant namespace and nonsecret chart values. It deliberately contains no Secret bytes. The repository path must match the layout approved by the project lead.
+[participant-application.example.yaml](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/main/deployment/argocd/participant-application.example.yaml) targets the supplied participant chart. Fill the approved project, repository, immutable source commit, existing participant namespace and nonsecret chart values. It deliberately contains no Secret bytes. The repository path must match the layout approved by the project lead.
 
 The participant owner must provision the namespace, server certificate/trust Secret, public JWKS/data Secret, source-token Secret and optional Core client Secret described in [participant setup](../testing/participant-test.md). Configure PCI's named client-trust Secret/RBAC and its exact participant host/private-IP allowlist. These are operator inputs, not resources that this Application reads from Git. Pin the built participant image digest and refresh `trustRevision` whenever startup trust/JWKS/source credentials change.
 
