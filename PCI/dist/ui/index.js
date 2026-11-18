@@ -3,7 +3,7 @@
 "use strict";
 const { createApp, computed, onMounted, onUnmounted, ref, reactive } = Vue;
 // ---- shared/public-url.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -123,7 +123,7 @@ function uiUrl(host, basePath = "") {
 
 
 // ---- src/config/runtime.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -164,7 +164,7 @@ function applyPublicConfiguration(configuration) {
 
 
 // ---- src/utils/pkce.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -188,7 +188,7 @@ async function sha256UrlSafe(value) {
 
 
 // ---- src/state/store.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -228,7 +228,7 @@ const store = reactive({
 
 
 // ---- src/state/reducers.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -313,7 +313,7 @@ function reduceUiMessage(envelope, pending) {
 
 
 // ---- src/state/theme.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -410,7 +410,7 @@ function applyPciTheme(element, branding) {
 
 
 // ---- src/services/transport.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -579,7 +579,7 @@ const bridgePing = () => sendCommand('', {}, 'ping');
 
 
 // ---- src/components/feedback.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -676,7 +676,7 @@ const UiField = {
 
 
 // ---- src/services/api.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -731,7 +731,7 @@ const api = {
 
 
 // ---- src/services/auth.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1061,7 +1061,7 @@ function pciQrImage(text) {
 
 
 // ---- src/issuer/client.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1089,7 +1089,7 @@ function createPciIssuerClient(request, tenantId) {
 
 
 // ---- src/issuer/form-defaults.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1145,7 +1145,7 @@ function newPciConfigurationForm() {
 
 
 // ---- src/issuer/workspace-state.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1303,7 +1303,7 @@ function createPciIssuerState({ ref, props, runtime, window }) {
 
 
 // ---- src/issuer/workspace-selectors.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1432,7 +1432,7 @@ function createPciIssuerSelectors(state, { computed, pciQrImage }) {
 
 
 // ---- src/issuer/actions/identity.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1477,7 +1477,7 @@ function createPciIdentityActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/configurations.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1560,7 +1560,7 @@ function createPciConfigurationActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/flows.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1655,7 +1655,7 @@ function createPciFlowActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/tenant.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1708,7 +1708,7 @@ function createPciTenantActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/connectors.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1750,7 +1750,7 @@ function createPciConnectorActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/access.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1785,7 +1785,7 @@ function createPciAccessActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/assets.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1830,7 +1830,7 @@ function createPciAssetActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/history.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1867,7 +1867,7 @@ function createPciHistoryActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/presentation.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -1916,7 +1916,7 @@ function createPciPresentationActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/journey.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -2017,7 +2017,7 @@ function createPciJourneyActions(state, dependencies) {
 
 
 // ---- src/issuer/actions/refresh.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -2167,7 +2167,7 @@ function createPciRefreshActions(state, dependencies) {
 
 
 // ---- src/issuer/operation-runner.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -2204,7 +2204,7 @@ function createPciOperationRunner(state, normalizeError, recoverInput) {
 
 
 // ---- src/issuer/controller.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -2277,7 +2277,7 @@ function createPciIssuerController(props, dependencies) {
 
 
 // ---- src/issuer/views/presentation-panel.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -2338,7 +2338,7 @@ const pciPresentationPanelTemplate = `
 
 
 // ---- src/issuer/views/request-panel.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -2417,7 +2417,7 @@ const pciRequestPanelTemplate = `
 
 
 // ---- src/issuer/views/configurations-panel.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -2716,7 +2716,7 @@ const pciConfigurationsPanelTemplate = `
 
 
 // ---- src/issuer/views/journeys-panel.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -2818,7 +2818,7 @@ const pciJourneysPanelTemplate = `
 
 
 // ---- src/issuer/views/history-panel.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -2937,7 +2937,7 @@ const pciHistoryPanelTemplate = `
 
 
 // ---- src/issuer/views/tenant-panel.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -3177,7 +3177,7 @@ const pciTenantPanelTemplate = `
 
 
 // ---- src/issuer/views/connectors-panel.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -3287,7 +3287,7 @@ const pciConnectorsPanelTemplate = `
 
 
 // ---- src/issuer/views/delegation-slot.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -3305,7 +3305,7 @@ const pciDelegationSlotTemplate = `
 
 
 // ---- src/issuer/views/delegation-panel.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -3346,7 +3346,7 @@ const pciDelegationPanelTemplate = `
 
 
 // ---- src/issuer/console-template.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -3464,7 +3464,7 @@ const pciIssuerTemplate = `
 
 
 // ---- src/sr2.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -3500,7 +3500,7 @@ const Sr2Console = {
 
 
 // ---- src/main.js ----
-// Copyright (c) 2026 LEANEA GmbH and others.
+// Copyright (c) 2026 Contributors to this project.
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at

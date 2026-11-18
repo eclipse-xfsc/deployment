@@ -66,4 +66,4 @@ For a disposable deployment, set `allowUninstall` to true. With active tenants, 
 python3 scripts/lifecycle.py uninstall --config /private/pci-lifecycle.json
 ```
 
-The migrated ORCE PVC, PostgreSQL PVC and backups are retained. Uninstall is not a data-erasure operation. Existing shared OCM deployments and the operator ORCE are outside its ownership. Run lifecycle acceptance in a dedicated test environment before operating the production instance. See [completion tests](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/30eb5e77252c449ab0310dd5499970f9711dfcd8/docs/testing/completion.md).
+The migrated ORCE PVC, PostgreSQL PVC and backups are retained. Uninstall is not a data-erasure operation. Existing shared OCM deployments and the operator ORCE are outside its ownership. Run lifecycle acceptance in a dedicated test environment before operating the production instance. See [completion tests](https://github.com/eclipse-xfsc/facis-fap-principal-credential-issuance/blob/bec198800cfb0e92380d99108aa0bd4481d34e46/docs/testing/completion.md).

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2026 LEANEA GmbH and others.
+# Copyright (c) 2026 Contributors to this project.
 #
 # This program and the accompanying materials are made available under the
 # terms of the Apache License, Version 2.0 which is available at
