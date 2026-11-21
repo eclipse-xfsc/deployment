@@ -1,2 +1,3 @@
+web-ui:
 # Additional environment variables; generated URL/auth keys are reserved.
-env: {}
+  env: {}
