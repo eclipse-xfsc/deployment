@@ -1,0 +1,18 @@
+tag: pcm-cloud
+path: "PCM Cloud/*"
+name: pcm-cloud
+namespace: pcm-cloud
+matrix: 
+  enabled: false
+revisionHistoryLimit: 3
+excludes: 
+ - "PCM Cloud/Mediator"
+ - "PCM Cloud/Plugin Discovery Service"
+ - "PCM Cloud/Plugins"
+project:
+  name: pcm-cloud
+  description: Argo-CD-Projekt für PCM Cloud
+sourceRepos: 
+  - https://github.com/eclipse-xfsc/deployment.git
+  - node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm-cloud
+  - node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services

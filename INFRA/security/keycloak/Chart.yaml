@@ -1,0 +1,9 @@
+apiVersion: v2
+appVersion: v1.0.0
+description: Customized Keycloak for XFSC
+name: xfsc-keycloak
+version: 1.0.0
+dependencies:
+  - name: keycloak
+    version: 1.0.6-helm
+    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/dev-ops

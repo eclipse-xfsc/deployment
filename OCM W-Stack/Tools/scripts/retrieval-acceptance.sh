@@ -4,7 +4,7 @@ set -euo pipefail
 NATS_URL="${NATS_URL:-nats://localhost:4222}"
 NATS_SUBJECT="${NATS_SUBJECT:-offering}"
 
-TENANT_ID="${TENANT_ID:-demo_tenant}"
+TENANT_ID="${TENANT_ID:-demo-tenant}"
 GROUP_ID="${GROUP_ID:-test}"
 
 HOLDER_KEY="${HOLDER_KEY:-eckey}"

@@ -76,6 +76,7 @@ helm install -n security eso INFRA/security/eso
 helm repo add kyverno https://kyverno.github.io/kyverno/
 helm dependency build INFRA/security/kyverno
 helm install -n security kyverno INFRA/security/kyverno
+
 ./argocd-bootstrap.sh
 
 helm install -n security infrastructure-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/infra-values.yaml
@@ -105,4 +106,7 @@ helm install -n infrastructure storage XFSC/Applicationsets/chart -f XFSC/Applic
 helm install -n infrastructure network XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/04_network-values.yaml --set storageClass="$STORAGE_CLASS" --set profile="$PROFILE" --set domain="$DOMAIN" --set email="$EMAIL" "${NETWORK_ARGS[@]}"
 ./check-applicationset.sh network argocd
 helm install -n infrastructure core XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/05_core-values.yaml --set storageClass="$STORAGE_CLASS"
+
+helm dependency build INFRA/security/keycloak
+helm install keycloak INFRA/security/keycloak -n security --set-string "keycloak.hostname=https://auth.${DOMAIN}" --set-string "domain=${DOMAIN}" 
 ./check-applicationset.sh core argocd

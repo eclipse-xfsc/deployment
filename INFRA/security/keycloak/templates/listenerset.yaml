@@ -1,0 +1,23 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: ListenerSet
+metadata:
+  name: {{ .Release.Name }}-auth
+  annotations:
+    {{- toYaml .Values.listenerSet.annotations | nindent 4 }}
+spec:
+  parentRef:
+    name: {{ .Values.gateway.name | quote }}
+    namespace: {{ .Values.gateway.namespace | default .Release.Namespace | quote }}
+  listeners:
+    - name: {{ .Values.listenerSet.listenerName | quote }}
+      hostname: {{ printf "auth.%s" .Values.domain | quote }}
+      port: {{ .Values.listenerSet.port }}
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: {{ .Values.certificate.secretName | default (printf "%s-auth-tls" .Release.Name) }}
+      allowedRoutes:
+        namespaces:
+          {{- toYaml .Values.listenerSet.allowedRoutes.namespaces | nindent 10 }}

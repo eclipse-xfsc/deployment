@@ -7,3 +7,4 @@ rendered.yaml
 log.txt
 *.tgz
 **/*.png
+*.zip

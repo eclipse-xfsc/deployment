@@ -1,0 +1,89 @@
+domain: example.com
+
+gateway:
+  name: xfsc-gateway
+  namespace: security
+
+certificate:
+  enabled: true
+  secretName: ""
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+    group: cert-manager.io
+  duration: ""
+  renewBefore: ""
+  privateKey:
+    algorithm: RSA
+    size: 4096
+
+listenerSet:
+  annotations: {}
+  listenerName: https
+  port: 443
+  allowedRoutes:
+    namespaces:
+      from: Same
+
+httpRoute:
+  enabled: true
+  annotations:
+    external-dns.alpha.kubernetes.io/ttl: "240"
+  backend:
+    serviceName: keycloak
+    port: 8080
+
+keycloak:
+  replicaCount: 1
+  image:
+    tag: 1.0.5
+  nats:
+    url: nats://nats:4222
+  keycloak:
+    hostname: keycloak.example.com
+    database:
+      url: jdbc:postgresql://postgres:5432/keycloak
+      username: keycloak
+      passwordSecretName: ""
+      passwordSecretKey: password
+    bootstrapAdmin:
+      username: admin
+      passwordSecretName: ""
+      passwordSecretKey: password
+    provisioning:
+      enabled: true
+      clientId: xfsc-provisioner
+      # Full master-realm admin access; reduce permissions after bootstrap if appropriate.
+      role: admin
+      image: python:3.12-alpine
+      timeoutSeconds: 300
+  controller:
+    enabled: true
+    image:
+      repository: xfsc-identity-controller
+      tag: latest
+      pullPolicy: IfNotPresent
+    adminUrl: ""
+    adminRealm: master
+    clientId: xfsc-provisioner
+    clientSecret:
+      secretName: ""
+      secretKey: client-secret
+  injection:
+    keycloak:
+      enabled: false
+      needs: postgres,nats
+      replacements:
+        POSTGRES_URL: KC_DB_URL
+        POSTGRES_USER: KC_DB_USERNAME
+        POSTGRES_PASSWORD: KC_DB_PASSWORD
+    controller:
+      enabled: false
+      needs: nats
+      replacements: {}
+  # Operator ResourceClaim requires an existing ESO ExternalSecret, and is opt-in.
+  resourceClaim:
+    enabled: false
+    provider: postgres
+    externalSecretName: ""
+    database: ""

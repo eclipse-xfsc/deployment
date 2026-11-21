@@ -120,6 +120,12 @@ spec:
               value: {{ .Values.email | quote }}
 {{- end }}
 
+{{- if .Values.tenantId }}
+            - name: global.tenantId
+              value: {{ .Values.tenantId | quote }}
+
+{{- end }}
+
       destination:
         server: https://kubernetes.default.svc
         namespace: {{ .Values.namespace | quote }}

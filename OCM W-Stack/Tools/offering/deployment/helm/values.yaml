@@ -23,7 +23,7 @@ nats:
 cloudEvent:
   source: "credential-offering-bootstrap"
 
-defaultTenantId: "demo_tenant"
+defaultTenantId: "demo-tenant"
 
 resources:
   requests:

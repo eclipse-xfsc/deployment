@@ -7,7 +7,7 @@ OFFER_TYPE="${2:-credential_offer}"
 NATS_SERVER="${NATS_SERVER:-nats://localhost:4222}"
 NATS_TOPIC="${NATS_TOPIC:-offering}"
 
-TENANT_ID="${TENANT_ID:-demo_tenant}"
+TENANT_ID="${TENANT_ID:-demo-tenant}"
 GROUP_ID="${GROUP_ID:-test}"
 REQUEST_ID="${REQUEST_ID:-$(uuidgen | tr '[:upper:]' '[:lower:]')}"
 
