@@ -1,7 +1,7 @@
 apiVersion: v2
 name: web-ui
 description: A Helm chart for deploying a cloud wallet web ui
-version: 0.2.6
+version: 0.2.7
 
 dependencies:
   - name: web-ui
