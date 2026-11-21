@@ -2,4 +2,4 @@ web-ui:
 # Additional environment variables; generated URL/auth keys are reserved.
   env: {}
   frontendContainer:
-    tag: 1.0.3-alpha
+    tag: 1.0.4-alpha
