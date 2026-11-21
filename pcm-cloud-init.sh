@@ -1,6 +1,7 @@
-export TENANT="${TENANT:-yourtenant}"
 
-./ocm-wstack-init.sh "$@" || exit $?
+source ./ocm-wstack-init.sh "$@" || exit $?
+
+echo "######################### Install pcm cloud "
 
 helm install -n security pcm-cloud-namespace \
   INFRA/app-management/app-namespace \

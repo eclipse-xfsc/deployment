@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-
 # Forward all bootstrap options (including --disable-external-dns) to the
 # basic cluster initialization.
-./basic-cluster-init.sh "$@" || exit $?
+source ./basic-cluster-init.sh "$@" || exit $?
+
+echo "######################### Install ocm wstack "
 
 helm install -n security ocm-wstack-namespace INFRA/app-management/app-namespace -f INFRA/app-management/app-namespace-values/ocm-wstack-values.yaml
 
@@ -13,3 +14,6 @@ STORAGE_CLASS=$(kubectl get storageclass -o jsonpath='{.items[?(@.metadata.annot
 # OCM W-Stack
 helm install -n ocm-wstack ocm-wstack XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/06_ocm_wstack-values.yaml --set storageClass="$STORAGE_CLASS"
 ./check-applicationset.sh ocm-wstack argocd
+
+helm install $TENANT xfsc/tenant/chart -f xfsc/tenant/values/tenant-ocm-wstack-values.yaml --set tenant.domain="$DOMAIN" -n ocm-wstack
+

@@ -1,59 +1,7 @@
 #!/usr/bin/env bash
+source ./variables.sh "$@"
 
-PROFILE=""
-DOMAIN=""
-EMAIL=""
-DNSTOKEN=""
-DISABLE_EXTERNAL_DNS=false
-
-usage() {
-  echo "Usage: $0 --profile <profile> --domain <domain> --email <email> [--dnstoken <token>] [--disable-external-dns]"
-}
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --profile)
-      PROFILE="$2"
-      shift 2
-      ;;
-    --domain)
-      DOMAIN="$2"
-      shift 2
-      ;;
-    --email)
-      EMAIL="$2"
-      shift 2
-      ;;
-    --dnstoken)
-      DNSTOKEN="$2"
-      shift 2
-      ;;
-    --disable-external-dns)
-      DISABLE_EXTERNAL_DNS=true
-      shift
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      echo "Unknown parameter: $1"
-      usage
-      exit 1
-      ;;
-  esac
-done
-
-if [[ -z "$PROFILE" || -z "$DOMAIN" || -z "$EMAIL" ]]; then
-  usage
-  exit 1
-fi
-
-if [[ "$DISABLE_EXTERNAL_DNS" != "true" && -z "$DNSTOKEN" ]]; then
-  echo "Error: --dnstoken is required unless --disable-external-dns is set."
-  usage
-  exit 1
-fi
+echo "######################### Install basic cluster"
 
 echo "PROFILE=$PROFILE"
 echo "DOMAIN=$DOMAIN"
