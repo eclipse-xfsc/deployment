@@ -1,7 +1,2 @@
 # Additional environment variables; generated URL/auth keys are reserved.
 env: {}
-
-dependencies:
-  - name: configuration-service
-    version: 1.0.3-helm.alpha
-    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm.cloud

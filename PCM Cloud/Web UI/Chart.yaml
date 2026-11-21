@@ -1,4 +1,9 @@
 apiVersion: v2
 name: web-ui
 description: A Helm chart for deploying a cloud wallet web ui
-version: 0.2.1
+version: 0.2.2
+
+dependencies:
+  - name: web-ui
+    version: 1.0.3-helm.alpha
+    repository: oci://node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/pcm-cloud
