@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 LEANEA GmbH and others.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """Validate and remove only helper trust owned by this runtime installation."""
 import argparse,json,subprocess
 p=argparse.ArgumentParser();p.add_argument('phase',choices=['plan','check','apply']);p.add_argument('namespace');p.add_argument('deployment');p.add_argument('plan');a=p.parse_args()

@@ -1,0 +1,6 @@
+{
+  "$comment": "Images of this release, pinned by digest. Filled from the Images workflow run on the release candidate tag; null until then.",
+  "version": "0.5.0-rc.17",
+  "application": "ecofacis/fap-pci@sha256:c610909cf73ccd3ecbda8ec518df66dcdb77f318fe98fe97d0b2e133383f68fd",
+  "participant": "ecofacis/fap-pci-participant@sha256:5f9e5115f64cc0cfc12b809837fd546c27cd8ab2bdcdb8c81815efb63e3f63fd"
+}

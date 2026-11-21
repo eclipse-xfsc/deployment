@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 LEANEA GmbH and others.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
 # SPDX-License-Identifier: Apache-2.0
+
 """Render exact workload mesh enrollment and STRICT policy from owner inventory.
 Does not change the shared stack. --apply enrolls only supplied UID-bound
 workloads after the owner has installed mesh.yaml with its pinned mesh release.
