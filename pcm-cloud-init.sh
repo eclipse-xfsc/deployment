@@ -1,5 +1,5 @@
-
-source ./ocm-wstack-init.sh "$@" || exit $?
+source ./variables.sh "$@"
+#source ./ocm-wstack-init.sh "$@" || exit $?
 
 echo "######################### Install pcm cloud "
 

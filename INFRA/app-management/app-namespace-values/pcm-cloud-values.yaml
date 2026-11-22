@@ -8,10 +8,10 @@ openbao:
   storeMountPath: pcm-cloud/system
   storeSecretPrefix: ""
   resourceProvisioner:
-    engineMountPrefix: ocm-cloud-wstack
+    engineMountPrefix: pcm-cloud
     serviceAccount:
       create: true
-      name: ocm-cloud-resource-provisioner
+      name: pcm-cloud-resource-provisioner
     tokenTTL: 15m
     tokenMaxTTL: 1h
     serviceToken:

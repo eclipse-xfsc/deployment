@@ -1,14 +1,15 @@
+
 domain: example.com
 
 gateway:
-  name: xfsc-gateway
-  namespace: security
+  name: envoy-gateway
+  namespace: infrastructure
 
 certificate:
   enabled: true
   secretName: ""
   issuerRef:
-    name: letsencrypt-production
+    name: letsencrypt
     kind: ClusterIssuer
     group: cert-manager.io
   duration: ""
@@ -30,33 +31,30 @@ httpRoute:
   annotations:
     external-dns.alpha.kubernetes.io/ttl: "240"
   backend:
-    serviceName: keycloak
+    serviceName: keycloak-keycloak
     port: 8080
 
 keycloak:
   replicaCount: 1
   image:
-    tag: 1.0.5
-  nats:
-    url: nats://nats:4222
+      tag: 1.0.9
   keycloak:
-    hostname: keycloak.example.com
-    database:
-      url: jdbc:postgresql://postgres:5432/keycloak
-      username: keycloak
-      passwordSecretName: ""
-      passwordSecretKey: password
-    bootstrapAdmin:
-      username: admin
-      passwordSecretName: ""
-      passwordSecretKey: password
-    provisioning:
-      enabled: true
-      clientId: xfsc-provisioner
-      # Full master-realm admin access; reduce permissions after bootstrap if appropriate.
-      role: admin
-      image: python:3.12-alpine
-      timeoutSeconds: 300
+      database:
+        url: jdbc:postgresql://postgres:5432/keycloak
+        username: keycloak
+        passwordSecretName: ""
+        passwordSecretKey: password
+      bootstrapAdmin:
+        username: admin
+        passwordSecretName: ""
+        passwordSecretKey: password
+      provisioning:
+        enabled: true
+        clientId: xfsc-provisioner
+        # Full master-realm admin access; reduce permissions after bootstrap if appropriate.
+        role: admin
+        image: python:3.12-alpine
+        timeoutSeconds: 300
   controller:
     enabled: true
     image:
@@ -71,19 +69,13 @@ keycloak:
       secretKey: client-secret
   injection:
     keycloak:
-      enabled: false
+      enabled: true
       needs: postgres,nats
       replacements:
-        POSTGRES_URL: KC_DB_URL
+        POSTGRES_HOST: KC_DB_URL_HOST
         POSTGRES_USER: KC_DB_USERNAME
         POSTGRES_PASSWORD: KC_DB_PASSWORD
     controller:
-      enabled: false
+      enabled: true
       needs: nats
       replacements: {}
-  # Operator ResourceClaim requires an existing ESO ExternalSecret, and is opt-in.
-  resourceClaim:
-    enabled: false
-    provider: postgres
-    externalSecretName: ""
-    database: ""

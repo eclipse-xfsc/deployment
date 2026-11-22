@@ -56,5 +56,6 @@ helm install -n infrastructure network XFSC/Applicationsets/chart -f XFSC/Applic
 helm install -n infrastructure core XFSC/Applicationsets/chart -f XFSC/Applicationsets/values/05_core-values.yaml --set storageClass="$STORAGE_CLASS"
 
 helm dependency build INFRA/security/keycloak
-helm install keycloak INFRA/security/keycloak -n security --set-string "keycloak.hostname=https://auth.${DOMAIN}" --set-string "domain=${DOMAIN}" 
+helm install keycloak INFRA/security/keycloak -n infrastructure --set-string "keycloak.keycloak.hostname=https://auth.${DOMAIN}" --set-string "domain=${DOMAIN}" 
+
 ./check-applicationset.sh core argocd
