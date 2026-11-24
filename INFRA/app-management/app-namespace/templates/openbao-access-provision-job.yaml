@@ -217,11 +217,12 @@ spec:
               if echo "$MOUNTS_JSON" | grep -q "\"${STORE_MOUNT}/\""; then
                 echo "Mount ${STORE_MOUNT} already exists."
 
-                MOUNT_TYPE="$(
-                  echo "$MOUNTS_JSON" |
-                    sed -n \
-                      "s#.*\"${STORE_MOUNT}/\"[[:space:]]*:[[:space:]]*{[^}]*\"type\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*#\\1#p"
-                )"
+                if ! MOUNT_TYPE="$(
+                  bao read -field=type "sys/mounts/${STORE_MOUNT}"
+                )"; then
+                  echo "Could not read mount configuration for ${STORE_MOUNT}."
+                  exit 1
+                fi
 
                 if [ -z "$MOUNT_TYPE" ]; then
                   echo "Could not determine mount type for ${STORE_MOUNT}."
